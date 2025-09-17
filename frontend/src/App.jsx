@@ -48,7 +48,7 @@ const ErrorMessage = ({ error, onRetry }) => (
 );
 
 const LocationInfo = ({ location, formatTimestamp }) => (
-  <div className='glassmorphism-strong rounded-4xl max-w-[100%] p-8'>
+  <div className='glassmorphism-strong rounded-4xl max-h-[100%] max-w-[100%] p-8'>
     <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
     
     <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
