@@ -216,7 +216,7 @@ function App() {
   return (
     <div className="min-h-screen transition-all duration-500 dark">
       <div className="fixed inset-0 -z-10 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900 via-purple-900 to-violet-800"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-teal-700 to-violet-800"></div>
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-indigo-500 rounded-full filter blur-3xl opacity-40 animate-float"></div>
           <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-gray-400 rounded-full filter blur-3xl opacity-30 animate-float"></div>
