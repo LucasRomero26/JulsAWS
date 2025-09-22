@@ -364,22 +364,33 @@ function App() {
 
   const fetchLatestLocation = async () => {
     try {
-      // DATOS FALSOS PARA DEMOSTRACIÓN
-      const data = {
-        latitude: "10.9639",
-        longitude: "-74.7964",
-        timestamp_value: "1726977600000" // Corresponde a Sep 22 2024
-      };
-      setLocationData(data);
-      const newPosition = [parseFloat(data.latitude), parseFloat(data.longitude)];
-      setPath(prevPath => {
-        const lastPoint = prevPath[prevPath.length - 1];
-        if (!lastPoint || lastPoint[0] !== newPosition[0] || lastPoint[1] !== newPosition[1]) {
-          return [...prevPath, newPosition];
+      const response = await fetch(`${config.API_BASE_URL}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('No hay datos de ubicación disponibles');
+          setLocationData(null);
+        } else {
+          throw new Error('Error al obtener datos');
         }
-        return prevPath;
-      });
-      setError(null);
+      } else {
+        const data = await response.json();
+        setLocationData(data);
+        
+        // --- LÓGICA PARA ACTUALIZAR LA TRAYECTORIA ---
+        const newPosition = [parseFloat(data.latitude), parseFloat(data.longitude)];
+        // Evita añadir puntos duplicados si la ubicación no ha cambiado
+        setPath(prevPath => {
+          const lastPoint = prevPath[prevPath.length - 1];
+          if (!lastPoint || lastPoint[0] !== newPosition[0] || lastPoint[1] !== newPosition[1]) {
+            return [...prevPath, newPosition];
+          }
+          return prevPath;
+        });
+
+        setError(null);
+        setLastUpdate(new Date());
+      }
     } catch (err) {
       setError('Error de conexión con el servidor');
       console.error('Error fetching location:', err);
