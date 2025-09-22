@@ -361,6 +361,7 @@ function App() {
   const [error, setError] = useState(null);
   const [path, setPath] = useState([]);
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
+    const [isLiveMode, setIsLiveMode] = useState(true);
 
   const fetchLatestLocation = async () => {
     try {
@@ -399,16 +400,71 @@ function App() {
     }
   };
 
-  const handleDateSearch = (searchData) => {
+const handleDateSearch = async (searchData) => {
     console.log('Búsqueda por fecha iniciada:', searchData);
-    // Aquí implementas la lógica para llamar a tu API con las fechas
+    setLoading(true);
+    setIsLiveMode(false); // Detenemos el modo en vivo
+    setError(null);
+
+    try {
+      const { startDate, endDate } = searchData;
+      // Construimos la URL con los parámetros de fecha
+      const response = await fetch(`${config.API_BASE_URL}/api/location/range?startDate=${startDate}&endDate=${endDate}`);
+      
+      if (!response.ok) {
+        throw new Error('Error al obtener el historial de ubicaciones');
+      }
+
+      const historicalData = await response.json();
+
+      if (historicalData.length > 0) {
+        // Creamos la nueva ruta para la polilínea
+        const newPath = historicalData.map(point => [
+          parseFloat(point.latitude),
+          parseFloat(point.longitude)
+        ]);
+        setPath(newPath);
+        
+        // Actualizamos la ubicación principal a la última del rango para centrar el mapa
+        const lastLocationInRange = historicalData[historicalData.length - 1];
+        setLocationData({
+            latitude: lastLocationInRange.latitude,
+            longitude: lastLocationInRange.longitude,
+            timestamp_value: lastLocationInRange.timestamp_value
+        });
+
+      } else {
+        // Si no hay datos, limpiamos la ruta y mostramos un mensaje
+        setPath([]);
+        setError('No se encontraron datos de ubicación para el rango seleccionado.');
+        setLocationData(null); // Opcional: limpiar la última ubicación conocida
+      }
+
+    } catch (err) {
+      setError('Error de conexión al buscar el historial.');
+      console.error('Error fetching date range:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    fetchLatestLocation();
-    const interval = setInterval(fetchLatestLocation, config.POLLING_INTERVAL);
-    return () => clearInterval(interval);
-  }, []);
+useEffect(() => {
+    // Iniciar la primera carga
+    fetchLatestLocation(); 
+
+    let interval;
+    if (isLiveMode) {
+      // Solo activar el polling si estamos en modo "en vivo"
+      interval = setInterval(fetchLatestLocation, config.POLLING_INTERVAL);
+    }
+
+    // Limpiar el intervalo cuando el componente se desmonte o cuando cambie el modo
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isLiveMode]); // <-- Añade isLiveMode como dependencia
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(parseInt(timestamp));
@@ -438,13 +494,34 @@ function App() {
         </div>
       </header>
 
-      <main className='flex flex-col md:flex-row items-center mt-50 md:mt-15 justify-between gap-2 max-w-[90%] mx-auto min-h-screen'>
+<main className='flex flex-col md:flex-row items-center mt-50 md:mt-15 justify-between gap-2 max-w-[90%] mx-auto min-h-screen'>
         {loading ? (
           <LoadingSpinner />
         ) : error ? (
-          <ErrorMessage error={error} onRetry={fetchLatestLocation} />
+          <ErrorMessage error={error} onRetry={isLiveMode ? fetchLatestLocation : () => setError(null)} />
         ) : locationData ? (
           <>
+            {/* --- BOTÓN PARA VOLVER A MODO EN VIVO --- */}
+            {!isLiveMode && (
+              <div className="absolute top-40 left-1/2 -translate-x-1/2 z-40">
+                  <button
+                    onClick={() => {
+                      setIsLiveMode(true);
+                      setPath([]); // Limpiamos la ruta histórica
+                      setError(null);
+                      setLoading(true); // Mostramos spinner mientras carga la última ubicación
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <path d="M3.5 2.5a.5.5 0 00-1 0V4a.5.5 0 00.5.5H4a.5.5 0 000-1H3.5V2.5zM3.5 6a.5.5 0 00-1 0v1.5a.5.5 0 00.5.5H4a.5.5 0 000-1H3.5V6zM3.5 9.5a.5.5 0 00-1 0V11a.5.5 0 00.5.5H4a.5.5 0 000-1H3.5V9.5zM6 3.5a.5.5 0 01.5-.5h1.5a.5.5 0 010 1H6.5a.5.5 0 01-.5-.5zM6.5 6a.5.5 0 000 1h1.5a.5.5 0 000-1H6.5zM6 10.5a.5.5 0 01.5-.5h1.5a.5.5 0 010 1H6.5a.5.5 0 01-.5-.5zM10.5 2.5a.5.5 0 00-1 0V4a.5.5 0 00.5.5h.5a.5.5 0 000-1h-.5V2.5zM10 6.5a.5.5 0 01.5-.5h.5a.5.5 0 010 1h-.5a.5.5 0 01-.5-.5zM10.5 9.5a.5.5 0 00-1 0V11a.5.5 0 00.5.5h.5a.5.5 0 000-1h-.5V9.5zM14 3.5a.5.5 0 01.5-.5h1.5a.5.5 0 010 1h-1.5a.5.5 0 01-.5-.5zM14.5 6a.5.5 0 000 1h1.5a.5.5 0 000-1h-1.5z" />
+                      <path fillRule="evenodd" d="M3 14a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Volver a Tiempo Real
+                  </button>
+              </div>
+            )}
+
             <LocationInfo
               location={locationData}
               formatTimestamp={formatTimestamp}
