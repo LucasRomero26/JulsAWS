@@ -132,6 +132,35 @@ app.get('/api/location/all', async (req, res) => {
   }
 });
 
+// Endpoint para obtener registros por rango de fechas
+app.get('/api/location/range', async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  if (!startDate || !endDate) {
+    return res.status(400).json({ message: 'Los parámetros startDate y endDate son requeridos' });
+  }
+
+  try {
+    // Los timestamps vienen en formato ISO 8601, los convertimos a milisegundos
+    const startTime = new Date(startDate).getTime();
+    const endTime = new Date(endDate).getTime();
+
+    const query = `
+      SELECT latitude, longitude, timestamp_value
+      FROM location_data
+      WHERE timestamp_value >= $1 AND timestamp_value <= $2
+      ORDER BY timestamp_value ASC;
+    `;
+    
+    const result = await pool.query(query, [startTime, endTime]);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo registros por rango:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
