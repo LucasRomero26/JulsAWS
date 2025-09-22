@@ -390,7 +390,6 @@ function App() {
         });
 
         setError(null);
-        setLastUpdate(new Date());
       }
     } catch (err) {
       setError('Error de conexión con el servidor');
