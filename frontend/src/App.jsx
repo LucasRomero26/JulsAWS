@@ -365,7 +365,7 @@ function App() {
 
   const fetchLatestLocation = async () => {
     try {
-      const response = await fetch(`${config.API_BASE_URL}`);
+      const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
       
       if (!response.ok) {
         if (response.status === 404) {
