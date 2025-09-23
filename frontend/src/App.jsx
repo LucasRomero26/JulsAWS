@@ -173,7 +173,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
                   maxDate={dayjs()} // No se pueden seleccionar fechas futuras
-                  minutesStep={1} // Paso de minutos a 1
+                  timeSteps={{ minutes: 1 }} // Set minute step to 1
                   sx={{
                     backgroundColor: 'rgba(0, 0, 0, 0.2)', // Fondo un poco más oscuro
                     borderRadius: '2rem', // Bordes más redondeados
@@ -193,6 +193,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
                   onChange={(newValue) => setEndDate(newValue)}
                   minDate={startDate} // No se puede seleccionar antes de la fecha de inicio
                   disabled={!startDate} // Deshabilitado hasta que se elija fecha de inicio
+                  timeSteps={{ minutes: 1 }} // Set minute step to 1
                   sx={{
                     backgroundColor: 'rgba(0, 0, 0, 0.2)', // Fondo un poco más oscuro
                     borderRadius: '2rem', // Bordes más redondeados
@@ -362,7 +363,7 @@ function App() {
   const [error, setError] = useState(null);
   const [path, setPath] = useState([]);
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
-    const [isLiveMode, setIsLiveMode] = useState(true);
+  const [isLiveMode, setIsLiveMode] = useState(true);
 
   const fetchLatestLocation = async () => {
     try {
