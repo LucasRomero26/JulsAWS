@@ -173,6 +173,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
                   maxDate={dayjs()} // No se pueden seleccionar fechas futuras
+                  minutesStep={1} // Paso de minutos a 1
                   sx={{
                     backgroundColor: 'rgba(0, 0, 0, 0.2)', // Fondo un poco más oscuro
                     borderRadius: '2rem', // Bordes más redondeados
