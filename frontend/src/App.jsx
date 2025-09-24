@@ -503,7 +503,7 @@ function App() {
         ) : locationData ? (
           <>
             {!isLiveMode && (
-              <div className="absolute top-40 left-1/3 -translate-x-1/2 z-40">
+              <div className="absolute top-40 left-1/5 -translate-x-1/2 z-40">
                 <button
                   onClick={() => {
                     setIsLiveMode(true);
