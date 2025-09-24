@@ -40,18 +40,33 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ErrorMessage = ({ error, onRetry }) => (
+const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
   <div className="glassmorphism-strong mt-40 md:-mt-60 rounded-4xl min-w-[90%] mx-auto p-8 text-center">
     <div className="text-red-400 mb-4">
       <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
       </svg>
-      <h3 className="text-xl font-bold">Error de Conexión</h3>
+      <h3 className="text-xl font-bold">
+        {isNoDataError ? 'No Data Found' : 'Error de Conexión'}
+      </h3>
     </div>
     <p className="text-white/70 mb-4">{error}</p>
-    <button onClick={onRetry} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors">
-      Reintentar
-    </button>
+    
+    {isNoDataError ? (
+      <button 
+        onClick={onReturnToLive}
+        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium mx-auto"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+        </svg>
+        Return to Live
+      </button>
+    ) : (
+      <button onClick={onRetry} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors">
+        Reintentar
+      </button>
+    )}
   </div>
 );
 
@@ -370,6 +385,7 @@ function App() {
   const [locationData, setLocationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null);
   const [path, setPath] = useState([]);
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
@@ -381,6 +397,7 @@ function App() {
       if (!response.ok) {
         if (response.status === 404) {
           setError('No hay datos de ubicación disponibles');
+          setErrorType('connection');
           setLocationData(null);
         } else {
           throw new Error('Error al obtener datos');
@@ -398,9 +415,11 @@ function App() {
           return prevPath;
         });
         setError(null);
+        setErrorType(null);
       }
     } catch (err) {
       setError('Error de conexión con el servidor');
+      setErrorType('connection');
       console.error('Error fetching location:', err);
     } finally {
       setLoading(false);
@@ -412,6 +431,7 @@ function App() {
     setLoading(true);
     setIsLiveMode(false);
     setError(null);
+    setErrorType(null);
 
     try {
       const { startDate, endDate } = searchData;
@@ -440,14 +460,25 @@ function App() {
       } else {
         setPath([]);
         setError('No se encontraron datos de ubicación para el rango seleccionado.');
+        setErrorType('no-data');
         setLocationData(null);
       }
     } catch (err) {
       setError('Error de conexión al buscar el historial.');
+      setErrorType('connection');
       console.error('Error fetching date range:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para manejar el retorno al modo live
+  const handleReturnToLive = () => {
+    setIsLiveMode(true);
+    setPath([]);
+    setError(null);
+    setErrorType(null);
+    setLoading(true);
   };
 
   useEffect(() => {
@@ -490,26 +521,25 @@ function App() {
         {loading ? (
           <LoadingSpinner />
         ) : error ? (
-          <ErrorMessage error={error} onRetry={() => {
+          <ErrorMessage 
+            error={error} 
+            onRetry={() => {
               if (isLiveMode) {
-                  fetchLatestLocation();
+                fetchLatestLocation();
               } else {
-                  // En modo histórico, el error simplemente se muestra, el usuario puede cerrar el modal o volver a live
-                  // Opcionalmente, se podría re-intentar la búsqueda, pero es más simple solo limpiar el error.
-                  setError(null);
+                setError(null);
+                setErrorType(null);
               }
-          }} />
+            }}
+            onReturnToLive={handleReturnToLive}
+            isNoDataError={errorType === 'no-data'}
+          />
         ) : locationData ? (
           <>
             {!isLiveMode && (
               <div className="absolute top-40 left-1/5 -translate-x-1/2 z-40">
                 <button
-                  onClick={() => {
-                    setIsLiveMode(true);
-                    setPath([]);
-                    setError(null);
-                    setLoading(true);
-                  }}
+                  onClick={handleReturnToLive}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
