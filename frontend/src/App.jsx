@@ -241,8 +241,7 @@ const LocationInfo = ({ location, formatTimestamp, onOpenDateSearch }) => (
           <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
         </div>
         <div className="flex flex-col items-end">
-          <span className='text-white/80 font-mono'>{location.timestamp_value}</span>
-          <span className='text-white/50 text-sm'>{formatTimestamp(location.timestamp_value)}</span>
+          <span className='text-white/80 font-mono'>{formatTimestamp(location.timestamp_value)}</span>
         </div>
       </div>
     </div>
