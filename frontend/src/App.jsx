@@ -71,8 +71,7 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
   </div>
 );
 
-
-// --- NUEVO: Hook para detectar el tamaño de la pantalla ---
+// --- Hook para detectar el tamaño de la pantalla ---
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
@@ -87,6 +86,22 @@ const useMediaQuery = (query) => {
   }, [matches, query]);
 
   return matches;
+};
+
+// --- Hook para altura dinámica del viewport ---
+const useViewportHeight = () => {
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return viewportHeight;
 };
 
 // --- MODIFICADO: El modal ahora es responsivo ---
@@ -338,41 +353,64 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
   );
 };
 
+// --- MODIFICADO: LocationInfo con altura adaptativa ---
+const LocationInfo = ({ location, formatTimestamp }) => {
+  const viewportHeight = useViewportHeight();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  // Calcula altura dinámica basada en el viewport
+  const containerHeight = isMobile 
+    ? 'auto' // En móvil usa altura automática
+    : `${Math.max(viewportHeight - 180, 400)}px`; // En desktop usa altura calculada
 
-const LocationInfo = ({ location, formatTimestamp }) => (
-  <div className='flex flex-col col-span-3 md:col-span-1 h-auto md:h-[40rem] mt-30 md:mt-20 p-8 rounded-4xl glassmorphism-strong '>
-    <div className=' rounded-4xl h-auto'>
-      <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
-        <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" /></svg>
-          <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}</span>
-        </div>
-      </div>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
-        <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" /></svg>
-          <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}</span>
-        </div>
-      </div>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
-        <div className='flex flex-row gap-2 group justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" /></svg>
-          <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
-        </div>
-        <div className="flex flex-col items-end">
-          <span className='text-white/80 font-mono'>{formatTimestamp(location.timestamp_value)}</span>
+  return (
+    <div 
+      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-20 p-8 rounded-4xl glassmorphism-strong'
+      style={{ height: containerHeight, minHeight: '300px' }}
+    >
+      <div className='rounded-4xl h-full flex flex-col'>
+        <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8 flex-shrink-0'>
+          Last Location Received
+        </h2>
+        <div className='flex-1 space-y-3 overflow-y-auto'>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}</span>
+            </div>
+          </div>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}</span>
+            </div>
+          </div>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 group justify-left transition-all duration-300 group-hover:scale-105'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{formatTimestamp(location.timestamp_value)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
@@ -438,8 +476,16 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
   return null;
 };
 
+// --- MODIFICADO: LocationMap con altura adaptativa ---
 const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
+  const viewportHeight = useViewportHeight();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Calcula altura dinámica del mapa
+  const mapHeight = isMobile 
+    ? Math.max(viewportHeight - 200, 300) // En móvil, más conservador
+    : Math.max(viewportHeight - 180, 400); // En desktop
 
   const customIcon = new Icon({
     iconUrl: "/map.png",
@@ -447,11 +493,16 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   });
 
   return (
-    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-4 md:mt-20 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
+    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-6 md:mt-20 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
       <MapContainer
         center={position}
         zoom={18}
-        style={{ height: '40rem', width: '100%', borderRadius: '1rem' }}
+        style={{ 
+          height: `${mapHeight}px`, 
+          width: '100%', 
+          borderRadius: '1rem',
+          minHeight: '300px' // Altura mínima de seguridad
+        }}
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
@@ -476,7 +527,6 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
           <GradientPolyline path={path} />
         )}
 
-        {/* --- CÓDIGO NUEVO --- */}
         {/* Dibuja un círculo clickeable para cada punto en el modo Histórico */}
         {!isLiveMode && path.map((point, index) => (
           <CircleMarker
@@ -498,7 +548,6 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
             </Popup>
           </CircleMarker>
         ))}
-        {/* --- FIN DEL CÓDIGO NUEVO --- */}
 
         <MapViewUpdater path={path} isLiveMode={isLiveMode} />
       </MapContainer>
@@ -519,34 +568,7 @@ function App() {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  /*  const MOCK_LOCATION_DATA = {
-      latitude: '10.9878',
-      longitude: '-74.7889',
-      timestamp_value: new Date().getTime().toString(),
-    };
-  
-  
-    const MOCK_PATH_DATA = [
-      [10.9878, -74.7889],
-      [10.9885, -74.7895],
-      [10.9892, -74.7901],
-      [10.9900, -74.7908],
-    ]; */
-
   const fetchLatestLocation = async () => {
-    /* // --- INICIO: CÓDIGO CON MOCK DATA ---
-    // Simula una pequeña demora como si fuera una petición real
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    setLocationData(MOCK_LOCATION_DATA);
-    const newPosition = [
-        parseFloat(MOCK_LOCATION_DATA.latitude),
-        parseFloat(MOCK_LOCATION_DATA.longitude)
-    ];
-    setPath(prevPath => [...prevPath, newPosition]);
-    setLoading(false);
-    // --- FIN: CÓDIGO CON MOCK DATA --- */
-
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
 
@@ -586,17 +608,6 @@ function App() {
     setLoading(true);
     setIsLiveMode(false);
     setError(null);
-
-    /* // --- INICIO: CÓDIGO CON MOCK DATA ---
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simula búsqueda
-    
-    setPath(MOCK_PATH_DATA);
-    setLocationData({
-        latitude: MOCK_PATH_DATA[MOCK_PATH_DATA.length - 1][0],
-        longitude: MOCK_PATH_DATA[MOCK_PATH_DATA.length - 1][1],
-        timestamp_value: new Date().getTime().toString()
-    });
-    setLoading(false); */
 
     try {
       const { startDate, endDate } = searchData;
@@ -664,7 +675,7 @@ function App() {
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
-      {/* UPDATED ANIMATED BACKGROUND */}
+      {/* ANIMATED BACKGROUND */}
       <div className="fixed inset-0 -z-10 animate-gradient-shift">
         <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940]"></div>
         <div className="absolute inset-0 bg-gradient-to-tl from-[#052940] via-[#0a1a2e] to-[#16213e] opacity-70 animate-gradient-overlay"></div>
@@ -752,17 +763,19 @@ function App() {
         )}
       </header>
 
-      <main className='grid grid-cols-3 md:flex-row mb-5 items-center gap-2 max-w-[98%] mx-auto min-h-screen px-4 md:px-0'>
+      {/* MODIFICADO: Main container con altura de viewport completa */}
+      <main className='grid grid-cols-3 md:flex-row items-stretch gap-2 max-w-[98%] mx-auto h-screen pt-20 px-4 md:px-0'>
         {loading ? (
-          <div className="col-span-3">
+          <div className="col-span-3 flex items-center justify-center h-full">
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="col-span-3 flex justify-center items-center">
+          <div className="col-span-3 flex justify-center items-center h-full">
             <ErrorMessage
               error={error}
               onRetry={() => {
-                // ...
+                setLoading(true);
+                fetchLatestLocation();
               }}
               onReturnToLive={handleReturnToLive}
               isNoDataError={errorType === 'no-data'}
@@ -774,11 +787,18 @@ function App() {
               location={locationData}
               formatTimestamp={formatTimestamp}
             />
-            <LocationMap location={locationData} formatTimestamp={formatTimestamp} path={path} isLiveMode={isLiveMode} />
+            <LocationMap 
+              location={locationData} 
+              formatTimestamp={formatTimestamp} 
+              path={path} 
+              isLiveMode={isLiveMode} 
+            />
           </>
         ) : (
-          <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
-            <p className="text-white/70 mb-4">Waiting for location data...</p>
+          <div className="col-span-3 flex items-center justify-center h-full">
+            <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
+              <p className="text-white/70 mb-4">Waiting for location data...</p>
+            </div>
           </div>
         )}
       </main>

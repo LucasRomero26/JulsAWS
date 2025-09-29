@@ -347,6 +347,34 @@ body {
   }
 }
 
+.responsive-map-container {
+  height: calc(100vh - 120px);
+  min-height: 300px;
+  max-height: 800px;
+}
+
+@media (max-width: 768px) {
+  .responsive-map-container {
+    height: calc(100vh - 160px);
+    min-height: 250px;
+  }
+}
+
+.responsive-info-container {
+  height: calc(100vh - 120px);
+  min-height: 300px;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .responsive-info-container {
+    height: auto;
+    min-height: 200px;
+    max-height: 400px;
+  }
+}
+
 /* Respeta preferencias de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   .animate-gradient-shift,
