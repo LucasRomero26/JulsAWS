@@ -200,7 +200,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- ACTUALIZADO: Componente de información de usuarios para móvil ---
+// --- ACTUALIZADO: Componente de información de usuarios para móvil con overflow fixed ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   if (!users || users.length === 0) return null;
 
@@ -226,13 +226,13 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                   : 'bg-white/5 hover:bg-white/10'
               }`}
             >
-              {/* Header del usuario */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                  <h3 className="font-semibold text-white">{user.name}</h3>
+              {/* Header del usuario con overflow corregido */}
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                  <h3 className="font-semibold text-white truncate">{user.name}</h3>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
+                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
                   isActive 
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                     : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -243,21 +243,21 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
               {/* Información de ubicación */}
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-white/70">Device ID:</span>
-                  <span className="text-white font-mono text-xs">{user.deviceId || 'N/A'}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-white/70 flex-shrink-0">Device ID:</span>
+                  <span className="text-white font-mono text-xs truncate">{user.deviceId || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Latitude:</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-white/70 flex-shrink-0">Latitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Longitude:</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-white/70 flex-shrink-0">Longitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-white/70">Last Update:</span>
-                  <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
+                <div className="flex justify-between gap-2">
+                  <span className="text-white/70 flex-shrink-0">Last Update:</span>
+                  <span className="text-white/90 text-xs truncate">{formatTimestamp(user.lastUpdate)}</span>
                 </div>
               </div>
             </div>
@@ -275,7 +275,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// --- ACTUALIZADO: Sidebar para desktop ---
+// --- ACTUALIZADO: Sidebar para desktop con overflow fixed ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   return (
     <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
@@ -301,13 +301,13 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                     : 'glassmorphism hover:bg-white/10'
                 }`}
               >
-                {/* Header del usuario */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                    <h3 className="font-semibold text-white">{user.name}</h3>
+                {/* Header del usuario con overflow corregido */}
+                <div className="flex items-center justify-between mb-3 gap-2">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <h3 className="font-semibold text-white truncate">{user.name}</h3>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
                     isActive 
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
@@ -318,25 +318,25 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
 
                 {/* Información de ubicación */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Device ID:</span>
-                    <span className="text-white font-mono text-xs">{user.deviceId || 'N/A'}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Device ID:</span>
+                    <span className="text-white font-mono text-xs truncate">{user.deviceId || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Type:</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Type:</span>
                     <span className="text-white text-xs">{user.deviceType || 'mobile'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Latitude:</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Latitude:</span>
                     <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Longitude:</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Longitude:</span>
                     <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Last Update:</span>
-                    <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Last Update:</span>
+                    <span className="text-white/90 text-xs truncate">{formatTimestamp(user.lastUpdate)}</span>
                   </div>
                 </div>
               </div>
