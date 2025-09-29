@@ -23,7 +23,7 @@ const config = {
   POLLING_INTERVAL: import.meta.env.VITE_POLLING_INTERVAL || 5000,
   JAWG_ACCESS_TOKEN: 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS',
   JAWG_MAP_ID: 'jawg-dark',
-  INACTIVE_TIMEOUT: 20000 // 20 segundos en milisegundos
+  INACTIVE_TIMEOUT: 60000 // AUMENTADO: 60 segundos en milisegundos para dar más margen
 };
 
 // Arreglo para el ícono por defecto de Leaflet en Vite
@@ -77,6 +77,58 @@ const formatTimestamp = (timestamp) => {
   } catch (error) {
     console.error('Error formatting timestamp:', error, timestamp);
     return 'Invalid Date';
+  }
+};
+
+// --- FUNCIÓN MEJORADA PARA VERIFICAR SI UN USUARIO ESTÁ ACTIVO ---
+const isUserActive = (lastUpdate) => {
+  try {
+    const now = new Date();
+    let lastUpdateTime;
+    
+    // Si el timestamp es null, undefined, o una cadena vacía
+    if (!lastUpdate) {
+      console.warn('No lastUpdate timestamp provided');
+      return false;
+    }
+    
+    // Convertir a string para verificar el formato
+    const timestampStr = String(lastUpdate);
+    
+    // Si es un timestamp en milisegundos (13 dígitos)
+    if (/^\d{13}$/.test(timestampStr)) {
+      lastUpdateTime = new Date(parseInt(timestampStr));
+    }
+    // Si es un timestamp en segundos (10 dígitos)
+    else if (/^\d{10}$/.test(timestampStr)) {
+      lastUpdateTime = new Date(parseInt(timestampStr) * 1000);
+    }
+    // Si es una fecha ISO string o cualquier otro formato que Date pueda parsear
+    else {
+      lastUpdateTime = new Date(lastUpdate);
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(lastUpdateTime.getTime())) {
+      console.warn('Invalid lastUpdate timestamp:', lastUpdate);
+      return false;
+    }
+    
+    const timeDifference = now.getTime() - lastUpdateTime.getTime();
+    
+    // Log para debugging
+    console.log('Activity check:', {
+      now: now.toISOString(),
+      lastUpdate: lastUpdateTime.toISOString(),
+      timeDifference: timeDifference,
+      inactiveTimeout: config.INACTIVE_TIMEOUT,
+      isActive: timeDifference <= config.INACTIVE_TIMEOUT
+    });
+    
+    return timeDifference <= config.INACTIVE_TIMEOUT;
+  } catch (error) {
+    console.error('Error checking user activity:', error, lastUpdate);
+    return false;
   }
 };
 
@@ -150,12 +202,6 @@ const useViewportHeight = () => {
 
 // --- ACTUALIZADO: Componente de información de usuarios para móvil ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
-  const isUserActive = (lastUpdate) => {
-    const now = new Date();
-    const lastUpdateTime = new Date(lastUpdate);
-    return (now - lastUpdateTime) <= config.INACTIVE_TIMEOUT;
-  };
-
   if (!users || users.length === 0) return null;
 
   return (
@@ -222,7 +268,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-white/50 text-center">
-          <p>Devices go inactive after 20 seconds</p>
+          <p>Devices go inactive after 60 seconds</p>
         </div>
       </div>
     </div>
@@ -231,12 +277,6 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
 // --- ACTUALIZADO: Sidebar para desktop ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
-  const isUserActive = (lastUpdate) => {
-    const now = new Date();
-    const lastUpdateTime = new Date(lastUpdate);
-    return (now - lastUpdateTime) <= config.INACTIVE_TIMEOUT;
-  };
-
   return (
     <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
       <div className="p-6 h-full flex flex-col">
@@ -307,7 +347,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
         {/* Footer */}
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="text-xs text-white/50 text-center">
-            <p>Devices go inactive after 20 seconds</p>
+            <p>Devices go inactive after 60 seconds</p>
             <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL/1000}s</p>
           </div>
         </div>
