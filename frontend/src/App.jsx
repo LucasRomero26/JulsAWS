@@ -34,6 +34,52 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+// --- FUNCIÓN CORREGIDA PARA FORMATEAR TIMESTAMP ---
+const formatTimestamp = (timestamp) => {
+  try {
+    let date;
+    
+    // Si el timestamp es null, undefined, o una cadena vacía
+    if (!timestamp) {
+      return 'Invalid Date';
+    }
+    
+    // Convertir a string para verificar el formato
+    const timestampStr = String(timestamp);
+    
+    // Si es un timestamp en milisegundos (13 dígitos)
+    if (/^\d{13}$/.test(timestampStr)) {
+      date = new Date(parseInt(timestampStr));
+    }
+    // Si es un timestamp en segundos (10 dígitos)
+    else if (/^\d{10}$/.test(timestampStr)) {
+      date = new Date(parseInt(timestampStr) * 1000);
+    }
+    // Si es una fecha ISO string o cualquier otro formato que Date pueda parsear
+    else {
+      date = new Date(timestamp);
+    }
+    
+    // Verificar si la fecha es válida
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid timestamp:', timestamp);
+      return 'Invalid Date';
+    }
+    
+    return date.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  } catch (error) {
+    console.error('Error formatting timestamp:', error, timestamp);
+    return 'Invalid Date';
+  }
+};
+
 // --- Componentes de UI ---
 
 const LoadingSpinner = () => (
@@ -104,17 +150,6 @@ const useViewportHeight = () => {
 
 // --- MODIFICADO: Componente de información de usuarios para móvil ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
   const isUserActive = (lastUpdate) => {
     const now = new Date();
     const lastUpdateTime = new Date(lastUpdate);
@@ -192,17 +227,6 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
 // --- MODIFICADO: Sidebar corregido para evitar superposición ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
-
   const isUserActive = (lastUpdate) => {
     const now = new Date();
     const lastUpdateTime = new Date(lastUpdate);
@@ -593,7 +617,7 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
 };
 
 // --- MODIFICADO: LocationMap ahora ocupa todo el ancho disponible ---
-const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
+const LocationMap = ({ location, path, isLiveMode }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -835,14 +859,6 @@ function App() {
     }
   }, [isLiveMode]);
 
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(parseInt(timestamp));
-    return date.toLocaleString('es-ES', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-  };
-
   return (
     <div className="min-h-screen transition-all duration-500 dark">
       {/* ANIMATED BACKGROUND */}
@@ -967,7 +983,6 @@ function App() {
           <>
             <LocationMap 
               location={locationData} 
-              formatTimestamp={formatTimestamp} 
               path={path} 
               isLiveMode={isLiveMode} 
             />
