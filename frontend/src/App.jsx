@@ -365,7 +365,7 @@ const LocationInfo = ({ location, formatTimestamp }) => {
 
   return (
     <div 
-      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-20 p-8 rounded-4xl glassmorphism-strong'
+      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-6 p-8 rounded-4xl glassmorphism-strong'
       style={{ height: containerHeight, minHeight: '300px' }}
     >
       <div className='rounded-4xl h-full flex flex-col'>
@@ -493,7 +493,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   });
 
   return (
-    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-6 md:mt-20 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
+    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-6 md:mt-6 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
       <MapContainer
         center={position}
         zoom={18}
