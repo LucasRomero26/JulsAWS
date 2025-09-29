@@ -735,8 +735,8 @@ const GradientPolyline = ({ path, deviceColor }) => {
   return <>{segments}</>;
 };
 
-// --- Componente para actualizar la vista del mapa ---
-const MapViewUpdater = ({ userPaths, isLiveMode, users }) => {
+// --- NUEVO: Componente mejorado para actualizar la vista del mapa ---
+const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -745,7 +745,20 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users }) => {
     try {
       if (isLiveMode) {
         const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
+        const previousActiveUsers = previousUsers ? previousUsers.filter(user => isUserActive(user.lastUpdate)) : [];
         
+        // Solo actualizar si hay cambios significativos en los usuarios activos
+        const activeUsersChanged = activeUsers.length !== previousActiveUsers.length ||
+          activeUsers.some((user, index) => {
+            const prevUser = previousActiveUsers[index];
+            if (!prevUser) return true;
+            return user.id !== prevUser.id || 
+                   Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
+                   Math.abs(parseFloat(user.longitude) - parseFloat(prevUser.longitude)) > 0.0001;
+          });
+
+        if (!activeUsersChanged) return;
+
         if (activeUsers.length > 1) {
           // Múltiples dispositivos activos: ajustar bounds para mostrar todos
           const allPositions = activeUsers.map(user => [
@@ -755,40 +768,60 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users }) => {
           
           if (allPositions.length > 0) {
             const bounds = L.latLngBounds(allPositions);
-            map.fitBounds(bounds, { 
-              padding: [50, 50], 
-              animate: true, 
-              duration: 1.5,
-              maxZoom: 16
-            });
+            
+            // Solo ajustar bounds si hay una diferencia significativa
+            const currentBounds = map.getBounds();
+            const needsUpdate = !currentBounds.contains(bounds) || 
+                              !bounds.contains(currentBounds);
+            
+            if (needsUpdate) {
+              map.fitBounds(bounds, { 
+                padding: [50, 50], 
+                animate: true, 
+                duration: 1.0,
+                maxZoom: 16
+              });
+            }
           }
         } else if (activeUsers.length === 1) {
-          // Un solo dispositivo activo: centrar en él
+          // Un solo dispositivo activo: solo centrar manteniendo el zoom
           const user = activeUsers[0];
-          const position = [parseFloat(user.latitude), parseFloat(user.longitude)];
-          map.flyTo(position, 18, {
-            duration: 1.5,
-            easeLinearity: 0.25
-          });
+          const newPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
+          const currentCenter = map.getCenter();
+          
+          // Solo centrar si hay una diferencia significativa (más de ~10 metros)
+          const distance = currentCenter.distanceTo(L.latLng(newPosition));
+          if (distance > 10) {
+            // Usar setView en lugar de flyTo para mantener el zoom actual
+            const currentZoom = map.getZoom();
+            map.setView(newPosition, currentZoom, {
+              animate: true,
+              duration: 0.5
+            });
+          }
         }
       } else {
         // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
         const allPaths = Object.values(userPaths).flat();
         if (allPaths && allPaths.length > 1) {
           const bounds = L.latLngBounds(allPaths);
-          map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
+          map.fitBounds(bounds, { 
+            padding: [20, 20], 
+            animate: true, 
+            duration: 1.0 
+          });
         }
       }
     } catch (error) {
       console.error('Error updating map view:', error);
     }
-  }, [userPaths, isLiveMode, users, map]);
+  }, [users, userPaths, isLiveMode, map, previousUsers]);
 
   return null;
 };
 
-// --- Mapa principal con soporte multi-dispositivo ---
-const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
+// --- Mapa principal con soporte multi-dispositivo MEJORADO ---
+const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -801,23 +834,15 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
     iconSize: [50, 50]
   });
 
-  // Obtener la posición central
-  const getCenterPosition = () => {
+  // Obtener la posición central - solo al inicializar, no actualizar constantemente
+  const getInitialCenterPosition = () => {
     if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
-    
-    if (isLiveMode) {
-      const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
-      if (activeUsers.length > 0) {
-        const firstActive = activeUsers[0];
-        return [parseFloat(firstActive.latitude), parseFloat(firstActive.longitude)];
-      }
-    }
     
     const firstUser = users[0];
     return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
 
-  const centerPosition = getCenterPosition();
+  const centerPosition = getInitialCenterPosition();
 
   // Validar que las coordenadas sean válidas
   if (!centerPosition || isNaN(centerPosition[0]) || isNaN(centerPosition[1])) {
@@ -833,6 +858,9 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
     );
   }
 
+  // Crear una key estable que no cambie con cada actualización
+  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}`;
+
   return (
     <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
       <MapContainer
@@ -844,7 +872,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
           borderRadius: '1rem',
           minHeight: '300px'
         }}
-        key={`${centerPosition[0]}-${centerPosition[1]}`} // Force re-render on position change
+        key={mapKey} // Key estable para evitar recreación del mapa
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
@@ -937,13 +965,18 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
           );
         })}
 
-        <MapViewUpdater userPaths={userPaths} isLiveMode={isLiveMode} users={users} />
+        <MapViewUpdater 
+          userPaths={userPaths} 
+          isLiveMode={isLiveMode} 
+          users={users}
+          previousUsers={previousUsers}
+        />
       </MapContainer>
     </div>
   );
 };
 
-// --- Componente Principal ---
+// --- Componente Principal MEJORADO ---
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -955,11 +988,12 @@ function App() {
 
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
+  const [previousUsers, setPreviousUsers] = useState(null); // NUEVO: Estado anterior
   const [selectedUserId, setSelectedUserId] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Función para obtener datos de múltiples dispositivos
+  // Función para obtener datos de múltiples dispositivos MEJORADA
   const fetchUsersData = async () => {
     try {
       setError(null);
@@ -985,12 +1019,15 @@ function App() {
           lastUpdate: device.timestamp_value || device.created_at
         }));
         
+        // Guardar estado anterior antes de actualizar
+        setPreviousUsers(users);
         setUsers(usersArray);
         
-        // Actualizar paths en modo live
+        // Actualizar paths en modo live de forma más eficiente
         if (isLiveMode) {
           setUserPaths(prevPaths => {
             const newPaths = { ...prevPaths };
+            let hasChanges = false;
             
             usersArray.forEach(user => {
               // Validar coordenadas antes de agregar
@@ -1001,20 +1038,23 @@ function App() {
                 const userPosition = [lat, lng];
                 const currentPath = newPaths[user.id] || [];
                 
-                // Solo agregar si es una posición diferente
+                // Solo agregar si es una posición significativamente diferente
                 const lastPoint = currentPath[currentPath.length - 1];
-                if (!lastPoint || lastPoint[0] !== userPosition[0] || lastPoint[1] !== userPosition[1]) {
+                if (!lastPoint || 
+                    Math.abs(lastPoint[0] - userPosition[0]) > 0.00001 || 
+                    Math.abs(lastPoint[1] - userPosition[1]) > 0.00001) {
                   newPaths[user.id] = [...currentPath, userPosition];
+                  hasChanges = true;
                   
                   // Limitar el historial para evitar arrays muy grandes
-                  if (newPaths[user.id].length > 100) {
-                    newPaths[user.id] = newPaths[user.id].slice(-50);
+                  if (newPaths[user.id].length > 50) {
+                    newPaths[user.id] = newPaths[user.id].slice(-25);
                   }
                 }
               }
             });
             
-            return newPaths;
+            return hasChanges ? newPaths : prevPaths;
           });
         }
         
@@ -1034,7 +1074,7 @@ function App() {
     }
   };
 
-  // Función de fallback
+  // Función de fallback MEJORADA
   const fetchLatestLocationFallback = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
@@ -1054,6 +1094,7 @@ function App() {
         lastUpdate: data.timestamp_value
       };
       
+      setPreviousUsers(users);
       setUsers([userData]);
       
       if (!selectedUserId) {
@@ -1063,7 +1104,10 @@ function App() {
         
         if (!isNaN(lat) && !isNaN(lng)) {
           const userPosition = [lat, lng];
-          setUserPaths({ [userData.id]: [userPosition] });
+          setUserPaths(prevPaths => ({
+            ...prevPaths,
+            [userData.id]: [...(prevPaths[userData.id] || []), userPosition]
+          }));
         }
       }
       
@@ -1145,17 +1189,18 @@ function App() {
     setErrorType(null);
     setLoading(true);
     setIsMobileMenuOpen(false);
+    setPreviousUsers(null); // Resetear estado anterior
   };
 
-  // Effect principal para polling
+  // Effect principal para polling MEJORADO
   useEffect(() => {
     if (isLiveMode && !isDateSearchModalOpen) {
       // Fetch inicial
       fetchUsersData();
       
-      // Polling para actualizaciones en vivo
+      // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
-        if (isLiveMode && !isDateSearchModalOpen) {
+        if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
         }
       }, config.POLLING_INTERVAL);
@@ -1293,6 +1338,7 @@ function App() {
               userPaths={userPaths} 
               isLiveMode={isLiveMode}
               selectedUserId={selectedUserId}
+              previousUsers={previousUsers}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && (
