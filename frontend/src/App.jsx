@@ -102,8 +102,96 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- Componente Sidebar de Usuarios ---
-const UsersSidebar = ({ users, isVisible, onToggle, onUserSelect, selectedUserId }) => {
+// --- MODIFICADO: Componente de información de usuarios para móvil ---
+const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
+  const formatTimestamp = (timestamp) => {
+    return new Date(timestamp).toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const isUserActive = (lastUpdate) => {
+    const now = new Date();
+    const lastUpdateTime = new Date(lastUpdate);
+    return (now - lastUpdateTime) <= config.INACTIVE_TIMEOUT;
+  };
+
+  if (!users || users.length === 0) return null;
+
+  return (
+    <div className="glassmorphism-strong rounded-4xl w-full mt-6 p-6">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-white">Dispositivos GPS</h2>
+        <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className="space-y-3">
+        {users.map((user) => {
+          const isActive = isUserActive(user.lastUpdate);
+          const isSelected = selectedUserId === user.id;
+          
+          return (
+            <div
+              key={user.id}
+              onClick={() => onUserSelect(user.id)}
+              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                isSelected 
+                  ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
+                  : 'bg-white/5 hover:bg-white/10'
+              }`}
+            >
+              {/* Header del usuario */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                  <h3 className="font-semibold text-white">{user.name}</h3>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  isActive 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                }`}>
+                  {isActive ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+
+              {/* Información de ubicación */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-white/70">Latitud:</span>
+                  <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Longitud:</span>
+                  <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/70">Última actualización:</span>
+                  <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="text-xs text-white/50 text-center">
+          <p>Dispositivos inactivos después de 20 segundos</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MODIFICADO: Sidebar solo para desktop ---
+const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleString('es-ES', {
       day: '2-digit',
@@ -122,101 +210,72 @@ const UsersSidebar = ({ users, isVisible, onToggle, onUserSelect, selectedUserId
   };
 
   return (
-    <>
-      {/* Sidebar */}
-      <div className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 bg-black/20 backdrop-blur-xl border-r border-white/10 z-40 transform transition-transform duration-300 ${
-        isVisible ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="p-6 h-full flex flex-col">
-          {/* Header con botón de cierre */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Dispositivos GPS</h2>
-              <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
-            </div>
-            {/* Botón X para cerrar */}
-            <button
-              onClick={onToggle}
-              className="p-2 glassmorphism-strong rounded-lg transition-all duration-300 hover:scale-105 hover:bg-red-500/20"
-            >
-              <svg 
-                className="w-5 h-5 text-white hover:text-red-400 transition-colors" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+    <div className="fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 glassmorphism-strong2 border-r border-white/10 z-40">
+      <div className="p-6 h-full flex flex-col">
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white">Dispositivos GPS</h2>
+          <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-3">
+          {users.map((user) => {
+            const isActive = isUserActive(user.lastUpdate);
+            const isSelected = selectedUserId === user.id;
+            
+            return (
+              <div
+                key={user.id}
+                onClick={() => onUserSelect(user.id)}
+                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                  isSelected 
+                    ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
+                    : 'glassmorphism hover:bg-white/10'
+                }`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-3">
-            {users.map((user) => {
-              const isActive = isUserActive(user.lastUpdate);
-              const isSelected = selectedUserId === user.id;
-              
-              return (
-                <div
-                  key={user.id}
-                  onClick={() => onUserSelect(user.id)}
-                  className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
-                    isSelected 
-                      ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
-                      : 'glassmorphism hover:bg-white/10'
-                  }`}
-                >
-                  {/* Header del usuario */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                      <h3 className="font-semibold text-white">{user.name}</h3>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      isActive 
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
-                      {isActive ? 'Activo' : 'Inactivo'}
-                    </span>
+                {/* Header del usuario */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <h3 className="font-semibold text-white">{user.name}</h3>
                   </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    isActive 
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}>
+                    {isActive ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
 
-                  {/* Información de ubicación */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Latitud:</span>
-                      <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Longitud:</span>
-                      <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Última actualización:</span>
-                      <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
-                    </div>
+                {/* Información de ubicación */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Latitud:</span>
+                    <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Longitud:</span>
+                    <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Última actualización:</span>
+                    <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Footer */}
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="text-xs text-white/50 text-center">
-              <p>Dispositivos inactivos después de 20 segundos</p>
-            </div>
+        {/* Footer */}
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="text-xs text-white/50 text-center">
+            <p>Dispositivos inactivos después de 20 segundos</p>
           </div>
         </div>
       </div>
-
-      {/* Overlay cuando el sidebar está visible en móvil */}
-      {isVisible && (
-        <div 
-          className="fixed inset-0 bg-black/20 z-30 lg:hidden"
-          onClick={onToggle}
-        />
-      )}
-    </>
+    </div>
   );
 };
 
@@ -533,7 +592,7 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
   return null;
 };
 
-// --- MODIFICADO: LocationMap ahora ocupa todo el ancho ---
+// --- MODIFICADO: LocationMap ahora ocupa todo el ancho disponible ---
 const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
   const viewportHeight = useViewportHeight();
@@ -550,7 +609,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   });
 
   return (
-    <div className='glassmorphism-strong w-full mt-6 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4'>
+    <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
       <MapContainer
         center={position}
         zoom={18}
@@ -623,10 +682,9 @@ function App() {
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Nuevos estados para el sidebar de usuarios
+  // Estados para el manejo de usuarios
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -799,25 +857,10 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
       </div>
 
+      {/* MODIFICADO: Header con color sólido */}
       <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong2 py-4 px-6">
         <div className="max-w-[100%] mx-auto flex items-center justify-between">
           <div className="flex items-center">
-            {/* Botón para abrir sidebar - solo visible cuando está cerrado */}
-            {!isSidebarVisible && (
-              <button
-                onClick={() => setIsSidebarVisible(true)}
-                className="mr-3 p-2 glassmorphism-strong2 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-cyan-500/20"
-              >
-                <svg 
-                  className="w-6 h-6 text-white hover:text-cyan-400 transition-colors" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
-                </svg>
-              </button>
-            )}
             <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
             <h1 className="py-1 px-3 text-center font-bold text-white/90 text-2xl md:text-3xl">
               {config.APP_NAME}
@@ -891,18 +934,18 @@ function App() {
         )}
       </header>
 
-      {/* Sidebar de Usuarios */}
-      <UsersSidebar
-        users={users}
-        isVisible={isSidebarVisible}
-        onToggle={() => setIsSidebarVisible(!isSidebarVisible)}
-        onUserSelect={handleUserSelect}
-        selectedUserId={selectedUserId}
-      />
+      {/* MODIFICADO: Sidebar solo en desktop */}
+      {!isMobile && (
+        <DesktopUsersSidebar
+          users={users}
+          onUserSelect={handleUserSelect}
+          selectedUserId={selectedUserId}
+        />
+      )}
 
-      {/* MODIFICADO: Main container simplificado - solo el mapa */}
+      {/* MODIFICADO: Main container con margen para el sidebar en desktop */}
       <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-5rem)] pt-20 px-4 md:px-0 transition-all duration-300 ${
-        isSidebarVisible ? 'md:ml-96 md:mr-8' : ''
+        !isMobile ? 'md:ml-96 md:mr-8' : ''
       }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -921,12 +964,22 @@ function App() {
             />
           </div>
         ) : locationData ? (
-          <LocationMap 
-            location={locationData} 
-            formatTimestamp={formatTimestamp} 
-            path={path} 
-            isLiveMode={isLiveMode} 
-          />
+          <>
+            <LocationMap 
+              location={locationData} 
+              formatTimestamp={formatTimestamp} 
+              path={path} 
+              isLiveMode={isLiveMode} 
+            />
+            {/* MODIFICADO: Información de usuarios solo en móvil */}
+            {isMobile && (
+              <MobileUsersInfo
+                users={users}
+                selectedUserId={selectedUserId}
+                onUserSelect={handleUserSelect}
+              />
+            )}
+          </>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
