@@ -190,7 +190,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// --- MODIFICADO: Sidebar solo para desktop ---
+// --- MODIFICADO: Sidebar corregido para evitar superposición ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const formatTimestamp = (timestamp) => {
     return new Date(timestamp).toLocaleString('es-ES', {
@@ -210,7 +210,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   };
 
   return (
-    <div className="fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
+    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
       <div className="p-6 h-full flex flex-col">
         {/* Header */}
         <div className="mb-6">
@@ -218,7 +218,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
           <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-3">
+        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
           {users.map((user) => {
             const isActive = isUserActive(user.lastUpdate);
             const isSelected = selectedUserId === user.id;
@@ -857,9 +857,9 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
       </div>
 
-      {/* MODIFICADO: Header con color sólido */}
-      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
-        <div className="max-w-[100%] mx-auto flex items-center justify-between">
+      {/* MODIFICADO: Header con altura aumentada */}
+      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
+        <div className="max-w-[100%] mx-auto flex items-center justify-between h-full">
           <div className="flex items-center">
             <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
             <h1 className="py-1 px-3 text-center font-bold text-white/90 text-2xl md:text-3xl">
@@ -934,7 +934,7 @@ function App() {
         )}
       </header>
 
-      {/* MODIFICADO: Sidebar solo en desktop */}
+      {/* MODIFICADO: Sidebar solo en desktop con top corregido */}
       {!isMobile && (
         <DesktopUsersSidebar
           users={users}
@@ -943,8 +943,8 @@ function App() {
         />
       )}
 
-      {/* MODIFICADO: Main container con margen para el sidebar en desktop */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-5rem)] pt-20 px-4 md:px-0 transition-all duration-300 ${
+      {/* MODIFICADO: Main container con padding-top aumentado */}
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${
         !isMobile ? 'md:ml-96 md:mr-8' : ''
       }`}>
         {loading ? (
