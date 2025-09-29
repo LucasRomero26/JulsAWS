@@ -126,8 +126,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   return (
     <div className="glassmorphism-strong rounded-4xl w-full mt-6 p-6">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-white">Dispositivos GPS</h2>
-        <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
+        <h2 className="text-xl font-bold text-white">Users</h2>
+        <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="space-y-3">
@@ -163,15 +163,15 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
               {/* Información de ubicación */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-white/70">Latitud:</span>
+                  <span className="text-white/70">Latitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/70">Longitud:</span>
+                  <span className="text-white/70">Longitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/70">Última actualización:</span>
+                  <span className="text-white/70">Time:</span>
                   <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
                 </div>
               </div>
@@ -183,7 +183,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-white/50 text-center">
-          <p>Dispositivos inactivos después de 20 segundos</p>
+          <p>Inactive devices after 20 seconds</p>
         </div>
       </div>
     </div>
@@ -251,15 +251,15 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 {/* Información de ubicación */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/70">Latitud:</span>
+                    <span className="text-white/70">Latitude:</span>
                     <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/70">Longitud:</span>
+                    <span className="text-white/70">Longitude:</span>
                     <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/70">Última actualización:</span>
+                    <span className="text-white/70">Time:</span>
                     <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
         {/* Footer */}
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="text-xs text-white/50 text-center">
-            <p>Dispositivos inactivos después de 20 segundos</p>
+            <p>Inactive devices after 20 seconds</p>
           </div>
         </div>
       </div>
@@ -628,8 +628,8 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
         <Marker position={position} icon={customIcon}>
           <Popup>
             <div className="text-center">
-              <strong>Ubicación actual</strong><br />
-              <small>Recibida: {formatTimestamp(location.timestamp_value)}</small><br />
+              <strong>Current Location</strong><br />
+              <small>Received: {formatTimestamp(location.timestamp_value)}</small><br />
               <small>Lat: {parseFloat(location.latitude).toFixed(6)}</small><br />
               <small>Lng: {parseFloat(location.longitude).toFixed(6)}</small>
             </div>
@@ -657,7 +657,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
           >
             <Popup>
               <div className="text-center">
-                <strong>Punto Histórico #{index + 1}</strong><br />
+                <strong>Historical Point #{index + 1}</strong><br />
                 <small>Lat: {point[0].toFixed(6)}</small><br />
                 <small>Lng: {point[1].toFixed(6)}</small>
               </div>
@@ -699,7 +699,7 @@ function App() {
         const data = await response.json();
         const userData = {
           id: 'vehicle_001',
-          name: 'Vehículo Principal',
+          name: 'First Vehicle',
           latitude: data.latitude,
           longitude: data.longitude,
           lastUpdate: data.timestamp_value
