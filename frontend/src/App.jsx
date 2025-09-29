@@ -340,7 +340,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
 
 
 const LocationInfo = ({ location, formatTimestamp }) => (
-  <div className='flex flex-col col-span-3 md:col-span-1 h-auto md:h-[40rem] mt-30 md:mt-20 p-8 rounded-4xl glassmorphism-strong '>
+  <div className='flex flex-col col-span-3 md:col-span-1 h-auto md:h-[35rem] mt-30 md:mt-20 p-8 rounded-4xl glassmorphism-strong '>
     <div className=' rounded-4xl h-auto'>
       <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
       <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
@@ -451,7 +451,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
       <MapContainer
         center={position}
         zoom={18}
-        style={{ height: '40rem', width: '100%', borderRadius: '1rem' }}
+        style={{ height: '35rem', width: '100%', borderRadius: '1rem' }}
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
@@ -752,7 +752,7 @@ function App() {
         )}
       </header>
 
-      <main className='grid grid-cols-3 md:flex-row mb-4 mt-2 items-center gap-2 max-w-[98%] mx-auto min-h-screen px-4 md:px-0'>
+      <main className='grid grid-cols-3 md:flex-row mb-4 mt-6items-center gap-2 max-w-[98%] mx-auto min-h-screen px-4 md:px-0'>
         {loading ? (
           <div className="col-span-3">
             <LoadingSpinner />
