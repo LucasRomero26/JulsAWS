@@ -9,6 +9,160 @@ body {
   scroll-behavior: smooth;
 }
 
+
+/* Animaciones para el fondo degradado */
+@keyframes gradient-shift {
+  0% {
+    background: linear-gradient(135deg, #011640 0%, #163e57 50%, #052940 100%);
+  }
+  25% {
+    background: linear-gradient(135deg, #052940 0%, #011640 50%, #163e57 100%);
+  }
+  50% {
+    background: linear-gradient(135deg, #163e57 0%, #052940 50%, #011640 100%);
+  }
+  75% {
+    background: linear-gradient(135deg, #011640 0%, #052940 50%, #163e57 100%);
+  }
+  100% {
+    background: linear-gradient(135deg, #011640 0%, #163e57 50%, #052940 100%);
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background: linear-gradient(45deg, #0a192f70 0%, transparent 50%, #163e5750 100%);
+  }
+  50% {
+    background: linear-gradient(45deg, transparent 0%, #163e5750 50%, #0a192f70 100%);
+  }
+  100% {
+    background: linear-gradient(45deg, #0a192f70 0%, transparent 50%, #163e5750 100%);
+  }
+}
+
+@keyframes gradient-pulse {
+  0% {
+    background: linear-gradient(225deg, transparent 0%, #05294040 50%, #01164060 100%);
+    opacity: 0.6;
+  }
+  50% {
+    background: linear-gradient(225deg, #01164060 0%, transparent 50%, #05294040 100%);
+    opacity: 0.8;
+  }
+  100% {
+    background: linear-gradient(225deg, transparent 0%, #05294040 50%, #01164060 100%);
+    opacity: 0.6;
+  }
+}
+
+/* Animaciones para las partículas flotantes */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(-25px, 25px) rotate(120deg);
+  }
+  66% {
+    transform: translate(15px, -15px) rotate(240deg);
+  }
+}
+
+@keyframes float-diagonal {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) translate(40px, -40px) scale(1.1);
+  }
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  25% {
+    transform: translate(20px, -15px) scale(1.1);
+  }
+  50% {
+    transform: translate(-15px, -25px) scale(0.9);
+  }
+  75% {
+    transform: translate(-25px, 15px) scale(1.05);
+  }
+}
+
+@keyframes float-bounce {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+  }
+}
+
+/* Clases de animación */
+.animate-gradient-shift {
+  animation: gradient-shift 15s ease-in-out infinite;
+}
+
+.animate-gradient-flow {
+  animation: gradient-flow 12s ease-in-out infinite;
+}
+
+.animate-gradient-pulse {
+  animation: gradient-pulse 8s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 18s ease-in-out infinite reverse;
+}
+
+.animate-float-diagonal {
+  animation: float-diagonal 16s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 10s ease-in-out infinite;
+}
+
+.animate-float-bounce {
+  animation: float-bounce 14s ease-in-out infinite;
+}
+
+/* Animación de fade para el menú móvil */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 .glassmorphism {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);

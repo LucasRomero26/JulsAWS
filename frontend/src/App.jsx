@@ -42,7 +42,7 @@ const LoadingSpinner = () => (
 );
 
 const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
-  <div className="glassmorphism-strong mt-40 md:-mt-60 rounded-4xl min-w-[90%] mx-auto p-8 text-center">
+  <div className="glassmorphism-strong rounded-4xl min-w-[90%] md:min-w-0 md:max-w-md mx-auto p-8 text-center">
     <div className="text-red-400 mb-4">
       <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -456,7 +456,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
         />
-        
+
         {/* Marcador final (el del ícono grande) */}
         <Marker position={position} icon={customIcon}>
           <Popup>
@@ -483,10 +483,10 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
             key={index}
             center={point}
             radius={6}
-            pathOptions={{ 
+            pathOptions={{
               color: '#0092b8',
               fillColor: '#00b8e0',
-              fillOpacity: 0.6 
+              fillOpacity: 0.6
             }}
           >
             <Popup>
@@ -519,21 +519,21 @@ function App() {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-/*  const MOCK_LOCATION_DATA = {
-    latitude: '10.9878',
-    longitude: '-74.7889',
-    timestamp_value: new Date().getTime().toString(),
-  };
+  /*  const MOCK_LOCATION_DATA = {
+      latitude: '10.9878',
+      longitude: '-74.7889',
+      timestamp_value: new Date().getTime().toString(),
+    };
+  
+  
+    const MOCK_PATH_DATA = [
+      [10.9878, -74.7889],
+      [10.9885, -74.7895],
+      [10.9892, -74.7901],
+      [10.9900, -74.7908],
+    ]; */
 
-
-  const MOCK_PATH_DATA = [
-    [10.9878, -74.7889],
-    [10.9885, -74.7895],
-    [10.9892, -74.7901],
-    [10.9900, -74.7908],
-  ]; */
-
-const fetchLatestLocation = async () => {
+  const fetchLatestLocation = async () => {
     /* // --- INICIO: CÓDIGO CON MOCK DATA ---
     // Simula una pequeña demora como si fuera una petición real
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -582,7 +582,7 @@ const fetchLatestLocation = async () => {
     }
   };
 
-const handleDateSearch = async (searchData) => {
+  const handleDateSearch = async (searchData) => {
     setLoading(true);
     setIsLiveMode(false);
     setError(null);
@@ -664,13 +664,28 @@ const handleDateSearch = async (searchData) => {
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
+      {/* --- NUEVO: Fondo con animación de degradado --- */}
       <div className="fixed inset-0 -z-10 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940]"></div>
+        {/* Gradiente base animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940] animate-gradient-shift"></div>
+        
+        {/* Capas de gradiente adicionales para más profundidad */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#0a192f]/70 via-transparent to-[#163e57]/50 animate-gradient-flow"></div>
+        <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-[#052940]/40 to-[#011640]/60 animate-gradient-pulse"></div>
+        
+        {/* Efectos de partículas flotantes */}
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#052940] rounded-full filter blur-3xl opacity-40 animate-float"></div>
-          <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-gray-400 rounded-full filter blur-3xl opacity-30 animate-float"></div>
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-zinc-500 rounded-full filter blur-3xl opacity-20 animate-float"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#052940] rounded-full filter blur-3xl opacity-40 animate-float-slow"></div>
+          <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-gray-400 rounded-full filter blur-3xl opacity-30 animate-float-reverse"></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-zinc-500 rounded-full filter blur-3xl opacity-20 animate-float-diagonal"></div>
+          
+          {/* Nuevas partículas más pequeñas */}
+          <div className="absolute top-1/4 right-1/4 w-32 h-32 md:w-48 md:h-48 bg-[#0092b8]/20 rounded-full filter blur-2xl opacity-25 animate-float-fast"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-24 h-24 md:w-36 md:h-36 bg-[#163e57]/30 rounded-full filter blur-2xl opacity-20 animate-float-bounce"></div>
         </div>
+        
+        {/* Overlay sutil para unificar */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/10"></div>
       </div>
 
       <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
@@ -755,19 +770,16 @@ const handleDateSearch = async (searchData) => {
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <ErrorMessage
-            error={error}
-            onRetry={() => {
-              if (isLiveMode) {
-                fetchLatestLocation();
-              } else {
-                setError(null);
-                setErrorType(null);
-              }
-            }}
-            onReturnToLive={handleReturnToLive}
-            isNoDataError={errorType === 'no-data'}
-          />
+          <div className="col-span-3 flex justify-center items-center">
+            <ErrorMessage
+              error={error}
+              onRetry={() => {
+                // ...
+              }}
+              onReturnToLive={handleReturnToLive}
+              isNoDataError={errorType === 'no-data'}
+            />
+          </div>
         ) : locationData ? (
           <>
             <LocationInfo
