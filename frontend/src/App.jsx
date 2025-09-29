@@ -253,7 +253,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                   isSelected 
-                    ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
+                    ? 'bg-cyan-600/30 border' 
                     : 'glassmorphism hover:bg-white/10'
                 }`}
               >
