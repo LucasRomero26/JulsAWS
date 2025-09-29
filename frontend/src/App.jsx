@@ -148,7 +148,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- MODIFICADO: Componente de información de usuarios para móvil ---
+// --- ACTUALIZADO: Componente de información de usuarios para móvil ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   const isUserActive = (lastUpdate) => {
     const now = new Date();
@@ -161,8 +161,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   return (
     <div className="glassmorphism-strong rounded-4xl w-full mt-6 p-6">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-white">Users</h2>
-        <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''}</span>
+        <h2 className="text-xl font-bold text-white">Devices</h2>
+        <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''} Connected</span>
       </div>
 
       <div className="space-y-3">
@@ -191,12 +191,16 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                     : 'bg-red-500/20 text-red-400 border border-red-500/30'
                 }`}>
-                  {isActive ? 'Activo' : 'Inactivo'}
+                  {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
               {/* Información de ubicación */}
               <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-white/70">Device ID:</span>
+                  <span className="text-white font-mono text-xs">{user.deviceId || 'N/A'}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-white/70">Latitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
@@ -206,7 +210,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                   <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/70">Time:</span>
+                  <span className="text-white/70">Last Update:</span>
                   <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
                 </div>
               </div>
@@ -218,14 +222,14 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-white/50 text-center">
-          <p>Inactive devices after 20 seconds</p>
+          <p>Devices go inactive after 20 seconds</p>
         </div>
       </div>
     </div>
   );
 };
 
-// --- MODIFICADO: Sidebar corregido para evitar superposición ---
+// --- ACTUALIZADO: Sidebar para desktop ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const isUserActive = (lastUpdate) => {
     const now = new Date();
@@ -238,8 +242,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
       <div className="p-6 h-full flex flex-col">
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Users</h2>
-          <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''}</span>
+          <h2 className="text-2xl font-bold text-white">Devices</h2>
+          <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''} Connected</span>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
@@ -253,7 +257,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                   isSelected 
-                    ? 'bg-cyan-600/30 border' 
+                    ? 'bg-cyan-600/30 border border-cyan-600/50' 
                     : 'glassmorphism hover:bg-white/10'
                 }`}
               >
@@ -275,6 +279,14 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 {/* Información de ubicación */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
+                    <span className="text-white/70">Device ID:</span>
+                    <span className="text-white font-mono text-xs">{user.deviceId || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Type:</span>
+                    <span className="text-white text-xs">{user.deviceType || 'mobile'}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-white/70">Latitude:</span>
                     <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                   </div>
@@ -283,7 +295,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                     <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/70">Time:</span>
+                    <span className="text-white/70">Last Update:</span>
                     <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
                   </div>
                 </div>
@@ -295,7 +307,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
         {/* Footer */}
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="text-xs text-white/50 text-center">
-            <p>Inactive devices after 20 seconds</p>
+            <p>Devices go inactive after 20 seconds</p>
+            <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL/1000}s</p>
           </div>
         </div>
       </div>
@@ -303,8 +316,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- MODIFICADO: El modal ahora es responsivo ---
-const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
+// --- ACTUALIZADO: Modal de búsqueda por fechas ---
+const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -411,7 +424,8 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
     try {
       const searchData = {
         startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
+        endDate: endDate.toISOString(),
+        deviceId: selectedUserId // Include selected device ID
       };
       onSearch(searchData);
       onClose();
@@ -458,6 +472,14 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
             </svg>
           </button>
         </div>
+        
+        {/* Show selected device info */}
+        {selectedUserId && (
+          <div className="mb-4 p-3 bg-cyan-600/20 rounded-xl border border-cyan-600/30">
+            <p className="text-sm text-cyan-400">Searching history for device: <span className="font-semibold">{selectedUserId}</span></p>
+          </div>
+        )}
+        
         <ThemeProvider theme={darkTheme}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             {isMobile ? (
@@ -616,8 +638,8 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
   return null;
 };
 
-// --- MODIFICADO: LocationMap ahora ocupa todo el ancho disponible ---
-const LocationMap = ({ location, path, isLiveMode }) => {
+// --- ACTUALIZADO: LocationMap con información de dispositivo en el popup ---
+const LocationMap = ({ location, path, isLiveMode, selectedDeviceName }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -653,6 +675,8 @@ const LocationMap = ({ location, path, isLiveMode }) => {
           <Popup>
             <div className="text-center">
               <strong>Current Location</strong><br />
+              {selectedDeviceName && <><small>Device: {selectedDeviceName}</small><br /></>}
+              {location.device_id && <><small>ID: {location.device_id}</small><br /></>}
               <small>Received: {formatTimestamp(location.timestamp_value)}</small><br />
               <small>Lat: {parseFloat(location.latitude).toFixed(6)}</small><br />
               <small>Lng: {parseFloat(location.longitude).toFixed(6)}</small>
@@ -706,24 +730,87 @@ function App() {
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Estados para el manejo de usuarios
+  // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Función para obtener datos de múltiples usuarios
+  // ACTUALIZADO: Función para obtener datos de múltiples dispositivos
   const fetchUsersData = async () => {
     try {
-      // Por ahora, simulamos datos de un usuario hasta que implementes el endpoint
-      // Reemplaza esto con tu endpoint real que devuelva múltiples usuarios
+      // Usar el nuevo endpoint para obtener todos los dispositivos
+      const response = await fetch(`${config.API_BASE_URL}/api/devices/latest-locations`);
+      
+      if (response.ok) {
+        const devicesData = await response.json();
+        console.log('Devices data received:', devicesData);
+        
+        if (devicesData && devicesData.length > 0) {
+          const usersArray = devicesData.map(device => ({
+            id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
+            name: device.device_name || device.device_id || 'Unknown Device',
+            deviceId: device.device_id,
+            deviceType: device.device_type || 'mobile',
+            latitude: device.latitude,
+            longitude: device.longitude,
+            lastUpdate: device.timestamp_value || device.created_at
+          }));
+          
+          setUsers(usersArray);
+          
+          // Si no hay usuario seleccionado, seleccionar el primero
+          if (!selectedUserId && usersArray.length > 0) {
+            const firstUser = usersArray[0];
+            setSelectedUserId(firstUser.id);
+            setLocationData({
+              latitude: firstUser.latitude,
+              longitude: firstUser.longitude,
+              timestamp_value: firstUser.lastUpdate,
+              device_id: firstUser.deviceId,
+              device_name: firstUser.name,
+              device_type: firstUser.deviceType
+            });
+          } else if (selectedUserId) {
+            // Actualizar datos del usuario seleccionado
+            const selectedUser = usersArray.find(user => user.id === selectedUserId);
+            if (selectedUser) {
+              setLocationData({
+                latitude: selectedUser.latitude,
+                longitude: selectedUser.longitude,
+                timestamp_value: selectedUser.lastUpdate,
+                device_id: selectedUser.deviceId,
+                device_name: selectedUser.name,
+                device_type: selectedUser.deviceType
+              });
+            }
+          }
+        } else {
+          // Si no hay dispositivos, usar el endpoint de fallback
+          await fetchLatestLocationFallback();
+        }
+      } else {
+        console.warn('Failed to fetch devices data, using fallback');
+        await fetchLatestLocationFallback();
+      }
+    } catch (err) {
+      console.error('Error fetching devices data:', err);
+      await fetchLatestLocationFallback();
+    }
+  };
+
+  // Función de fallback para obtener el último registro general
+  const fetchLatestLocationFallback = async () => {
+    try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
       
       if (response.ok) {
         const data = await response.json();
         const userData = {
-          id: 'vehicle_001',
-          name: 'First Vehicle',
+          id: data.device_id || 'device_legacy',
+          name: data.device_name || 'Legacy Device',
+          deviceId: data.device_id,
+          deviceType: data.device_type || 'mobile',
           latitude: data.latitude,
           longitude: data.longitude,
           lastUpdate: data.timestamp_value
@@ -731,20 +818,33 @@ function App() {
         
         setUsers([userData]);
         
-        // Selecciona automáticamente el primer usuario si no hay ninguno seleccionado
         if (!selectedUserId) {
           setSelectedUserId(userData.id);
           setLocationData(data);
         }
       }
     } catch (err) {
-      console.error('Error fetching users data:', err);
+      console.error('Error fetching fallback data:', err);
     }
   };
 
+  // ACTUALIZADO: Función para obtener la última ubicación considerando dispositivo seleccionado
   const fetchLatestLocation = async () => {
     try {
-      const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
+      let response;
+      
+      if (selectedUserId && selectedUserId !== 'device_legacy') {
+        // Obtener datos específicos del dispositivo seleccionado
+        response = await fetch(`${config.API_BASE_URL}/api/location/device/${selectedUserId}/latest`);
+        
+        if (!response.ok) {
+          // Si falla, obtener datos generales
+          response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
+        }
+      } else {
+        // Obtener datos generales
+        response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
+      }
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -778,14 +878,19 @@ function App() {
     }
   };
 
+  // ACTUALIZADO: Manejar selección de usuario
   const handleUserSelect = (userId) => {
+    console.log('User selected:', userId);
     setSelectedUserId(userId);
     const selectedUser = users.find(user => user.id === userId);
     if (selectedUser) {
       setLocationData({
         latitude: selectedUser.latitude,
         longitude: selectedUser.longitude,
-        timestamp_value: selectedUser.lastUpdate
+        timestamp_value: selectedUser.lastUpdate,
+        device_id: selectedUser.deviceId,
+        device_name: selectedUser.name,
+        device_type: selectedUser.deviceType
       });
       
       // Actualiza el path para mostrar solo la ubicación del usuario seleccionado
@@ -794,14 +899,21 @@ function App() {
     }
   };
 
+  // ACTUALIZADO: Búsqueda por fecha con soporte para dispositivos específicos
   const handleDateSearch = async (searchData) => {
     setLoading(true);
     setIsLiveMode(false);
     setError(null);
 
     try {
-      const { startDate, endDate } = searchData;
-      const response = await fetch(`${config.API_BASE_URL}/api/location/range?startDate=${startDate}&endDate=${endDate}`);
+      const { startDate, endDate, deviceId } = searchData;
+      let url = `${config.API_BASE_URL}/api/location/range?startDate=${startDate}&endDate=${endDate}`;
+      
+      if (deviceId) {
+        url += `&deviceId=${deviceId}`;
+      }
+      
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error('Error al obtener el historial de ubicaciones');
@@ -820,7 +932,10 @@ function App() {
         setLocationData({
           latitude: lastLocationInRange.latitude,
           longitude: lastLocationInRange.longitude,
-          timestamp_value: lastLocationInRange.timestamp_value
+          timestamp_value: lastLocationInRange.timestamp_value,
+          device_id: lastLocationInRange.device_id,
+          device_name: lastLocationInRange.device_name,
+          device_type: lastLocationInRange.device_type
         });
 
       } else {
@@ -849,15 +964,24 @@ function App() {
 
   useEffect(() => {
     if (isLiveMode) {
-      fetchLatestLocation();
+      // Fetch inicial
       fetchUsersData();
+      fetchLatestLocation();
+      
+      // Polling para actualizaciones en vivo
       const interval = setInterval(() => {
-        fetchLatestLocation();
         fetchUsersData();
+        if (selectedUserId) {
+          fetchLatestLocation();
+        }
       }, config.POLLING_INTERVAL);
+      
       return () => clearInterval(interval);
     }
-  }, [isLiveMode]);
+  }, [isLiveMode, selectedUserId]);
+
+  // Obtener el nombre del dispositivo seleccionado para mostrar en el mapa
+  const selectedDeviceName = users.find(user => user.id === selectedUserId)?.name;
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -873,7 +997,7 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
       </div>
 
-      {/* MODIFICADO: Header con altura aumentada */}
+      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
         <div className="max-w-[100%] mx-auto flex items-center justify-between h-full">
           <div className="flex items-center">
@@ -950,7 +1074,7 @@ function App() {
         )}
       </header>
 
-      {/* MODIFICADO: Sidebar solo en desktop con top corregido */}
+      {/* Sidebar solo en desktop */}
       {!isMobile && (
         <DesktopUsersSidebar
           users={users}
@@ -959,7 +1083,7 @@ function App() {
         />
       )}
 
-      {/* MODIFICADO: Main container con padding-top aumentado */}
+      {/* Main container */}
       <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${
         !isMobile ? 'md:ml-96 md:mr-8' : ''
       }`}>
@@ -974,6 +1098,7 @@ function App() {
               onRetry={() => {
                 setLoading(true);
                 fetchLatestLocation();
+                fetchUsersData();
               }}
               onReturnToLive={handleReturnToLive}
               isNoDataError={errorType === 'no-data'}
@@ -984,9 +1109,10 @@ function App() {
             <LocationMap 
               location={locationData} 
               path={path} 
-              isLiveMode={isLiveMode} 
+              isLiveMode={isLiveMode}
+              selectedDeviceName={selectedDeviceName}
             />
-            {/* MODIFICADO: Información de usuarios solo en móvil */}
+            {/* Información de dispositivos solo en móvil */}
             {isMobile && (
               <MobileUsersInfo
                 users={users}
@@ -1008,6 +1134,7 @@ function App() {
         isOpen={isDateSearchModalOpen}
         onClose={() => setIsDateSearchModalOpen(false)}
         onSearch={handleDateSearch}
+        selectedUserId={selectedUserId}
       />
     </div>
   );
