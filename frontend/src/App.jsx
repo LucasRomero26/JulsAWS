@@ -7,7 +7,6 @@ import { ThreeDot } from 'react-loading-indicators';
 // --- MUI Date Picker Imports ---
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-// --- MODIFICADO: Se importa también el DateTimePicker normal ---
 import { StaticDateTimePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import dayjs from 'dayjs';
@@ -23,42 +22,50 @@ const config = {
   POLLING_INTERVAL: import.meta.env.VITE_POLLING_INTERVAL || 5000,
   JAWG_ACCESS_TOKEN: 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS',
   JAWG_MAP_ID: 'jawg-dark',
-  INACTIVE_TIMEOUT: 20000 // AUMENTADO: 20 segundos en milisegundos para dar más margen
+  INACTIVE_TIMEOUT: 20000
 };
 
-// --- NUEVO: Configuración de colores para dispositivos ---
-const DEVICE_COLORS = {
-  primary: {
-    light: '#ecfeff', // cyan claro
-    dark: '#053345',  // cyan oscuro
-    main: '#0092b8'   // cyan principal
+// --- NUEVO: Sistema de colores para múltiples dispositivos ---
+const DEVICE_COLORS = [
+  {
+    name: 'Cyan',
+    light: '#ecfeff',
+    dark: '#053345',
+    main: '#0092b8',
+    hex: '#0092b8'
   },
-  secondary: {
-    light: '#fef3c7', // amarillo claro
-    dark: '#78350f',  // amarillo oscuro
-    main: '#f59e0b'   // amarillo principal
+  {
+    name: 'Yellow',
+    light: '#fef3c7',
+    dark: '#78350f',
+    main: '#f59e0b',
+    hex: '#f59e0b'
   },
-  tertiary: {
-    light: '#fecaca', // rojo claro
-    dark: '#7f1d1d',  // rojo oscuro
-    main: '#dc2626'   // rojo principal
+  {
+    name: 'Red',
+    light: '#fecaca',
+    dark: '#7f1d1d',
+    main: '#dc2626',
+    hex: '#dc2626'
   },
-  quaternary: {
-    light: '#e9d5ff', // morado claro
-    dark: '#581c87',  // morado oscuro
-    main: '#9333ea'   // morado principal
+  {
+    name: 'Purple',
+    light: '#e9d5ff',
+    dark: '#581c87',
+    main: '#9333ea',
+    hex: '#9333ea'
   },
-  quinary: {
-    light: '#dbeafe', // azul oscuro claro
-    dark: '#1e3a8a',  // azul oscuro
-    main: '#3b82f6'   // azul principal
+  {
+    name: 'Dark Blue',
+    light: '#dbeafe',
+    dark: '#1e3a8a',
+    main: '#3b82f6',
+    hex: '#3b82f6'
   }
-};
+];
 
 const getDeviceColor = (index) => {
-  const colorKeys = ['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'];
-  const colorKey = colorKeys[index % colorKeys.length];
-  return DEVICE_COLORS[colorKey];
+  return DEVICE_COLORS[index % DEVICE_COLORS.length];
 };
 
 // Arreglo para el ícono por defecto de Leaflet en Vite
@@ -69,33 +76,25 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// --- FUNCIÓN CORREGIDA PARA FORMATEAR TIMESTAMP ---
+// --- Funciones utilitarias ---
 const formatTimestamp = (timestamp) => {
   try {
     let date;
     
-    // Si el timestamp es null, undefined, o una cadena vacía
     if (!timestamp) {
       return 'Invalid Date';
     }
     
-    // Convertir a string para verificar el formato
     const timestampStr = String(timestamp);
     
-    // Si es un timestamp en milisegundos (13 dígitos)
     if (/^\d{13}$/.test(timestampStr)) {
       date = new Date(parseInt(timestampStr));
-    }
-    // Si es un timestamp en segundos (10 dígitos)
-    else if (/^\d{10}$/.test(timestampStr)) {
+    } else if (/^\d{10}$/.test(timestampStr)) {
       date = new Date(parseInt(timestampStr) * 1000);
-    }
-    // Si es una fecha ISO string o cualquier otro formato que Date pueda parsear
-    else {
+    } else {
       date = new Date(timestamp);
     }
     
-    // Verificar si la fecha es válida
     if (isNaN(date.getTime())) {
       console.warn('Invalid timestamp:', timestamp);
       return 'Invalid Date';
@@ -115,51 +114,30 @@ const formatTimestamp = (timestamp) => {
   }
 };
 
-// --- FUNCIÓN MEJORADA PARA VERIFICAR SI UN USUARIO ESTÁ ACTIVO ---
 const isUserActive = (lastUpdate) => {
   try {
     const now = new Date();
     let lastUpdateTime;
     
-    // Si el timestamp es null, undefined, o una cadena vacía
     if (!lastUpdate) {
-      console.warn('No lastUpdate timestamp provided');
       return false;
     }
     
-    // Convertir a string para verificar el formato
     const timestampStr = String(lastUpdate);
     
-    // Si es un timestamp en milisegundos (13 dígitos)
     if (/^\d{13}$/.test(timestampStr)) {
       lastUpdateTime = new Date(parseInt(timestampStr));
-    }
-    // Si es un timestamp en segundos (10 dígitos)
-    else if (/^\d{10}$/.test(timestampStr)) {
+    } else if (/^\d{10}$/.test(timestampStr)) {
       lastUpdateTime = new Date(parseInt(timestampStr) * 1000);
-    }
-    // Si es una fecha ISO string o cualquier otro formato que Date pueda parsear
-    else {
+    } else {
       lastUpdateTime = new Date(lastUpdate);
     }
     
-    // Verificar si la fecha es válida
     if (isNaN(lastUpdateTime.getTime())) {
-      console.warn('Invalid lastUpdate timestamp:', lastUpdate);
       return false;
     }
     
     const timeDifference = now.getTime() - lastUpdateTime.getTime();
-    
-    // Log para debugging
-    console.log('Activity check:', {
-      now: now.toISOString(),
-      lastUpdate: lastUpdateTime.toISOString(),
-      timeDifference: timeDifference,
-      inactiveTimeout: config.INACTIVE_TIMEOUT,
-      isActive: timeDifference <= config.INACTIVE_TIMEOUT
-    });
-    
     return timeDifference <= config.INACTIVE_TIMEOUT;
   } catch (error) {
     console.error('Error checking user activity:', error, lastUpdate);
@@ -168,7 +146,6 @@ const isUserActive = (lastUpdate) => {
 };
 
 // --- Componentes de UI ---
-
 const LoadingSpinner = () => (
   <div className="flex items-center mx-auto justify-center p-8">
     <ThreeDot color="#FFFFFF" size="medium" text="" textColor="" />
@@ -235,7 +212,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- ACTUALIZADO: Componente de información de usuarios para móvil con colores ---
+// --- Información de usuarios para móvil con colores ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   if (!users || users.length === 0) return null;
 
@@ -256,25 +233,24 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
             <div
               key={user.id}
               onClick={() => onUserSelect(user.id)}
-              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
                 isSelected 
-                  ? `bg-[${deviceColor.main}]/30 border border-[${deviceColor.main}]/50 shadow-lg shadow-[${deviceColor.main}]/20` 
-                  : 'bg-white/5 hover:bg-white/10'
+                  ? 'border-opacity-80 shadow-lg' 
+                  : 'border-white/10 hover:border-white/20'
               }`}
               style={isSelected ? {
-                backgroundColor: `${deviceColor.main}30`,
-                borderColor: `${deviceColor.main}80`,
-                boxShadow: `0 10px 25px ${deviceColor.main}20`
+                backgroundColor: `${deviceColor.hex}20`,
+                borderColor: deviceColor.hex,
+                boxShadow: `0 10px 25px ${deviceColor.hex}30`
               } : {}}
             >
-              {/* Header del usuario con color indicator */}
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div 
                     className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
                     style={{
                       backgroundColor: isActive ? '#10b981' : '#ef4444',
-                      borderColor: deviceColor.main
+                      borderColor: deviceColor.hex
                     }}
                   ></div>
                   <h3 className="font-semibold text-white truncate">{user.name}</h3>
@@ -288,13 +264,11 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                 </span>
               </div>
 
-              {/* Color indicator bar */}
               <div 
                 className="w-full h-1 rounded-full mb-3"
-                style={{ backgroundColor: deviceColor.main }}
+                style={{ backgroundColor: deviceColor.hex }}
               ></div>
 
-              {/* Información de ubicación */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between gap-2">
                   <span className="text-white/70 flex-shrink-0">Device ID:</span>
@@ -318,22 +292,20 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
         })}
       </div>
 
-      {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-white/50 text-center">
-          <p>Devices go inactive after 60 seconds</p>
+          <p>Devices go inactive after {config.INACTIVE_TIMEOUT/1000} seconds</p>
         </div>
       </div>
     </div>
   );
 };
 
-// --- ACTUALIZADO: Sidebar para desktop con colores ---
+// --- Sidebar para desktop con colores ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   return (
     <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
       <div className="p-6 h-full flex flex-col">
-        {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-white">Devices</h2>
           <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''} Connected</span>
@@ -349,24 +321,24 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
               <div
                 key={user.id}
                 onClick={() => onUserSelect(user.id)}
-                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
                   isSelected 
-                    ? 'border' 
-                    : 'glassmorphism hover:bg-white/10'
+                    ? 'border-opacity-80 shadow-lg' 
+                    : 'border-white/10 hover:border-white/20'
                 }`}
                 style={isSelected ? {
-                  backgroundColor: `${deviceColor.main}30`,
-                  borderColor: `${deviceColor.main}80`
+                  backgroundColor: `${deviceColor.hex}20`,
+                  borderColor: deviceColor.hex,
+                  boxShadow: `0 10px 25px ${deviceColor.hex}30`
                 } : {}}
               >
-                {/* Header del usuario con color indicator */}
                 <div className="flex items-center justify-between mb-3 gap-2">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div 
                       className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
                       style={{
                         backgroundColor: isActive ? '#10b981' : '#ef4444',
-                        borderColor: deviceColor.main
+                        borderColor: deviceColor.hex
                       }}
                     ></div>
                     <h3 className="font-semibold text-white truncate">{user.name}</h3>
@@ -380,13 +352,11 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                   </span>
                 </div>
 
-                {/* Color indicator bar */}
                 <div 
                   className="w-full h-1 rounded-full mb-3"
-                  style={{ backgroundColor: deviceColor.main }}
+                  style={{ backgroundColor: deviceColor.hex }}
                 ></div>
 
-                {/* Información de ubicación */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between gap-2">
                     <span className="text-white/70 flex-shrink-0">Device ID:</span>
@@ -414,10 +384,9 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
           })}
         </div>
 
-        {/* Footer */}
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="text-xs text-white/50 text-center">
-            <p>Devices go inactive after 60 seconds</p>
+            <p>Devices go inactive after {config.INACTIVE_TIMEOUT/1000} seconds</p>
             <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL/1000}s</p>
           </div>
         </div>
@@ -426,7 +395,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- ACTUALIZADO: Modal de búsqueda por fechas con selector de dispositivo ---
+// --- Modal de búsqueda por fechas con selector de dispositivo ---
 const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -434,7 +403,6 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Se usa el hook para determinar si la vista es móvil
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const darkTheme = createTheme({
@@ -563,12 +531,10 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
     if (!isOpen) {
       resetForm();
     } else if (users && users.length > 0 && !selectedDeviceId) {
-      // Auto-seleccionar el primer dispositivo disponible
       setSelectedDeviceId(users[0].id);
     }
-  }, [isOpen, users]);
+  }, [isOpen, users, selectedDeviceId]);
 
-  // Estilos para los pickers en móvil
   const mobilePickerSx = {
     '& .MuiInputBase-root': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '0.75rem' },
     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
@@ -610,15 +576,15 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
                       : 'border-white/20 hover:border-white/40'
                   }`}
                   style={isSelected ? {
-                    backgroundColor: `${deviceColor.main}30`,
-                    borderColor: deviceColor.main,
-                    boxShadow: `0 10px 25px ${deviceColor.main}20`
+                    backgroundColor: `${deviceColor.hex}30`,
+                    borderColor: deviceColor.hex,
+                    boxShadow: `0 10px 25px ${deviceColor.hex}20`
                   } : {}}
                 >
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: deviceColor.main }}
+                      style={{ backgroundColor: deviceColor.hex }}
                     ></div>
                     <div className="text-left">
                       <div className="text-white font-semibold truncate">{user.name}</div>
@@ -634,7 +600,6 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
         <ThemeProvider theme={darkTheme}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             {isMobile ? (
-              // --- VISTA MÓVIL ---
               <div className="flex flex-col gap-6 my-4">
                 <DateTimePicker
                   label="Start Date & Time"
@@ -653,7 +618,6 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
                 />
               </div>
             ) : (
-              // --- VISTA ESCRITORIO ---
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
@@ -684,11 +648,13 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
             )}
           </LocalizationProvider>
         </ThemeProvider>
+        
         {error && (
           <div className="mt-4 text-center text-red-400 bg-red-900/50 p-3 rounded-xl">
             {error}
           </div>
         )}
+        
         <div className="flex gap-4 pt-6 mt-4 border-t border-white/20">
           <button
             onClick={resetForm}
@@ -725,7 +691,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   );
 };
 
-// --- NUEVO: Componente para interpolación de colores con múltiples dispositivos ---
+// --- Funciones para gradientes de colores ---
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -769,103 +735,120 @@ const GradientPolyline = ({ path, deviceColor }) => {
   return <>{segments}</>;
 };
 
-// --- ACTUALIZADO: Componente para actualizar la vista del mapa con múltiples dispositivos ---
+// --- Componente para actualizar la vista del mapa ---
 const MapViewUpdater = ({ userPaths, isLiveMode, users }) => {
   const map = useMap();
 
   useEffect(() => {
     if (!users || users.length === 0) return;
 
-    if (isLiveMode) {
-      // En modo live, ajustar zoom para mostrar todos los dispositivos activos
-      const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
-      
-      if (activeUsers.length > 1) {
-        // Múltiples dispositivos activos: ajustar bounds para mostrar todos
-        const allPositions = activeUsers.map(user => [
-          parseFloat(user.latitude), 
-          parseFloat(user.longitude)
-        ]);
+    try {
+      if (isLiveMode) {
+        const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
         
-        const bounds = L.latLngBounds(allPositions);
-        map.fitBounds(bounds, { 
-          padding: [50, 50], 
-          animate: true, 
-          duration: 1.5,
-          maxZoom: 16 // Limitar el zoom máximo para no acercarse demasiado
-        });
-      } else if (activeUsers.length === 1) {
-        // Un solo dispositivo activo: centrar en él
-        const user = activeUsers[0];
-        const position = [parseFloat(user.latitude), parseFloat(user.longitude)];
-        map.flyTo(position, 18, {
-          duration: 1.5,
-          easeLinearity: 0.25
-        });
+        if (activeUsers.length > 1) {
+          // Múltiples dispositivos activos: ajustar bounds para mostrar todos
+          const allPositions = activeUsers.map(user => [
+            parseFloat(user.latitude), 
+            parseFloat(user.longitude)
+          ]);
+          
+          if (allPositions.length > 0) {
+            const bounds = L.latLngBounds(allPositions);
+            map.fitBounds(bounds, { 
+              padding: [50, 50], 
+              animate: true, 
+              duration: 1.5,
+              maxZoom: 16
+            });
+          }
+        } else if (activeUsers.length === 1) {
+          // Un solo dispositivo activo: centrar en él
+          const user = activeUsers[0];
+          const position = [parseFloat(user.latitude), parseFloat(user.longitude)];
+          map.flyTo(position, 18, {
+            duration: 1.5,
+            easeLinearity: 0.25
+          });
+        }
+      } else {
+        // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
+        const allPaths = Object.values(userPaths).flat();
+        if (allPaths && allPaths.length > 1) {
+          const bounds = L.latLngBounds(allPaths);
+          map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
+        }
       }
-    } else {
-      // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
-      const selectedUserPaths = Object.values(userPaths).find(paths => paths.length > 0);
-      if (selectedUserPaths && selectedUserPaths.length > 1) {
-        const bounds = L.latLngBounds(selectedUserPaths);
-        map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
-      }
+    } catch (error) {
+      console.error('Error updating map view:', error);
     }
   }, [userPaths, isLiveMode, users, map]);
 
   return null;
 };
 
-// --- ACTUALIZADO: LocationMap con soporte para múltiples dispositivos y colores ---
+// --- Mapa principal con soporte multi-dispositivo ---
 const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Calcula altura dinámica del mapa
   const mapHeight = isMobile 
-    ? Math.max(viewportHeight - 200, 300) // En móvil, más conservador
-    : Math.max(viewportHeight - 180, 400); // En desktop
+    ? Math.max(viewportHeight - 200, 300)
+    : Math.max(viewportHeight - 180, 400);
 
   const customIcon = new Icon({
     iconUrl: "/map.png",
     iconSize: [50, 50]
   });
 
-  // Obtener la posición central basada en usuarios activos o el seleccionado
+  // Obtener la posición central
   const getCenterPosition = () => {
-    if (isLiveMode && users.length > 0) {
+    if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
+    
+    if (isLiveMode) {
       const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
       if (activeUsers.length > 0) {
         const firstActive = activeUsers[0];
         return [parseFloat(firstActive.latitude), parseFloat(firstActive.longitude)];
       }
-      const firstUser = users[0];
-      return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
-    } else if (selectedUserId && users.length > 0) {
-      const selectedUser = users.find(user => user.id === selectedUserId);
-      if (selectedUser) {
-        return [parseFloat(selectedUser.latitude), parseFloat(selectedUser.longitude)];
-      }
     }
-    return [0, 0]; // Fallback
+    
+    const firstUser = users[0];
+    return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
 
   const centerPosition = getCenterPosition();
+
+  // Validar que las coordenadas sean válidas
+  if (!centerPosition || isNaN(centerPosition[0]) || isNaN(centerPosition[1])) {
+    return (
+      <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
+        <div className="flex items-center justify-center" style={{ height: `${mapHeight}px` }}>
+          <div className="text-center text-white">
+            <p>Error: Invalid coordinates</p>
+            <p className="text-sm text-white/60 mt-2">Please check your location data</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
       <MapContainer
         center={centerPosition}
-        zoom={18}
+        zoom={isLiveMode ? 15 : 13}
         style={{ 
           height: `${mapHeight}px`, 
           width: '100%', 
           borderRadius: '1rem',
-          minHeight: '300px' // Altura mínima de seguridad
+          minHeight: '300px'
         }}
+        key={`${centerPosition[0]}-${centerPosition[1]}`} // Force re-render on position change
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
+          attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
         />
 
         {/* Renderizar marcadores y rutas para cada usuario */}
@@ -876,8 +859,12 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
           const userPath = userPaths[user.id] || [userPosition];
           const isSelected = selectedUserId === user.id;
 
-          // En modo live, mostrar todos los usuarios activos
-          // En modo histórico, mostrar solo el seleccionado
+          // Validar coordenadas del usuario
+          if (isNaN(userPosition[0]) || isNaN(userPosition[1])) {
+            return null;
+          }
+
+          // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
           const shouldShow = isLiveMode ? isActive : isSelected;
           
           if (!shouldShow) return null;
@@ -892,7 +879,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
               >
                 <Popup>
                   <div className="text-center">
-                    <strong style={{ color: deviceColor.main }}>
+                    <strong style={{ color: deviceColor.hex }}>
                       {user.name}
                     </strong><br />
                     <small>Device: {user.deviceId}</small><br />
@@ -910,7 +897,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
                   {isLiveMode ? (
                     <Polyline 
                       pathOptions={{ 
-                        color: deviceColor.main, 
+                        color: deviceColor.hex, 
                         weight: 4, 
                         opacity: 0.8 
                       }} 
@@ -929,14 +916,15 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
                   center={point}
                   radius={6}
                   pathOptions={{
-                    color: deviceColor.main,
+                    color: deviceColor.hex,
                     fillColor: deviceColor.light,
-                    fillOpacity: 0.6
+                    fillOpacity: 0.6,
+                    weight: 2
                   }}
                 >
                   <Popup>
                     <div className="text-center">
-                      <strong style={{ color: deviceColor.main }}>
+                      <strong style={{ color: deviceColor.hex }}>
                         {user.name} - Point #{pointIndex + 1}
                       </strong><br />
                       <small>Lat: {point[0].toFixed(6)}</small><br />
@@ -960,7 +948,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
-  const [userPaths, setUserPaths] = useState({}); // Cambio: paths por usuario
+  const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -971,60 +959,73 @@ function App() {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // ACTUALIZADO: Función para obtener datos de múltiples dispositivos
+  // Función para obtener datos de múltiples dispositivos
   const fetchUsersData = async () => {
     try {
-      // Usar el nuevo endpoint para obtener todos los dispositivos
+      setError(null);
+      setErrorType(null);
+      
       const response = await fetch(`${config.API_BASE_URL}/api/devices/latest-locations`);
       
-      if (response.ok) {
-        const devicesData = await response.json();
-        console.log('Devices data received:', devicesData);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const devicesData = await response.json();
+      console.log('Devices data received:', devicesData);
+      
+      if (devicesData && devicesData.length > 0) {
+        const usersArray = devicesData.map(device => ({
+          id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
+          name: device.device_name || device.device_id || 'Unknown Device',
+          deviceId: device.device_id,
+          deviceType: device.device_type || 'mobile',
+          latitude: device.latitude,
+          longitude: device.longitude,
+          lastUpdate: device.timestamp_value || device.created_at
+        }));
         
-        if (devicesData && devicesData.length > 0) {
-          const usersArray = devicesData.map(device => ({
-            id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
-            name: device.device_name || device.device_id || 'Unknown Device',
-            deviceId: device.device_id,
-            deviceType: device.device_type || 'mobile',
-            latitude: device.latitude,
-            longitude: device.longitude,
-            lastUpdate: device.timestamp_value || device.created_at
-          }));
-          
-          setUsers(usersArray);
-          
-          // Actualizar paths en modo live
-          if (isLiveMode) {
-            setUserPaths(prevPaths => {
-              const newPaths = { ...prevPaths };
+        setUsers(usersArray);
+        
+        // Actualizar paths en modo live
+        if (isLiveMode) {
+          setUserPaths(prevPaths => {
+            const newPaths = { ...prevPaths };
+            
+            usersArray.forEach(user => {
+              // Validar coordenadas antes de agregar
+              const lat = parseFloat(user.latitude);
+              const lng = parseFloat(user.longitude);
               
-              usersArray.forEach(user => {
-                const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
+              if (!isNaN(lat) && !isNaN(lng)) {
+                const userPosition = [lat, lng];
                 const currentPath = newPaths[user.id] || [];
                 
                 // Solo agregar si es una posición diferente
                 const lastPoint = currentPath[currentPath.length - 1];
                 if (!lastPoint || lastPoint[0] !== userPosition[0] || lastPoint[1] !== userPosition[1]) {
                   newPaths[user.id] = [...currentPath, userPosition];
+                  
+                  // Limitar el historial para evitar arrays muy grandes
+                  if (newPaths[user.id].length > 100) {
+                    newPaths[user.id] = newPaths[user.id].slice(-50);
+                  }
                 }
-              });
-              
-              return newPaths;
+              }
             });
-          }
-          
-          // Si no hay usuario seleccionado, seleccionar el primero activo
-          if (!selectedUserId && usersArray.length > 0) {
-            const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
-            setSelectedUserId(activeUser.id);
-          }
-        } else {
-          // Si no hay dispositivos, usar el endpoint de fallback
-          await fetchLatestLocationFallback();
+            
+            return newPaths;
+          });
         }
+        
+        // Si no hay usuario seleccionado, seleccionar el primero activo
+        if (!selectedUserId && usersArray.length > 0) {
+          const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
+          setSelectedUserId(activeUser.id);
+        }
+        
+        setLoading(false);
       } else {
-        console.warn('Failed to fetch devices data, using fallback');
         await fetchLatestLocationFallback();
       }
     } catch (err) {
@@ -1033,50 +1034,55 @@ function App() {
     }
   };
 
-  // Función de fallback para obtener el último registro general
+  // Función de fallback
   const fetchLatestLocationFallback = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
       
-      if (response.ok) {
-        const data = await response.json();
-        const userData = {
-          id: data.device_id || 'device_legacy',
-          name: data.device_name || 'Legacy Device',
-          deviceId: data.device_id,
-          deviceType: data.device_type || 'mobile',
-          latitude: data.latitude,
-          longitude: data.longitude,
-          lastUpdate: data.timestamp_value
-        };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const userData = {
+        id: data.device_id || 'device_legacy',
+        name: data.device_name || 'Legacy Device',
+        deviceId: data.device_id,
+        deviceType: data.device_type || 'mobile',
+        latitude: data.latitude,
+        longitude: data.longitude,
+        lastUpdate: data.timestamp_value
+      };
+      
+      setUsers([userData]);
+      
+      if (!selectedUserId) {
+        setSelectedUserId(userData.id);
+        const lat = parseFloat(userData.latitude);
+        const lng = parseFloat(userData.longitude);
         
-        setUsers([userData]);
-        
-        if (!selectedUserId) {
-          setSelectedUserId(userData.id);
-          const userPosition = [parseFloat(userData.latitude), parseFloat(userData.longitude)];
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const userPosition = [lat, lng];
           setUserPaths({ [userData.id]: [userPosition] });
         }
       }
+      
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching fallback data:', err);
-      setError('Error de conexión con el servidor');
+      setError('Error de conexión con el servidor. Verificar que el backend esté funcionando.');
       setErrorType('connection');
-    } finally {
       setLoading(false);
     }
   };
 
-  // ACTUALIZADO: Manejar selección de usuario
+  // Manejar selección de usuario
   const handleUserSelect = (userId) => {
     console.log('User selected:', userId);
     setSelectedUserId(userId);
-    
-    // En modo live, no necesitamos hacer nada más
-    // En modo histórico, necesitaríamos recargar datos específicos del usuario
   };
 
-  // ACTUALIZADO: Búsqueda por fecha con soporte para dispositivos específicos
+  // Búsqueda por fecha
   const handleDateSearch = async (searchData) => {
     setLoading(true);
     setIsLiveMode(false);
@@ -1099,17 +1105,25 @@ function App() {
       const historicalData = await response.json();
 
       if (historicalData.length > 0) {
-        const newPath = historicalData.map(point => [
-          parseFloat(point.latitude),
-          parseFloat(point.longitude)
-        ]);
+        const newPath = historicalData
+          .map(point => {
+            const lat = parseFloat(point.latitude);
+            const lng = parseFloat(point.longitude);
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+              return [lat, lng];
+            }
+            return null;
+          })
+          .filter(point => point !== null);
         
-        // Establecer path solo para el dispositivo seleccionado
-        setUserPaths({ [deviceId]: newPath });
-        
-        // Asegurar que el usuario seleccionado corresponda al deviceId
-        setSelectedUserId(deviceId);
-
+        if (newPath.length > 0) {
+          setUserPaths({ [deviceId]: newPath });
+          setSelectedUserId(deviceId);
+        } else {
+          setError('No se encontraron ubicaciones válidas para el rango seleccionado.');
+          setErrorType('no-data');
+        }
       } else {
         setUserPaths({});
         setError('No se encontraron datos de ubicación para el rango seleccionado.');
@@ -1133,17 +1147,14 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
-  // 🔥 CORRECCIÓN PRINCIPAL: useEffect con control de polling mejorado
+  // Effect principal para polling
   useEffect(() => {
     if (isLiveMode && !isDateSearchModalOpen) {
-      // Solo hacer polling si estamos en live mode Y el modal no está abierto
-      
       // Fetch inicial
       fetchUsersData();
       
       // Polling para actualizaciones en vivo
       const interval = setInterval(() => {
-        // Doble verificación: solo hacer polling si seguimos en live mode y modal cerrado
         if (isLiveMode && !isDateSearchModalOpen) {
           fetchUsersData();
         }
@@ -1151,7 +1162,7 @@ function App() {
       
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, isDateSearchModalOpen]); // 🔥 Agregamos isDateSearchModalOpen a las dependencias
+  }, [isLiveMode, isDateSearchModalOpen]);
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -1267,6 +1278,8 @@ function App() {
               error={error}
               onRetry={() => {
                 setLoading(true);
+                setError(null);
+                setErrorType(null);
                 fetchUsersData();
               }}
               onReturnToLive={handleReturnToLive}
@@ -1294,6 +1307,15 @@ function App() {
           <div className="flex items-center justify-center h-full">
             <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
               <p className="text-white/70 mb-4">Waiting for location data...</p>
+              <button 
+                onClick={() => {
+                  setLoading(true);
+                  fetchUsersData();
+                }}
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors"
+              >
+                Retry Connection
+              </button>
             </div>
           </div>
         )}
