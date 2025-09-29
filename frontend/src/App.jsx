@@ -102,10 +102,10 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- NUEVO: Componente Sidebar de Usuarios ---
+// --- Componente Sidebar de Usuarios ---
 const UsersSidebar = ({ users, isVisible, onToggle, onUserSelect, selectedUserId }) => {
   const formatTimestamp = (timestamp) => {
-    return new Date(parseInt(timestamp)).toLocaleString('es-ES', {
+    return new Date(timestamp).toLocaleString('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -117,142 +117,93 @@ const UsersSidebar = ({ users, isVisible, onToggle, onUserSelect, selectedUserId
 
   const isUserActive = (lastUpdate) => {
     const now = new Date();
-    const lastUpdateTime = new Date(parseInt(lastUpdate));
+    const lastUpdateTime = new Date(lastUpdate);
     return (now - lastUpdateTime) <= config.INACTIVE_TIMEOUT;
   };
 
   return (
     <>
-      {/* Toggle Button */}
-      <button
-        onClick={onToggle}
-        className={`fixed top-24 ${isVisible ? 'left-80' : 'left-4'} z-50 p-3 glassmorphism-strong rounded-xl transition-all duration-300 hover:scale-105 shadow-lg`}
-        title={isVisible ? 'Ocultar sidebar' : 'Mostrar sidebar'}
-      >
-        <svg 
-          className={`w-6 h-6 text-white transition-transform duration-300 ${isVisible ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-
       {/* Sidebar */}
-      <div className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 bg-black/30 backdrop-blur-xl border-r border-white/10 z-40 transform transition-transform duration-300 shadow-2xl ${
+      <div className={`fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 bg-black/20 backdrop-blur-xl border-r border-white/10 z-40 transform transition-transform duration-300 ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="p-6 h-full flex flex-col">
-          {/* Header */}
+          {/* Header con botón de cierre */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Dispositivos GPS</h2>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Dispositivos GPS</h2>
               <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
             </div>
+            {/* Botón X para cerrar */}
+            <button
+              onClick={onToggle}
+              className="p-2 glassmorphism-strong rounded-lg transition-all duration-300 hover:scale-105 hover:bg-red-500/20"
+            >
+              <svg 
+                className="w-5 h-5 text-white hover:text-red-400 transition-colors" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
-          {/* Lista de usuarios */}
-          <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-            {users.length === 0 ? (
-              <div className="text-center p-6 text-white/60">
-                <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p>No hay dispositivos disponibles</p>
-              </div>
-            ) : (
-              users.map((user) => {
-                const isActive = isUserActive(user.lastUpdate);
-                const isSelected = selectedUserId === user.id;
-                
-                return (
-                  <div
-                    key={user.id}
-                    onClick={() => onUserSelect(user.id)}
-                    className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border ${
-                      isSelected 
-                        ? 'bg-cyan-600/30 border-cyan-600/50 shadow-lg shadow-cyan-600/20 scale-[1.02]' 
-                        : 'glassmorphism hover:bg-white/10 border-white/10 hover:border-white/20 hover:scale-[1.01]'
-                    }`}
-                  >
-                    {/* Header del usuario */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'}`}></div>
-                        <h3 className="font-semibold text-white">{user.name}</h3>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        isActive 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}>
-                        {isActive ? 'Activo' : 'Inactivo'}
-                      </span>
+          <div className="flex-1 overflow-y-auto space-y-3">
+            {users.map((user) => {
+              const isActive = isUserActive(user.lastUpdate);
+              const isSelected = selectedUserId === user.id;
+              
+              return (
+                <div
+                  key={user.id}
+                  onClick={() => onUserSelect(user.id)}
+                  className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                    isSelected 
+                      ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
+                      : 'glassmorphism hover:bg-white/10'
+                  }`}
+                >
+                  {/* Header del usuario */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                      <h3 className="font-semibold text-white">{user.name}</h3>
                     </div>
-
-                    {/* Información de ubicación */}
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/70 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          </svg>
-                          Lat:
-                        </span>
-                        <span className="text-white font-mono text-xs">{parseFloat(user.latitude).toFixed(6)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/70 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          </svg>
-                          Lng:
-                        </span>
-                        <span className="text-white font-mono text-xs">{parseFloat(user.longitude).toFixed(6)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/70 flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Actualizado:
-                        </span>
-                      </div>
-                      <div className="text-white/90 text-xs text-right font-mono bg-black/20 rounded px-2 py-1">
-                        {formatTimestamp(user.lastUpdate)}
-                      </div>
-                    </div>
-
-                    {/* Indicador de selección */}
-                    {isSelected && (
-                      <div className="mt-3 flex items-center justify-center">
-                        <div className="flex items-center gap-2 text-cyan-400 text-xs">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>Dispositivo seleccionado</span>
-                        </div>
-                      </div>
-                    )}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      isActive 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {isActive ? 'Activo' : 'Inactivo'}
+                    </span>
                   </div>
-                );
-              })
-            )}
+
+                  {/* Información de ubicación */}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Latitud:</span>
+                      <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Longitud:</span>
+                      <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Última actualización:</span>
+                      <span className="text-white/90 text-xs">{formatTimestamp(user.lastUpdate)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Footer */}
           <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="text-xs text-white/50 text-center space-y-1">
-              <p className="flex items-center justify-center gap-2">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Dispositivos inactivos después de 20 segundos
-              </p>
-              <p className="text-white/30">Click en un dispositivo para verlo en el mapa</p>
+            <div className="text-xs text-white/50 text-center">
+              <p>Dispositivos inactivos después de 20 segundos</p>
             </div>
           </div>
         </div>
@@ -261,7 +212,7 @@ const UsersSidebar = ({ users, isVisible, onToggle, onUserSelect, selectedUserId
       {/* Overlay cuando el sidebar está visible en móvil */}
       {isVisible && (
         <div 
-          className="fixed inset-0 bg-black/30 z-30 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/20 z-30 lg:hidden"
           onClick={onToggle}
         />
       )}
@@ -518,6 +469,65 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
   );
 };
 
+// --- MODIFICADO: LocationInfo con altura adaptativa ---
+const LocationInfo = ({ location, formatTimestamp }) => {
+  const viewportHeight = useViewportHeight();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  // Calcula altura dinámica basada en el viewport
+  const containerHeight = isMobile 
+    ? 'auto' // En móvil usa altura automática
+    : `${Math.max(viewportHeight - 180, 400)}px`; // En desktop usa altura calculada
+
+  return (
+    <div 
+      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-6 p-6 rounded-4xl glassmorphism-strong'
+      style={{ height: containerHeight, minHeight: '300px' }}
+    >
+      <div className='rounded-4xl h-full flex flex-col'>
+        <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8 flex-shrink-0'>
+          Users
+        </h2>
+        <div className='flex-1 space-y-3'>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-101 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-101'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}</span>
+            </div>
+          </div>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-101 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-101'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72V15a.75.75 0 0 0 1.5 0V9.81l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}</span>
+            </div>
+          </div>
+          <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-101 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
+            <div className='flex flex-row gap-2 group justify-left transition-all duration-300 group-hover:scale-101'>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
+                <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+              </svg>
+              <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className='text-white/80 font-mono'>{formatTimestamp(location.timestamp_value)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -599,7 +609,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   });
 
   return (
-    <div className='glassmorphism-strong col-span-3 md:col-span-1 mt-6 md:mt-6 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
+    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-6 md:mt-6 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
       <MapContainer
         center={position}
         zoom={18}
@@ -671,19 +681,19 @@ function App() {
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  // NUEVOS: Estados para el sidebar de usuarios
+
+  // Nuevos estados para el sidebar de usuarios
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // NUEVA: Función para obtener datos de múltiples usuarios
+  // Función para obtener datos de múltiples usuarios
   const fetchUsersData = async () => {
     try {
-      // Por ahora, simulamos datos de un usuario hasta que implementes el endpoint para múltiples usuarios
-      // Reemplaza este código con tu endpoint real que devuelva múltiples usuarios
+      // Por ahora, simulamos datos de un usuario hasta que implementes el endpoint
+      // Reemplaza esto con tu endpoint real que devuelva múltiples usuarios
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
       
       if (response.ok) {
@@ -696,26 +706,12 @@ function App() {
           lastUpdate: data.timestamp_value
         };
         
-        // En el futuro, puedes agregar más usuarios aquí o desde tu endpoint
-        // Ejemplo de múltiples usuarios:
-        /*
-        const allUsers = [
-          userData,
-          {
-            id: 'vehicle_002',
-            name: 'Vehículo Secundario',
-            latitude: '-34.6037',
-            longitude: '-58.3816',
-            lastUpdate: Date.now() - 30000 // 30 segundos atrás (inactivo)
-          }
-        ];
-        */
-        
-        setUsers([userData]); // Por ahora solo un usuario
+        setUsers([userData]);
         
         // Selecciona automáticamente el primer usuario si no hay ninguno seleccionado
         if (!selectedUserId) {
           setSelectedUserId(userData.id);
+          setLocationData(data);
         }
       }
     } catch (err) {
@@ -723,7 +719,6 @@ function App() {
     }
   };
 
-  // MODIFICADA: Función existente mantenida
   const fetchLatestLocation = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
@@ -760,7 +755,6 @@ function App() {
     }
   };
 
-  // NUEVA: Función para manejar selección de usuario
   const handleUserSelect = (userId) => {
     setSelectedUserId(userId);
     const selectedUser = users.find(user => user.id === userId);
@@ -828,18 +822,8 @@ function App() {
     setErrorType(null);
     setLoading(true);
     setIsMobileMenuOpen(false);
-    // Recarga los datos cuando vuelve al modo live
-    fetchLatestLocation();
-    fetchUsersData();
   };
 
-  // MODIFICADO: Efecto para cargar datos iniciales
-  useEffect(() => {
-    fetchLatestLocation();
-    fetchUsersData();
-  }, []);
-
-  // MODIFICADO: Efecto para actualización en tiempo real
   useEffect(() => {
     if (isLiveMode) {
       fetchLatestLocation();
@@ -877,6 +861,22 @@ function App() {
       <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
         <div className="max-w-[100%] mx-auto flex items-center justify-between">
           <div className="flex items-center">
+            {/* Botón para abrir sidebar - solo visible cuando está cerrado */}
+            {!isSidebarVisible && (
+              <button
+                onClick={() => setIsSidebarVisible(true)}
+                className="mr-3 p-2 glassmorphism-strong rounded-lg transition-all duration-300 hover:scale-105 hover:bg-cyan-500/20"
+              >
+                <svg 
+                  className="w-6 h-6 text-white hover:text-cyan-400 transition-colors" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+                </svg>
+              </button>
+            )}
             <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
             <h1 className="py-1 px-3 text-center font-bold text-white/90 text-2xl md:text-3xl">
               {config.APP_NAME}
@@ -950,7 +950,7 @@ function App() {
         )}
       </header>
 
-      {/* NUEVO: Sidebar de Usuarios */}
+      {/* Sidebar de Usuarios */}
       <UsersSidebar
         users={users}
         isVisible={isSidebarVisible}
@@ -959,36 +959,41 @@ function App() {
         selectedUserId={selectedUserId}
       />
 
-      {/* MODIFICADO: Main container ajustado para el sidebar */}
-      <main className={`grid grid-cols-1 items-stretch gap-2 max-w-[98%] mx-auto min-h-[calc(100vh-5rem)] pt-20 px-4 md:px-0 transition-all duration-300 ${
-        isSidebarVisible ? 'md:ml-80' : ''
+      {/* MODIFICADO: Main container con mayor separación cuando el sidebar está abierto */}
+      <main className={`grid grid-cols-3 md:flex-row items-stretch gap-2 max-w-[98%] mx-auto min-h-[calc(100vh-5rem)] pt-20 px-4 md:px-0 transition-all duration-300 ${
+        isSidebarVisible ? 'md:ml-96 md:mr-8' : ''
       }`}>
         {loading ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="col-span-3 flex items-center justify-center h-full">
             <LoadingSpinner />
           </div>
         ) : error ? (
-          <div className="flex justify-center items-center h-full">
+          <div className="col-span-3 flex justify-center items-center h-full">
             <ErrorMessage
               error={error}
               onRetry={() => {
                 setLoading(true);
                 fetchLatestLocation();
-                fetchUsersData();
               }}
               onReturnToLive={handleReturnToLive}
               isNoDataError={errorType === 'no-data'}
             />
           </div>
         ) : locationData ? (
-          <LocationMap 
-            location={locationData} 
-            formatTimestamp={formatTimestamp} 
-            path={path} 
-            isLiveMode={isLiveMode} 
-          />
+          <>
+            <LocationInfo
+              location={locationData}
+              formatTimestamp={formatTimestamp}
+            />
+            <LocationMap 
+              location={locationData} 
+              formatTimestamp={formatTimestamp} 
+              path={path} 
+              isLiveMode={isLiveMode} 
+            />
+          </>
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="col-span-3 flex items-center justify-center h-full">
             <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
               <p className="text-white/70 mb-4">Waiting for location data...</p>
             </div>
