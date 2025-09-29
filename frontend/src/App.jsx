@@ -425,7 +425,7 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
 
     if (!isLiveMode && path.length > 1) {
       const bounds = L.latLngBounds(path);
-      map.fitBounds(bounds.pad(0.1), { animate: true, duration: 1.5 });
+      map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
     } else {
       const lastPosition = path[path.length - 1];
       map.flyTo(lastPosition, 18, {
@@ -471,7 +471,7 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
 
         {/* Lógica para dibujar la línea de la ruta */}
         {isLiveMode ? (
-          <Polyline pathOptions={{ color: '#8B5CF6', weight: 4 }} positions={path} />
+          <Polyline pathOptions={{ color: '#053345', weight: 4 }} positions={path} />
         ) : (
           <GradientPolyline path={path} />
         )}
@@ -519,7 +519,7 @@ function App() {
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  const MOCK_LOCATION_DATA = {
+/*  const MOCK_LOCATION_DATA = {
     latitude: '10.9878',
     longitude: '-74.7889',
     timestamp_value: new Date().getTime().toString(),
@@ -531,7 +531,7 @@ function App() {
     [10.9885, -74.7895],
     [10.9892, -74.7901],
     [10.9900, -74.7908],
-  ];
+  ]; */
 
 const fetchLatestLocation = async () => {
     /* // --- INICIO: CÓDIGO CON MOCK DATA ---
@@ -583,11 +583,11 @@ const fetchLatestLocation = async () => {
   };
 
 const handleDateSearch = async (searchData) => {
-    /* setLoading(true);
+    setLoading(true);
     setIsLiveMode(false);
     setError(null);
 
-    // --- INICIO: CÓDIGO CON MOCK DATA ---
+    /* // --- INICIO: CÓDIGO CON MOCK DATA ---
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simula búsqueda
     
     setPath(MOCK_PATH_DATA);
