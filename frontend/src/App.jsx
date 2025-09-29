@@ -664,28 +664,16 @@ function App() {
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
-      {/* --- NUEVO: Fondo con animación de degradado --- */}
-      <div className="fixed inset-0 -z-10 transition-all duration-500">
-        {/* Gradiente base animado */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940] animate-gradient-shift"></div>
-        
-        {/* Capas de gradiente adicionales para más profundidad */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#0a192f]/70 via-transparent to-[#163e57]/50 animate-gradient-flow"></div>
-        <div className="absolute inset-0 bg-gradient-to-bl from-transparent via-[#052940]/40 to-[#011640]/60 animate-gradient-pulse"></div>
-        
-        {/* Efectos de partículas flotantes */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#052940] rounded-full filter blur-3xl opacity-40 animate-float-slow"></div>
-          <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-gray-400 rounded-full filter blur-3xl opacity-30 animate-float-reverse"></div>
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-zinc-500 rounded-full filter blur-3xl opacity-20 animate-float-diagonal"></div>
-          
-          {/* Nuevas partículas más pequeñas */}
-          <div className="absolute top-1/4 right-1/4 w-32 h-32 md:w-48 md:h-48 bg-[#0092b8]/20 rounded-full filter blur-2xl opacity-25 animate-float-fast"></div>
-          <div className="absolute bottom-1/4 left-1/4 w-24 h-24 md:w-36 md:h-36 bg-[#163e57]/30 rounded-full filter blur-2xl opacity-20 animate-float-bounce"></div>
+      {/* UPDATED ANIMATED BACKGROUND */}
+      <div className="fixed inset-0 -z-10 animate-gradient-shift">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940]"></div>
+        <div className="absolute inset-0 bg-gradient-to-tl from-[#052940] via-[#0a1a2e] to-[#16213e] opacity-70 animate-gradient-overlay"></div>
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#0092b8] rounded-full filter blur-3xl opacity-30 animate-float-slow"></div>
+          <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-[#163e57] rounded-full filter blur-3xl opacity-25 animate-float-slower"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-64 md:h-64 bg-[#052940] rounded-full filter blur-3xl opacity-20 animate-float"></div>
         </div>
-        
-        {/* Overlay sutil para unificar */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/5 to-black/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
       </div>
 
       <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
