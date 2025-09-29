@@ -214,8 +214,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
       <div className="p-6 h-full flex flex-col">
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Dispositivos GPS</h2>
-          <span className="text-sm text-white/60">{users.length} dispositivo{users.length !== 1 ? 's' : ''}</span>
+          <h2 className="text-2xl font-bold text-white">Users</h2>
+          <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''}</span>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
@@ -244,7 +244,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
                   }`}>
-                    {isActive ? 'Activo' : 'Inactivo'}
+                    {isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
