@@ -3,13 +3,6 @@
 @import "tailwindcss";
 
 
-
-.leaflet-container {
-  height: 35rem;
-  width: auto;
-  border-radius: 1rem;
-}
-
 body {
   font-family: "Poppins", sans-serif;
   overflow-x: hidden;

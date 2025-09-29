@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -7,7 +7,8 @@ import { ThreeDot } from 'react-loading-indicators';
 // --- MUI Date Picker Imports ---
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { StaticDateTimePicker } from '@mui/x-date-pickers/StaticDateTimePicker';
+// --- MODIFICADO: Se importa también el DateTimePicker normal ---
+import { StaticDateTimePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import dayjs from 'dayjs';
 
@@ -51,9 +52,9 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
       </h3>
     </div>
     <p className="text-white/70 mb-4">{error}</p>
-    
+
     {isNoDataError ? (
-      <button 
+      <button
         onClick={onReturnToLive}
         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium mx-auto"
       >
@@ -63,24 +64,46 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
         Return to Live
       </button>
     ) : (
-      <button onClick={onRetry} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors">
+      <button onClick={onRetry} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors">
         Reintentar
       </button>
     )}
   </div>
 );
 
+
+// --- NUEVO: Hook para detectar el tamaño de la pantalla ---
+const useMediaQuery = (query) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    window.addEventListener('resize', listener);
+    return () => window.removeEventListener('resize', listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
+// --- MODIFICADO: El modal ahora es responsivo ---
 const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Se usa el hook para determinar si la vista es móvil
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
   const darkTheme = createTheme({
     palette: {
       mode: 'dark',
       primary: {
-        main: '#8B5CF6',
+        main: '#0092b8',
       },
       background: {
         paper: 'rgba(255, 255, 255, 0.1)',
@@ -94,10 +117,67 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
       MuiPickersToolbar: {
         styleOverrides: {
           root: {
-            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+            backgroundColor: 'rgba(0, 146, 184, 0.2)',
           },
         },
       },
+      MuiPickersLayout: {
+        styleOverrides: {
+          root: {
+            color: '#FFFFFF',
+            backgroundColor: 'rgba(10, 25, 41, 0.98)',
+            backdropFilter: 'blur(5px)',
+          },
+        },
+      },
+      MuiPickersCalendarHeader: {
+        styleOverrides: {
+          root: { color: '#FFFFFF' },
+          label: { color: '#FFFFFF' },
+        },
+      },
+      MuiDayPicker: {
+        styleOverrides: {
+          weekDayLabel: { color: 'rgba(255, 255, 255, 0.7)' },
+        },
+      },
+      MuiPickersDay: {
+        styleOverrides: {
+          root: {
+            color: '#FFFFFF',
+            "&.Mui-selected": {
+              color: '#FFFFFF',
+            }
+          },
+        },
+      },
+      MuiPickersYear: {
+        styleOverrides: {
+          yearButton: {
+            color: 'rgba(255, 255, 255, 0.9)',
+            '&.Mui-selected': {
+              color: '#FFFFFF',
+            },
+          },
+        },
+      },
+      MuiClock: {
+        styleOverrides: {
+          clockNumber: {
+            color: 'rgba(255, 255, 255, 0.9)',
+            '&.Mui-selected': {
+              color: '#FFFFFF',
+            },
+          },
+        },
+      },
+      MuiTimeClock: {
+        styleOverrides: {
+          arrowSwitcher: {
+            color: 'rgba(255, 255, 255, 0.7)'
+          }
+        }
+      }
     },
   });
 
@@ -141,6 +221,12 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
     }
   }, [isOpen]);
 
+  // Estilos para los pickers en móvil
+  const mobilePickerSx = {
+    '& .MuiInputBase-root': { backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '0.75rem' },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -149,7 +235,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative glassmorphism-strong rounded-4xl p-8 mx-4 w-full max-w-5xl transform">
+      <div className="relative glassmorphism-strong rounded-4xl p-6 md:p-8 mx-4 w-full max-w-md md:max-w-5xl transform">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Select Date Range</h2>
           <button onClick={onClose} className="text-white/60 cursor-pointer hover:text-white p-1">
@@ -160,31 +246,55 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
         </div>
         <ThemeProvider theme={darkTheme}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
-                <StaticDateTimePicker
-                  orientation="landscape"
+            {isMobile ? (
+              // --- VISTA MÓVIL ---
+              <div className="flex flex-col gap-6 my-4">
+                <DateTimePicker
+                  label="Start Date & Time"
                   value={startDate}
                   onChange={(newValue) => setStartDate(newValue)}
                   maxDate={dayjs()}
-                  timeSteps={{ minutes: 1 }}
-                  sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem', color: '#FFFFFF' }}
+                  sx={mobilePickerSx}
                 />
-              </div>
-              <div>
-                <label className="block text-white text-lg font-medium mb-4 text-center">End Date</label>
-                <StaticDateTimePicker
-                  orientation="landscape"
+                <DateTimePicker
+                  label="End Date & Time"
                   value={endDate}
                   onChange={(newValue) => setEndDate(newValue)}
                   minDate={startDate}
                   disabled={!startDate}
-                  timeSteps={{ minutes: 1 }}
-                  sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem', color: '#FFFFFF' }}
+                  sx={mobilePickerSx}
                 />
               </div>
-            </div>
+            ) : (
+              // --- VISTA ESCRITORIO ---
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
+                  <StaticDateTimePicker
+                    orientation="landscape"
+                    value={startDate}
+                    onChange={(newValue) => setStartDate(newValue)}
+                    maxDate={dayjs()}
+                    timeSteps={{ minutes: 1 }}
+                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem' }}
+                    slotProps={{ actionBar: { actions: [] } }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-white text-lg font-medium mb-4 text-center">End Date</label>
+                  <StaticDateTimePicker
+                    orientation="landscape"
+                    value={endDate}
+                    onChange={(newValue) => setEndDate(newValue)}
+                    minDate={startDate}
+                    disabled={!startDate}
+                    timeSteps={{ minutes: 1 }}
+                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem' }}
+                    slotProps={{ actionBar: { actions: [] } }}
+                  />
+                </div>
+              </div>
+            )}
           </LocalizationProvider>
         </ThemeProvider>
         {error && (
@@ -203,7 +313,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
           <button
             onClick={handleSearch}
             disabled={isLoading || !startDate || !endDate}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-700 hover:to-violet-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -228,31 +338,32 @@ const DateSearchModal = ({ isOpen, onClose, onSearch }) => {
   );
 };
 
-const LocationInfo = ({ location, formatTimestamp, onOpenDateSearch }) => (
-  <div className='flex flex-col p-8 rounded-4xl glassmorphism-strong '>
+
+const LocationInfo = ({ location, formatTimestamp }) => (
+  <div className='flex flex-col col-span-3 md:col-span-1 h-auto md:h-[50rem] mt-30 md:mt-20 p-8 rounded-4xl glassmorphism-strong '>
     <div className=' rounded-4xl h-auto'>
       <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8'>Last Location Received</h2>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
+      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
         <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm4.28 10.28a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H8.25a.75.75 0 0 0 0 1.5h5.69l-1.72 1.72a.75.75 0 1 0 1.06 1.06l3-3Z" clipRule="evenodd" /></svg>
           <h3 className='text-l text-white rounded-xl inline-block'>Latitude:</h3>
         </div>
         <div className="flex flex-col items-end">
           <span className='text-white/80 font-mono'>{parseFloat(location.latitude).toFixed(8)}</span>
         </div>
       </div>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
+      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
         <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v5.69a.75.75 0 0 0 1.5 0v-5.69l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" /></svg>
           <h3 className='text-l text-white rounded-xl inline-block'>Longitude:</h3>
         </div>
         <div className="flex flex-col items-end">
           <span className='text-white/80 font-mono'>{parseFloat(location.longitude).toFixed(8)}</span>
         </div>
       </div>
-      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(142,81,255,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
+      <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-105 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl mb-3 pl-2 pr-6 py-2'>
         <div className='flex flex-row gap-2 group justify-left transition-all duration-300 group-hover:scale-105'>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-violet-500 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" /></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" /></svg>
           <h3 className='text-l text-white rounded-xl inline-block'>Timestamp:</h3>
         </div>
         <div className="flex flex-col items-end">
@@ -260,17 +371,9 @@ const LocationInfo = ({ location, formatTimestamp, onOpenDateSearch }) => (
         </div>
       </div>
     </div>
-    <button
-      onClick={onOpenDateSearch}
-      className='button-hover inline-flex items-center justify-center gap-2 font-semibold rounded-full transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-800 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-violet-600 to-violet-700 text-white hover:from-violet-700 hover:to-violet-800 px-20 py-3 md:px-20 md:py-2 text-base md:text-lg mt-2 mx-auto'
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-      <span className='group-hover:text-white/90 duration-300'>Search by Date</span>
-    </button>
   </div>
 );
 
-// --- NUEVO: Helper para interpolar colores ---
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -289,18 +392,17 @@ const interpolateColor = (color1, color2, factor) => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
-// --- NUEVO: Componente para renderizar la polilínea con degradado ---
 const GradientPolyline = ({ path }) => {
   if (path.length < 2) {
-    return null; // No se puede dibujar una línea con menos de dos puntos
+    return null;
   }
 
-  const startColor = "#C4B5FD"; // Un violeta claro (inicio)
-  const endColor = "#6D28D9";   // Un violeta oscuro (fin)
+  const startColor = "#ecfeff";
+  const endColor = "#053345";
 
   const segments = path.slice(1).map((point, index) => {
     const segmentPath = [path[index], point];
-    const factor = index / (path.length - 2); // Factor de 0 a 1
+    const factor = index / (path.length - 2);
     const color = interpolateColor(startColor, endColor, factor);
 
     return (
@@ -315,8 +417,6 @@ const GradientPolyline = ({ path }) => {
   return <>{segments}</>;
 };
 
-
-// --- MODIFICADO: Componente que actualiza la vista del mapa ---
 const MapViewUpdater = ({ path, isLiveMode }) => {
   const map = useMap();
 
@@ -324,11 +424,9 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
     if (!path || path.length === 0) return;
 
     if (!isLiveMode && path.length > 1) {
-      // MODO HISTÓRICO: Ajusta los límites para mostrar toda la ruta
       const bounds = L.latLngBounds(path);
       map.fitBounds(bounds.pad(0.1), { animate: true, duration: 1.5 });
     } else {
-      // MODO EN VIVO: Vuela a la última posición conocida
       const lastPosition = path[path.length - 1];
       map.flyTo(lastPosition, 18, {
         duration: 1.5,
@@ -340,25 +438,26 @@ const MapViewUpdater = ({ path, isLiveMode }) => {
   return null;
 };
 
-// --- Componente del Mapa ---
 const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
   const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
 
   const customIcon = new Icon({
-    iconUrl: "/icon.svg",
-    iconSize: [70, 70]
+    iconUrl: "/map.png",
+    iconSize: [50, 50]
   });
 
   return (
-    <div className='glassmorphism-strong rounded-4xl backdrop-blur-lg shadow-lg p-4 max-w-4xl w-full mx-4'>
+    <div className='glassmorphism-strong col-span-3 md:col-span-2 mt-4 md:mt-20 mx-auto rounded-4xl backdrop-blur-lg shadow-lg p-4 w-full'>
       <MapContainer
         center={position}
         zoom={18}
-        style={{ height: '35rem', width: '100%', borderRadius: '1rem' }}
+        style={{ height: '50rem', width: '100%', borderRadius: '1rem' }}
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
         />
+        
+        {/* Marcador final (el del ícono grande) */}
         <Marker position={position} icon={customIcon}>
           <Popup>
             <div className="text-center">
@@ -369,11 +468,38 @@ const LocationMap = ({ location, formatTimestamp, path, isLiveMode }) => {
             </div>
           </Popup>
         </Marker>
+
+        {/* Lógica para dibujar la línea de la ruta */}
         {isLiveMode ? (
           <Polyline pathOptions={{ color: '#8B5CF6', weight: 4 }} positions={path} />
         ) : (
           <GradientPolyline path={path} />
         )}
+
+        {/* --- CÓDIGO NUEVO --- */}
+        {/* Dibuja un círculo clickeable para cada punto en el modo Histórico */}
+        {!isLiveMode && path.map((point, index) => (
+          <CircleMarker
+            key={index}
+            center={point}
+            radius={6}
+            pathOptions={{ 
+              color: '#0092b8',
+              fillColor: '#00b8e0',
+              fillOpacity: 0.6 
+            }}
+          >
+            <Popup>
+              <div className="text-center">
+                <strong>Punto Histórico #{index + 1}</strong><br />
+                <small>Lat: {point[0].toFixed(6)}</small><br />
+                <small>Lng: {point[1].toFixed(6)}</small>
+              </div>
+            </Popup>
+          </CircleMarker>
+        ))}
+        {/* --- FIN DEL CÓDIGO NUEVO --- */}
+
         <MapViewUpdater path={path} isLiveMode={isLiveMode} />
       </MapContainer>
     </div>
@@ -389,8 +515,38 @@ function App() {
   const [path, setPath] = useState([]);
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const fetchLatestLocation = async () => {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const MOCK_LOCATION_DATA = {
+    latitude: '10.9878',
+    longitude: '-74.7889',
+    timestamp_value: new Date().getTime().toString(),
+  };
+
+
+  const MOCK_PATH_DATA = [
+    [10.9878, -74.7889],
+    [10.9885, -74.7895],
+    [10.9892, -74.7901],
+    [10.9900, -74.7908],
+  ];
+
+const fetchLatestLocation = async () => {
+    /* // --- INICIO: CÓDIGO CON MOCK DATA ---
+    // Simula una pequeña demora como si fuera una petición real
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    setLocationData(MOCK_LOCATION_DATA);
+    const newPosition = [
+        parseFloat(MOCK_LOCATION_DATA.latitude),
+        parseFloat(MOCK_LOCATION_DATA.longitude)
+    ];
+    setPath(prevPath => [...prevPath, newPosition]);
+    setLoading(false);
+    // --- FIN: CÓDIGO CON MOCK DATA --- */
+
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
 
@@ -426,12 +582,21 @@ function App() {
     }
   };
 
-  const handleDateSearch = async (searchData) => {
-    console.log('Búsqueda por fecha iniciada:', searchData);
-    setLoading(true);
+const handleDateSearch = async (searchData) => {
+    /* setLoading(true);
     setIsLiveMode(false);
     setError(null);
-    setErrorType(null);
+
+    // --- INICIO: CÓDIGO CON MOCK DATA ---
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simula búsqueda
+    
+    setPath(MOCK_PATH_DATA);
+    setLocationData({
+        latitude: MOCK_PATH_DATA[MOCK_PATH_DATA.length - 1][0],
+        longitude: MOCK_PATH_DATA[MOCK_PATH_DATA.length - 1][1],
+        timestamp_value: new Date().getTime().toString()
+    });
+    setLoading(false); */
 
     try {
       const { startDate, endDate } = searchData;
@@ -472,20 +637,20 @@ function App() {
     }
   };
 
-  // Función para manejar el retorno al modo live
   const handleReturnToLive = () => {
     setIsLiveMode(true);
     setPath([]);
     setError(null);
     setErrorType(null);
     setLoading(true);
+    setIsMobileMenuOpen(false);
   };
 
   useEffect(() => {
     if (isLiveMode) {
-        fetchLatestLocation(); // Carga inicial en modo en vivo
-        const interval = setInterval(fetchLatestLocation, config.POLLING_INTERVAL);
-        return () => clearInterval(interval);
+      fetchLatestLocation();
+      const interval = setInterval(fetchLatestLocation, config.POLLING_INTERVAL);
+      return () => clearInterval(interval);
     }
   }, [isLiveMode]);
 
@@ -500,29 +665,98 @@ function App() {
   return (
     <div className="min-h-screen transition-all duration-500 dark">
       <div className="fixed inset-0 -z-10 transition-all duration-500">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-violet-400 to-violet-800"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940]"></div>
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-indigo-500 rounded-full filter blur-3xl opacity-40 animate-float"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#052940] rounded-full filter blur-3xl opacity-40 animate-float"></div>
           <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-gray-400 rounded-full filter blur-3xl opacity-30 animate-float"></div>
           <div className="absolute top-1/2 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-zinc-500 rounded-full filter blur-3xl opacity-20 animate-float"></div>
         </div>
       </div>
 
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 glassmorphism-strong min-w-[80%] md:min-w-[90%] py-3 px-4 rounded-4xl">
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="py-1 px-3 text-center font-bold text-white/80 text-3xl">
-            {config.APP_NAME}
-          </h1>
-          <p className="text-white/60 text-sm">{config.APP_SUBTITLE}</p>
+      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
+        <div className="max-w-[100%] mx-auto flex items-center justify-between">
+          <div className="flex items-center">
+            <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
+            <h1 className="py-1 px-3 text-center font-bold text-white/90 text-2xl md:text-3xl">
+              {config.APP_NAME}
+            </h1>
+          </div>
+
+          {isMobile ? (
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-white hover:text-white/70 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          ) : (
+            <div className="flex items-center gap-4 p-1">
+              <button
+                onClick={handleReturnToLive}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white border-transparent hover:text-white/50'
+                  }`}
+              >
+                Live Tracking
+              </button>
+              <button
+                onClick={() => setIsDateSearchModalOpen(true)}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                  }`}
+              >
+                History
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobile && isMobileMenuOpen && (
+          <div className="mt-4 glassmorphism rounded-2xl p-4 animate-fade-in">
+            <button
+              onClick={handleReturnToLive}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
+                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+                : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              Live Tracking
+            </button>
+            <button
+              onClick={() => {
+                setIsDateSearchModalOpen(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
+                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+                : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              History
+            </button>
+          </div>
+        )}
       </header>
 
-      <main className='flex flex-col md:flex-row items-center mt-50 md:mt-15 justify-between gap-2 max-w-[90%] mx-auto min-h-screen'>
+      <main className='grid grid-cols-3 md:flex-row items-center gap-2 max-w-[98%] mx-auto min-h-screen px-4 md:px-0'>
         {loading ? (
-          <LoadingSpinner />
+          <div className="col-span-3">
+            <LoadingSpinner />
+          </div>
         ) : error ? (
-          <ErrorMessage 
-            error={error} 
+          <ErrorMessage
+            error={error}
             onRetry={() => {
               if (isLiveMode) {
                 fetchLatestLocation();
@@ -536,21 +770,9 @@ function App() {
           />
         ) : locationData ? (
           <>
-            {!isLiveMode && (
-              <div className="absolute top-40 left-1/5 -translate-x-1/2 z-40">
-                <button
-                  onClick={handleReturnToLive}
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-                  Return to Live
-                </button>
-              </div>
-            )}
             <LocationInfo
               location={locationData}
               formatTimestamp={formatTimestamp}
-              onOpenDateSearch={() => setIsDateSearchModalOpen(true)}
             />
             <LocationMap location={locationData} formatTimestamp={formatTimestamp} path={path} isLiveMode={isLiveMode} />
           </>
