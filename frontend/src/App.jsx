@@ -365,14 +365,14 @@ const LocationInfo = ({ location, formatTimestamp }) => {
 
   return (
     <div 
-      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-6 p-8 rounded-4xl glassmorphism-strong'
+      className='flex flex-col col-span-3 md:col-span-1 mt-4 md:mt-6 p-6 rounded-4xl glassmorphism-strong'
       style={{ height: containerHeight, minHeight: '300px' }}
     >
       <div className='rounded-4xl h-full flex flex-col'>
         <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8 flex-shrink-0'>
           Last Location Received
         </h2>
-        <div className='flex-1 space-y-3 overflow-y-auto'>
+        <div className='flex-1 space-y-3'>
           <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-101 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
             <div className='flex flex-row gap-2 justify-left transition-all duration-300 group-hover:scale-101'>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-white duration-300 group-hover:text-cyan-600 size-6">
