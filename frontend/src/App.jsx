@@ -799,14 +799,14 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
       </div>
 
-      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-4 px-6">
+      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong2 py-4 px-6">
         <div className="max-w-[100%] mx-auto flex items-center justify-between">
           <div className="flex items-center">
             {/* Botón para abrir sidebar - solo visible cuando está cerrado */}
             {!isSidebarVisible && (
               <button
                 onClick={() => setIsSidebarVisible(true)}
-                className="mr-3 p-2 glassmorphism-strong rounded-lg transition-all duration-300 hover:scale-105 hover:bg-cyan-500/20"
+                className="mr-3 p-2 glassmorphism-strong2 rounded-lg transition-all duration-300 hover:scale-105 hover:bg-cyan-500/20"
               >
                 <svg 
                   className="w-6 h-6 text-white hover:text-cyan-400 transition-colors" 
