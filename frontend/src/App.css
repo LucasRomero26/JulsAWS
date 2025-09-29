@@ -122,158 +122,81 @@ body {
   border-radius: 3px;
 }
 
-/* ===== ANIMACIONES OPTIMIZADAS PARA ELIMINAR SALTOS ===== */
+/* ===== ANIMACIONES SIMPLES Y FLUIDAS ===== */
 
-/* Floating animations con curvas suaves */
-@keyframes float-smooth {
+/* Animación de gradient suave y simple */
+@keyframes gentle-gradient {
   0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  25% {
-    transform: translate3d(5px, -10px, 0) rotate(1deg) scale(1.02);
+    background-position: 0% 50%;
   }
   50% {
-    transform: translate3d(-3px, -20px, 0) rotate(-0.5deg) scale(1.05);
-  }
-  75% {
-    transform: translate3d(-8px, -10px, 0) rotate(0.8deg) scale(1.02);
+    background-position: 100% 50%;
   }
 }
 
-@keyframes float-smooth-alt {
+/* Overlay con breathing sutil */
+@keyframes gentle-breathe {
   0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  20% {
-    transform: translate3d(-8px, -15px, 0) rotate(-1deg) scale(1.03);
-  }
-  40% {
-    transform: translate3d(10px, -25px, 0) rotate(1.5deg) scale(1.08);
-  }
-  60% {
-    transform: translate3d(15px, -18px, 0) rotate(-0.8deg) scale(1.05);
-  }
-  80% {
-    transform: translate3d(-5px, -8px, 0) rotate(0.5deg) scale(1.02);
-  }
-}
-
-@keyframes float-smooth-slow {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-  }
-  16% {
-    transform: translate3d(-12px, -8px, 0) rotate(-0.5deg) scale(1.01);
-  }
-  33% {
-    transform: translate3d(8px, -18px, 0) rotate(1deg) scale(1.04);
-  }
-  50% {
-    transform: translate3d(18px, -25px, 0) rotate(-1.2deg) scale(1.07);
-  }
-  66% {
-    transform: translate3d(5px, -20px, 0) rotate(0.8deg) scale(1.05);
-  }
-  83% {
-    transform: translate3d(-10px, -12px, 0) rotate(-0.3deg) scale(1.02);
-  }
-}
-
-/* Gradiente con transiciones más suaves usando HSL */
-@keyframes gradient-flow {
-  0% {
-    background: linear-gradient(135deg, 
-      hsl(222, 91%, 9%) 0%, 
-      hsl(205, 56%, 22%) 35%, 
-      hsl(200, 85%, 15%) 70%, 
-      hsl(210, 78%, 12%) 100%);
-  }
-  20% {
-    background: linear-gradient(145deg, 
-      hsl(210, 78%, 12%) 0%, 
-      hsl(222, 91%, 9%) 35%, 
-      hsl(205, 56%, 22%) 70%, 
-      hsl(195, 82%, 18%) 100%);
-  }
-  40% {
-    background: linear-gradient(155deg, 
-      hsl(195, 82%, 18%) 0%, 
-      hsl(200, 85%, 15%) 35%, 
-      hsl(210, 78%, 12%) 70%, 
-      hsl(222, 91%, 9%) 100%);
-  }
-  60% {
-    background: linear-gradient(165deg, 
-      hsl(200, 85%, 15%) 0%, 
-      hsl(195, 82%, 18%) 35%, 
-      hsl(222, 91%, 9%) 70%, 
-      hsl(205, 56%, 22%) 100%);
-  }
-  80% {
-    background: linear-gradient(175deg, 
-      hsl(205, 56%, 22%) 0%, 
-      hsl(210, 78%, 12%) 35%, 
-      hsl(195, 82%, 18%) 70%, 
-      hsl(200, 85%, 15%) 100%);
-  }
-  100% {
-    background: linear-gradient(135deg, 
-      hsl(222, 91%, 9%) 0%, 
-      hsl(205, 56%, 22%) 35%, 
-      hsl(200, 85%, 15%) 70%, 
-      hsl(210, 78%, 12%) 100%);
-  }
-}
-
-/* Overlay con opacidad variable suave */
-@keyframes overlay-breathe {
-  0%, 100% {
-    background: linear-gradient(225deg, 
-      hsla(200, 85%, 15%, 0.4) 0%, 
-      hsla(210, 78%, 12%, 0.6) 50%, 
-      hsla(205, 56%, 22%, 0.5) 100%);
-    opacity: 0.7;
-  }
-  33% {
-    background: linear-gradient(235deg, 
-      hsla(205, 56%, 22%, 0.5) 0%, 
-      hsla(200, 85%, 15%, 0.4) 50%, 
-      hsla(195, 82%, 18%, 0.6) 100%);
     opacity: 0.6;
   }
-  66% {
-    background: linear-gradient(245deg, 
-      hsla(195, 82%, 18%, 0.6) 0%, 
-      hsla(205, 56%, 22%, 0.5) 50%, 
-      hsla(210, 78%, 12%, 0.4) 100%);
+  50% {
     opacity: 0.8;
   }
 }
 
-/* Shimmer más sutil y continuo */
-@keyframes shimmer-smooth {
+/* Floating suave y continuo */
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.05);
+  }
+}
+
+@keyframes gentle-float-alt {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-10px) translateX(-8px) scale(1.02);
+  }
+  66% {
+    transform: translateY(-20px) translateX(5px) scale(1.08);
+  }
+}
+
+@keyframes gentle-float-slow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) translateX(-10px) scale(1.02) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-18px) translateX(0px) scale(1.06) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-12px) translateX(8px) scale(1.03) rotate(-1deg);
+  }
+}
+
+/* Shimmer muy sutil */
+@keyframes gentle-shimmer {
   0% {
-    transform: translateX(-100%) skewX(-15deg);
+    transform: translateX(-50%);
     opacity: 0;
   }
-  20% {
-    opacity: 0.3;
-  }
-  40% {
-    opacity: 0.8;
-  }
-  60% {
-    opacity: 0.8;
-  }
-  80% {
+  50% {
     opacity: 0.3;
   }
   100% {
-    transform: translateX(100%) skewX(-15deg);
+    transform: translateX(50%);
     opacity: 0;
   }
 }
 
+/* Otras animaciones existentes */
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
@@ -338,29 +261,31 @@ body {
   }
 }
 
-/* ===== CLASES DE ANIMACIÓN OPTIMIZADAS ===== */
+/* ===== CLASES DE ANIMACIÓN SUAVES ===== */
 .animate-float {
-  animation: float-smooth 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: gentle-float 6s ease-in-out infinite;
 }
 
 .animate-float-slow {
-  animation: float-smooth-alt 14s cubic-bezier(0.25, 0, 0.75, 1) infinite;
+  animation: gentle-float-alt 10s ease-in-out infinite;
 }
 
 .animate-float-slower {
-  animation: float-smooth-slow 20s cubic-bezier(0.25, 0, 0.75, 1) infinite;
+  animation: gentle-float-slow 14s ease-in-out infinite;
 }
 
 .animate-gradient-shift {
-  animation: gradient-flow 30s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: linear-gradient(-45deg, #011640, #163e57, #052940, #0a1a2e);
+  background-size: 400% 400%;
+  animation: gentle-gradient 8s ease infinite;
 }
 
 .animate-gradient-overlay {
-  animation: overlay-breathe 35s cubic-bezier(0.25, 0, 0.75, 1) infinite;
+  animation: gentle-breathe 6s ease-in-out infinite;
 }
 
 .animate-shimmer {
-  animation: shimmer-smooth 12s cubic-bezier(0.25, 0, 0.75, 1) infinite;
+  animation: gentle-shimmer 10s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
@@ -394,45 +319,35 @@ body {
 .animate-float,
 .animate-float-slow,
 .animate-float-slower {
-  will-change: transform, background-image, opacity;
+  will-change: transform, background-position, opacity;
   backface-visibility: hidden;
-  perspective: 1000px;
-  transform-style: preserve-3d;
-  /* Força aceleración por hardware */
   transform: translateZ(0);
 }
 
-/* Reduce el repaint en elementos con blur */
-.animate-float,
-.animate-float-slow,
-.animate-float-slower {
-  contain: layout style paint;
-}
-
-/* Optimización para dispositivos de baja potencia */
+/* Optimizaciones para móviles */
 @media (max-width: 768px) {
   .animate-gradient-shift {
-    animation-duration: 45s;
+    animation-duration: 12s;
   }
   
   .animate-gradient-overlay {
-    animation-duration: 50s;
+    animation-duration: 8s;
   }
   
-  .animate-shimmer {
-    animation-duration: 18s;
+  .animate-float {
+    animation-duration: 8s;
   }
   
   .animate-float-slow {
-    animation-duration: 20s;
+    animation-duration: 12s;
   }
   
   .animate-float-slower {
-    animation-duration: 28s;
+    animation-duration: 16s;
   }
 }
 
-/* Respeta las preferencias de accesibilidad */
+/* Respeta preferencias de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   .animate-gradient-shift,
   .animate-gradient-overlay,
@@ -440,9 +355,7 @@ body {
   .animate-float,
   .animate-float-slow,
   .animate-float-slower {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
   }
 }
 
