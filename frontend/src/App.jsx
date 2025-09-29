@@ -23,7 +23,7 @@ const config = {
   POLLING_INTERVAL: import.meta.env.VITE_POLLING_INTERVAL || 5000,
   JAWG_ACCESS_TOKEN: 'icNC49f9tQCM0CwkpIHYIXmvNjTgtAVrdIf3PdM94merPcn8Bcx806NlkILQrOPS',
   JAWG_MAP_ID: 'jawg-dark',
-  INACTIVE_TIMEOUT: 60000 // AUMENTADO: 60 segundos en milisegundos para dar más margen
+  INACTIVE_TIMEOUT: 20000 // AUMENTADO: 20 segundos en milisegundos para dar más margen
 };
 
 // Arreglo para el ícono por defecto de Leaflet en Vite
@@ -1002,23 +1002,29 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // 🔥 CORRECCIÓN PRINCIPAL: useEffect con control de polling mejorado
   useEffect(() => {
-    if (isLiveMode) {
+    if (isLiveMode && !isDateSearchModalOpen) {
+      // Solo hacer polling si estamos en live mode Y el modal no está abierto
+      
       // Fetch inicial
       fetchUsersData();
       fetchLatestLocation();
       
       // Polling para actualizaciones en vivo
       const interval = setInterval(() => {
-        fetchUsersData();
-        if (selectedUserId) {
-          fetchLatestLocation();
+        // Doble verificación: solo hacer polling si seguimos en live mode y modal cerrado
+        if (isLiveMode && !isDateSearchModalOpen) {
+          fetchUsersData();
+          if (selectedUserId) {
+            fetchLatestLocation();
+          }
         }
       }, config.POLLING_INTERVAL);
       
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, selectedUserId]);
+  }, [isLiveMode, selectedUserId, isDateSearchModalOpen]); // 🔥 Agregamos isDateSearchModalOpen a las dependencias
 
   // Obtener el nombre del dispositivo seleccionado para mostrar en el mapa
   const selectedDeviceName = users.find(user => user.id === selectedUserId)?.name;
