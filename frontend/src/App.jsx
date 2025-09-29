@@ -26,6 +26,41 @@ const config = {
   INACTIVE_TIMEOUT: 20000 // AUMENTADO: 20 segundos en milisegundos para dar más margen
 };
 
+// --- NUEVO: Configuración de colores para dispositivos ---
+const DEVICE_COLORS = {
+  primary: {
+    light: '#ecfeff', // cyan claro
+    dark: '#053345',  // cyan oscuro
+    main: '#0092b8'   // cyan principal
+  },
+  secondary: {
+    light: '#fef3c7', // amarillo claro
+    dark: '#78350f',  // amarillo oscuro
+    main: '#f59e0b'   // amarillo principal
+  },
+  tertiary: {
+    light: '#fecaca', // rojo claro
+    dark: '#7f1d1d',  // rojo oscuro
+    main: '#dc2626'   // rojo principal
+  },
+  quaternary: {
+    light: '#e9d5ff', // morado claro
+    dark: '#581c87',  // morado oscuro
+    main: '#9333ea'   // morado principal
+  },
+  quinary: {
+    light: '#dbeafe', // azul oscuro claro
+    dark: '#1e3a8a',  // azul oscuro
+    main: '#3b82f6'   // azul principal
+  }
+};
+
+const getDeviceColor = (index) => {
+  const colorKeys = ['primary', 'secondary', 'tertiary', 'quaternary', 'quinary'];
+  const colorKey = colorKeys[index % colorKeys.length];
+  return DEVICE_COLORS[colorKey];
+};
+
 // Arreglo para el ícono por defecto de Leaflet en Vite
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -200,7 +235,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- ACTUALIZADO: Componente de información de usuarios para móvil con overflow fixed ---
+// --- ACTUALIZADO: Componente de información de usuarios para móvil con colores ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   if (!users || users.length === 0) return null;
 
@@ -212,9 +247,10 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       </div>
 
       <div className="space-y-3">
-        {users.map((user) => {
+        {users.map((user, index) => {
           const isActive = isUserActive(user.lastUpdate);
           const isSelected = selectedUserId === user.id;
+          const deviceColor = getDeviceColor(index);
           
           return (
             <div
@@ -222,14 +258,25 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
               onClick={() => onUserSelect(user.id)}
               className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                 isSelected 
-                  ? 'bg-cyan-600/30 border border-cyan-600/50 shadow-lg shadow-cyan-600/20' 
+                  ? `bg-[${deviceColor.main}]/30 border border-[${deviceColor.main}]/50 shadow-lg shadow-[${deviceColor.main}]/20` 
                   : 'bg-white/5 hover:bg-white/10'
               }`}
+              style={isSelected ? {
+                backgroundColor: `${deviceColor.main}30`,
+                borderColor: `${deviceColor.main}80`,
+                boxShadow: `0 10px 25px ${deviceColor.main}20`
+              } : {}}
             >
-              {/* Header del usuario con overflow corregido */}
+              {/* Header del usuario con color indicator */}
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                  <div 
+                    className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
+                    style={{
+                      backgroundColor: isActive ? '#10b981' : '#ef4444',
+                      borderColor: deviceColor.main
+                    }}
+                  ></div>
                   <h3 className="font-semibold text-white truncate">{user.name}</h3>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
@@ -240,6 +287,12 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
+
+              {/* Color indicator bar */}
+              <div 
+                className="w-full h-1 rounded-full mb-3"
+                style={{ backgroundColor: deviceColor.main }}
+              ></div>
 
               {/* Información de ubicación */}
               <div className="space-y-2 text-sm">
@@ -275,7 +328,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// --- ACTUALIZADO: Sidebar para desktop con overflow fixed ---
+// --- ACTUALIZADO: Sidebar para desktop con colores ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   return (
     <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
@@ -287,9 +340,10 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-          {users.map((user) => {
+          {users.map((user, index) => {
             const isActive = isUserActive(user.lastUpdate);
             const isSelected = selectedUserId === user.id;
+            const deviceColor = getDeviceColor(index);
             
             return (
               <div
@@ -297,14 +351,24 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                   isSelected 
-                    ? 'bg-cyan-600/30 border border-cyan-600/50' 
+                    ? 'border' 
                     : 'glassmorphism hover:bg-white/10'
                 }`}
+                style={isSelected ? {
+                  backgroundColor: `${deviceColor.main}30`,
+                  borderColor: `${deviceColor.main}80`
+                } : {}}
               >
-                {/* Header del usuario con overflow corregido */}
+                {/* Header del usuario con color indicator */}
                 <div className="flex items-center justify-between mb-3 gap-2">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <div 
+                      className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
+                      style={{
+                        backgroundColor: isActive ? '#10b981' : '#ef4444',
+                        borderColor: deviceColor.main
+                      }}
+                    ></div>
                     <h3 className="font-semibold text-white truncate">{user.name}</h3>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
@@ -315,6 +379,12 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                     {isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
+
+                {/* Color indicator bar */}
+                <div 
+                  className="w-full h-1 rounded-full mb-3"
+                  style={{ backgroundColor: deviceColor.main }}
+                ></div>
 
                 {/* Información de ubicación */}
                 <div className="space-y-2 text-sm">
@@ -356,10 +426,11 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- ACTUALIZADO: Modal de búsqueda por fechas ---
-const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
+// --- ACTUALIZADO: Modal de búsqueda por fechas con selector de dispositivo ---
+const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -453,6 +524,10 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
       setError('Please select both a start and end date.');
       return;
     }
+    if (!selectedDeviceId) {
+      setError('Please select a device.');
+      return;
+    }
     if (endDate.isBefore(startDate)) {
       setError('End date must be after the start date.');
       return;
@@ -465,7 +540,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
       const searchData = {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        deviceId: selectedUserId // Include selected device ID
+        deviceId: selectedDeviceId
       };
       onSearch(searchData);
       onClose();
@@ -480,14 +555,18 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
   const resetForm = () => {
     setStartDate(null);
     setEndDate(null);
+    setSelectedDeviceId('');
     setError('');
   };
 
   useEffect(() => {
     if (!isOpen) {
       resetForm();
+    } else if (users && users.length > 0 && !selectedDeviceId) {
+      // Auto-seleccionar el primer dispositivo disponible
+      setSelectedDeviceId(users[0].id);
     }
-  }, [isOpen]);
+  }, [isOpen, users]);
 
   // Estilos para los pickers en móvil
   const mobilePickerSx = {
@@ -505,7 +584,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
       />
       <div className="relative glassmorphism-strong rounded-4xl p-6 md:p-8 mx-4 w-full max-w-md md:max-w-5xl transform">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Select Date Range</h2>
+          <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
           <button onClick={onClose} className="text-white/60 cursor-pointer hover:text-white p-1">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -513,12 +592,44 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
           </button>
         </div>
         
-        {/* Show selected device info */}
-        {selectedUserId && (
-          <div className="mb-4 p-3 bg-cyan-600/20 rounded-xl border border-cyan-600/30">
-            <p className="text-sm text-cyan-400">Searching history for device: <span className="font-semibold">{selectedUserId}</span></p>
+        {/* Device Selector */}
+        <div className="mb-6">
+          <label className="block text-white text-lg font-medium mb-3">Select Device</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {users.map((user, index) => {
+              const deviceColor = getDeviceColor(index);
+              const isSelected = selectedDeviceId === user.id;
+              
+              return (
+                <button
+                  key={user.id}
+                  onClick={() => setSelectedDeviceId(user.id)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    isSelected 
+                      ? 'border-opacity-80 shadow-lg' 
+                      : 'border-white/20 hover:border-white/40'
+                  }`}
+                  style={isSelected ? {
+                    backgroundColor: `${deviceColor.main}30`,
+                    borderColor: deviceColor.main,
+                    boxShadow: `0 10px 25px ${deviceColor.main}20`
+                  } : {}}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: deviceColor.main }}
+                    ></div>
+                    <div className="text-left">
+                      <div className="text-white font-semibold truncate">{user.name}</div>
+                      <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
         
         <ThemeProvider theme={darkTheme}>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -588,7 +699,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
           </button>
           <button
             onClick={handleSearch}
-            disabled={isLoading || !startDate || !endDate}
+            disabled={isLoading || !startDate || !endDate || !selectedDeviceId}
             className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
@@ -614,6 +725,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, selectedUserId }) => {
   );
 };
 
+// --- NUEVO: Componente para interpolación de colores con múltiples dispositivos ---
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -632,13 +744,13 @@ const interpolateColor = (color1, color2, factor) => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
-const GradientPolyline = ({ path }) => {
+const GradientPolyline = ({ path, deviceColor }) => {
   if (path.length < 2) {
     return null;
   }
 
-  const startColor = "#ecfeff";
-  const endColor = "#053345";
+  const startColor = deviceColor.light;
+  const endColor = deviceColor.dark;
 
   const segments = path.slice(1).map((point, index) => {
     const segmentPath = [path[index], point];
@@ -657,30 +769,55 @@ const GradientPolyline = ({ path }) => {
   return <>{segments}</>;
 };
 
-const MapViewUpdater = ({ path, isLiveMode }) => {
+// --- ACTUALIZADO: Componente para actualizar la vista del mapa con múltiples dispositivos ---
+const MapViewUpdater = ({ userPaths, isLiveMode, users }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (!path || path.length === 0) return;
+    if (!users || users.length === 0) return;
 
-    if (!isLiveMode && path.length > 1) {
-      const bounds = L.latLngBounds(path);
-      map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
+    if (isLiveMode) {
+      // En modo live, ajustar zoom para mostrar todos los dispositivos activos
+      const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
+      
+      if (activeUsers.length > 1) {
+        // Múltiples dispositivos activos: ajustar bounds para mostrar todos
+        const allPositions = activeUsers.map(user => [
+          parseFloat(user.latitude), 
+          parseFloat(user.longitude)
+        ]);
+        
+        const bounds = L.latLngBounds(allPositions);
+        map.fitBounds(bounds, { 
+          padding: [50, 50], 
+          animate: true, 
+          duration: 1.5,
+          maxZoom: 16 // Limitar el zoom máximo para no acercarse demasiado
+        });
+      } else if (activeUsers.length === 1) {
+        // Un solo dispositivo activo: centrar en él
+        const user = activeUsers[0];
+        const position = [parseFloat(user.latitude), parseFloat(user.longitude)];
+        map.flyTo(position, 18, {
+          duration: 1.5,
+          easeLinearity: 0.25
+        });
+      }
     } else {
-      const lastPosition = path[path.length - 1];
-      map.flyTo(lastPosition, 18, {
-        duration: 1.5,
-        easeLinearity: 0.25
-      });
+      // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
+      const selectedUserPaths = Object.values(userPaths).find(paths => paths.length > 0);
+      if (selectedUserPaths && selectedUserPaths.length > 1) {
+        const bounds = L.latLngBounds(selectedUserPaths);
+        map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.5 });
+      }
     }
-  }, [path, isLiveMode, map]);
+  }, [userPaths, isLiveMode, users, map]);
 
   return null;
 };
 
-// --- ACTUALIZADO: LocationMap con información de dispositivo en el popup ---
-const LocationMap = ({ location, path, isLiveMode, selectedDeviceName }) => {
-  const position = [parseFloat(location.latitude), parseFloat(location.longitude)];
+// --- ACTUALIZADO: LocationMap con soporte para múltiples dispositivos y colores ---
+const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -694,10 +831,31 @@ const LocationMap = ({ location, path, isLiveMode, selectedDeviceName }) => {
     iconSize: [50, 50]
   });
 
+  // Obtener la posición central basada en usuarios activos o el seleccionado
+  const getCenterPosition = () => {
+    if (isLiveMode && users.length > 0) {
+      const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
+      if (activeUsers.length > 0) {
+        const firstActive = activeUsers[0];
+        return [parseFloat(firstActive.latitude), parseFloat(firstActive.longitude)];
+      }
+      const firstUser = users[0];
+      return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
+    } else if (selectedUserId && users.length > 0) {
+      const selectedUser = users.find(user => user.id === selectedUserId);
+      if (selectedUser) {
+        return [parseFloat(selectedUser.latitude), parseFloat(selectedUser.longitude)];
+      }
+    }
+    return [0, 0]; // Fallback
+  };
+
+  const centerPosition = getCenterPosition();
+
   return (
     <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
       <MapContainer
-        center={position}
+        center={centerPosition}
         zoom={18}
         style={{ 
           height: `${mapHeight}px`, 
@@ -710,50 +868,88 @@ const LocationMap = ({ location, path, isLiveMode, selectedDeviceName }) => {
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
         />
 
-        {/* Marcador final (el del ícono grande) */}
-        <Marker position={position} icon={customIcon}>
-          <Popup>
-            <div className="text-center">
-              <strong>Current Location</strong><br />
-              {selectedDeviceName && <><small>Device: {selectedDeviceName}</small><br /></>}
-              {location.device_id && <><small>ID: {location.device_id}</small><br /></>}
-              <small>Received: {formatTimestamp(location.timestamp_value)}</small><br />
-              <small>Lat: {parseFloat(location.latitude).toFixed(6)}</small><br />
-              <small>Lng: {parseFloat(location.longitude).toFixed(6)}</small>
+        {/* Renderizar marcadores y rutas para cada usuario */}
+        {users.map((user, index) => {
+          const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
+          const deviceColor = getDeviceColor(index);
+          const isActive = isUserActive(user.lastUpdate);
+          const userPath = userPaths[user.id] || [userPosition];
+          const isSelected = selectedUserId === user.id;
+
+          // En modo live, mostrar todos los usuarios activos
+          // En modo histórico, mostrar solo el seleccionado
+          const shouldShow = isLiveMode ? isActive : isSelected;
+          
+          if (!shouldShow) return null;
+
+          return (
+            <div key={user.id}>
+              {/* Marcador del dispositivo */}
+              <Marker 
+                position={userPosition} 
+                icon={customIcon}
+                opacity={isSelected || isLiveMode ? 1 : 0.7}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <strong style={{ color: deviceColor.main }}>
+                      {user.name}
+                    </strong><br />
+                    <small>Device: {user.deviceId}</small><br />
+                    <small>Status: {isActive ? 'Active' : 'Inactive'}</small><br />
+                    <small>Last Update: {formatTimestamp(user.lastUpdate)}</small><br />
+                    <small>Lat: {parseFloat(user.latitude).toFixed(6)}</small><br />
+                    <small>Lng: {parseFloat(user.longitude).toFixed(6)}</small>
+                  </div>
+                </Popup>
+              </Marker>
+
+              {/* Ruta del dispositivo */}
+              {userPath.length > 1 && (
+                <>
+                  {isLiveMode ? (
+                    <Polyline 
+                      pathOptions={{ 
+                        color: deviceColor.main, 
+                        weight: 4, 
+                        opacity: 0.8 
+                      }} 
+                      positions={userPath} 
+                    />
+                  ) : (
+                    <GradientPolyline path={userPath} deviceColor={deviceColor} />
+                  )}
+                </>
+              )}
+
+              {/* Puntos históricos clickeables (solo en modo histórico) */}
+              {!isLiveMode && userPath.map((point, pointIndex) => (
+                <CircleMarker
+                  key={`${user.id}-${pointIndex}`}
+                  center={point}
+                  radius={6}
+                  pathOptions={{
+                    color: deviceColor.main,
+                    fillColor: deviceColor.light,
+                    fillOpacity: 0.6
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <strong style={{ color: deviceColor.main }}>
+                        {user.name} - Point #{pointIndex + 1}
+                      </strong><br />
+                      <small>Lat: {point[0].toFixed(6)}</small><br />
+                      <small>Lng: {point[1].toFixed(6)}</small>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              ))}
             </div>
-          </Popup>
-        </Marker>
+          );
+        })}
 
-        {/* Lógica para dibujar la línea de la ruta */}
-        {isLiveMode ? (
-          <Polyline pathOptions={{ color: '#053345', weight: 4 }} positions={path} />
-        ) : (
-          <GradientPolyline path={path} />
-        )}
-
-        {/* Dibuja un círculo clickeable para cada punto en el modo Histórico */}
-        {!isLiveMode && path.map((point, index) => (
-          <CircleMarker
-            key={index}
-            center={point}
-            radius={6}
-            pathOptions={{
-              color: '#0092b8',
-              fillColor: '#00b8e0',
-              fillOpacity: 0.6
-            }}
-          >
-            <Popup>
-              <div className="text-center">
-                <strong>Historical Point #{index + 1}</strong><br />
-                <small>Lat: {point[0].toFixed(6)}</small><br />
-                <small>Lng: {point[1].toFixed(6)}</small>
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
-
-        <MapViewUpdater path={path} isLiveMode={isLiveMode} />
+        <MapViewUpdater userPaths={userPaths} isLiveMode={isLiveMode} users={users} />
       </MapContainer>
     </div>
   );
@@ -761,11 +957,10 @@ const LocationMap = ({ location, path, isLiveMode, selectedDeviceName }) => {
 
 // --- Componente Principal ---
 function App() {
-  const [locationData, setLocationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
-  const [path, setPath] = useState([]);
+  const [userPaths, setUserPaths] = useState({}); // Cambio: paths por usuario
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -799,31 +994,30 @@ function App() {
           
           setUsers(usersArray);
           
-          // Si no hay usuario seleccionado, seleccionar el primero
-          if (!selectedUserId && usersArray.length > 0) {
-            const firstUser = usersArray[0];
-            setSelectedUserId(firstUser.id);
-            setLocationData({
-              latitude: firstUser.latitude,
-              longitude: firstUser.longitude,
-              timestamp_value: firstUser.lastUpdate,
-              device_id: firstUser.deviceId,
-              device_name: firstUser.name,
-              device_type: firstUser.deviceType
-            });
-          } else if (selectedUserId) {
-            // Actualizar datos del usuario seleccionado
-            const selectedUser = usersArray.find(user => user.id === selectedUserId);
-            if (selectedUser) {
-              setLocationData({
-                latitude: selectedUser.latitude,
-                longitude: selectedUser.longitude,
-                timestamp_value: selectedUser.lastUpdate,
-                device_id: selectedUser.deviceId,
-                device_name: selectedUser.name,
-                device_type: selectedUser.deviceType
+          // Actualizar paths en modo live
+          if (isLiveMode) {
+            setUserPaths(prevPaths => {
+              const newPaths = { ...prevPaths };
+              
+              usersArray.forEach(user => {
+                const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
+                const currentPath = newPaths[user.id] || [];
+                
+                // Solo agregar si es una posición diferente
+                const lastPoint = currentPath[currentPath.length - 1];
+                if (!lastPoint || lastPoint[0] !== userPosition[0] || lastPoint[1] !== userPosition[1]) {
+                  newPaths[user.id] = [...currentPath, userPosition];
+                }
               });
-            }
+              
+              return newPaths;
+            });
+          }
+          
+          // Si no hay usuario seleccionado, seleccionar el primero activo
+          if (!selectedUserId && usersArray.length > 0) {
+            const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
+            setSelectedUserId(activeUser.id);
           }
         } else {
           // Si no hay dispositivos, usar el endpoint de fallback
@@ -860,59 +1054,14 @@ function App() {
         
         if (!selectedUserId) {
           setSelectedUserId(userData.id);
-          setLocationData(data);
+          const userPosition = [parseFloat(userData.latitude), parseFloat(userData.longitude)];
+          setUserPaths({ [userData.id]: [userPosition] });
         }
       }
     } catch (err) {
       console.error('Error fetching fallback data:', err);
-    }
-  };
-
-  // ACTUALIZADO: Función para obtener la última ubicación considerando dispositivo seleccionado
-  const fetchLatestLocation = async () => {
-    try {
-      let response;
-      
-      if (selectedUserId && selectedUserId !== 'device_legacy') {
-        // Obtener datos específicos del dispositivo seleccionado
-        response = await fetch(`${config.API_BASE_URL}/api/location/device/${selectedUserId}/latest`);
-        
-        if (!response.ok) {
-          // Si falla, obtener datos generales
-          response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
-        }
-      } else {
-        // Obtener datos generales
-        response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
-      }
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('No hay datos de ubicación disponibles');
-          setErrorType('connection');
-          setLocationData(null);
-        } else {
-          throw new Error('Error al obtener datos');
-        }
-      } else {
-        const data = await response.json();
-        setLocationData(data);
-
-        const newPosition = [parseFloat(data.latitude), parseFloat(data.longitude)];
-        setPath(prevPath => {
-          const lastPoint = prevPath[prevPath.length - 1];
-          if (!lastPoint || lastPoint[0] !== newPosition[0] || lastPoint[1] !== newPosition[1]) {
-            return [...prevPath, newPosition];
-          }
-          return prevPath;
-        });
-        setError(null);
-        setErrorType(null);
-      }
-    } catch (err) {
       setError('Error de conexión con el servidor');
       setErrorType('connection');
-      console.error('Error fetching location:', err);
     } finally {
       setLoading(false);
     }
@@ -922,21 +1071,9 @@ function App() {
   const handleUserSelect = (userId) => {
     console.log('User selected:', userId);
     setSelectedUserId(userId);
-    const selectedUser = users.find(user => user.id === userId);
-    if (selectedUser) {
-      setLocationData({
-        latitude: selectedUser.latitude,
-        longitude: selectedUser.longitude,
-        timestamp_value: selectedUser.lastUpdate,
-        device_id: selectedUser.deviceId,
-        device_name: selectedUser.name,
-        device_type: selectedUser.deviceType
-      });
-      
-      // Actualiza el path para mostrar solo la ubicación del usuario seleccionado
-      const userPosition = [parseFloat(selectedUser.latitude), parseFloat(selectedUser.longitude)];
-      setPath([userPosition]);
-    }
+    
+    // En modo live, no necesitamos hacer nada más
+    // En modo histórico, necesitaríamos recargar datos específicos del usuario
   };
 
   // ACTUALIZADO: Búsqueda por fecha con soporte para dispositivos específicos
@@ -966,23 +1103,17 @@ function App() {
           parseFloat(point.latitude),
           parseFloat(point.longitude)
         ]);
-        setPath(newPath);
-
-        const lastLocationInRange = historicalData[historicalData.length - 1];
-        setLocationData({
-          latitude: lastLocationInRange.latitude,
-          longitude: lastLocationInRange.longitude,
-          timestamp_value: lastLocationInRange.timestamp_value,
-          device_id: lastLocationInRange.device_id,
-          device_name: lastLocationInRange.device_name,
-          device_type: lastLocationInRange.device_type
-        });
+        
+        // Establecer path solo para el dispositivo seleccionado
+        setUserPaths({ [deviceId]: newPath });
+        
+        // Asegurar que el usuario seleccionado corresponda al deviceId
+        setSelectedUserId(deviceId);
 
       } else {
-        setPath([]);
+        setUserPaths({});
         setError('No se encontraron datos de ubicación para el rango seleccionado.');
         setErrorType('no-data');
-        setLocationData(null);
       }
     } catch (err) {
       setError('Error de conexión al buscar el historial.');
@@ -995,7 +1126,7 @@ function App() {
 
   const handleReturnToLive = () => {
     setIsLiveMode(true);
-    setPath([]);
+    setUserPaths({});
     setError(null);
     setErrorType(null);
     setLoading(true);
@@ -1009,25 +1140,18 @@ function App() {
       
       // Fetch inicial
       fetchUsersData();
-      fetchLatestLocation();
       
       // Polling para actualizaciones en vivo
       const interval = setInterval(() => {
         // Doble verificación: solo hacer polling si seguimos en live mode y modal cerrado
         if (isLiveMode && !isDateSearchModalOpen) {
           fetchUsersData();
-          if (selectedUserId) {
-            fetchLatestLocation();
-          }
         }
       }, config.POLLING_INTERVAL);
       
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, selectedUserId, isDateSearchModalOpen]); // 🔥 Agregamos isDateSearchModalOpen a las dependencias
-
-  // Obtener el nombre del dispositivo seleccionado para mostrar en el mapa
-  const selectedDeviceName = users.find(user => user.id === selectedUserId)?.name;
+  }, [isLiveMode, isDateSearchModalOpen]); // 🔥 Agregamos isDateSearchModalOpen a las dependencias
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -1121,7 +1245,7 @@ function App() {
       </header>
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && (
+      {!isMobile && users.length > 0 && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -1131,7 +1255,7 @@ function App() {
 
       {/* Main container */}
       <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${
-        !isMobile ? 'md:ml-96 md:mr-8' : ''
+        !isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
       }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -1143,20 +1267,19 @@ function App() {
               error={error}
               onRetry={() => {
                 setLoading(true);
-                fetchLatestLocation();
                 fetchUsersData();
               }}
               onReturnToLive={handleReturnToLive}
               isNoDataError={errorType === 'no-data'}
             />
           </div>
-        ) : locationData ? (
+        ) : users.length > 0 ? (
           <>
             <LocationMap 
-              location={locationData} 
-              path={path} 
+              users={users}
+              userPaths={userPaths} 
               isLiveMode={isLiveMode}
-              selectedDeviceName={selectedDeviceName}
+              selectedUserId={selectedUserId}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && (
@@ -1180,7 +1303,7 @@ function App() {
         isOpen={isDateSearchModalOpen}
         onClose={() => setIsDateSearchModalOpen(false)}
         onSearch={handleDateSearch}
-        selectedUserId={selectedUserId}
+        users={users}
       />
     </div>
   );
