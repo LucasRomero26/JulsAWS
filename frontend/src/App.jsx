@@ -210,7 +210,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   };
 
   return (
-    <div className="fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 glassmorphism-strong2 border-r border-white/10 z-40">
+    <div className="fixed top-20 left-0 h-[calc(100vh-5rem)] w-80 bg-[#011640] border-r border-white/10 z-40">
       <div className="p-6 h-full flex flex-col">
         {/* Header */}
         <div className="mb-6">
@@ -858,7 +858,7 @@ function App() {
       </div>
 
       {/* MODIFICADO: Header con color sólido */}
-      <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong2 py-4 px-6">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#011640] py-4 px-6">
         <div className="max-w-[100%] mx-auto flex items-center justify-between">
           <div className="flex items-center">
             <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
