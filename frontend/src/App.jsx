@@ -56,11 +56,8 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
     {isNoDataError ? (
       <button
         onClick={onReturnToLive}
-        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg transition-all font-medium mx-auto"
+        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-xl shadow-lg transition-all font-medium mx-auto"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-        </svg>
         Return to Live
       </button>
     ) : (
@@ -370,7 +367,7 @@ const LocationInfo = ({ location, formatTimestamp }) => {
     >
       <div className='rounded-4xl h-full flex flex-col'>
         <h2 className='text-2xl font-bold text-white text-center rounded-4xl mb-8 flex-shrink-0'>
-          Last Location Received
+          Users
         </h2>
         <div className='flex-1 space-y-3'>
           <div className='flex flex-row justify-between gap-4 glassmorphism group hover:scale-101 hover:shadow-[0px_3px_15px_0px_rgba(0,146,184,0.6)] rounded-xl pl-2 pr-6 py-2'>
@@ -736,7 +733,7 @@ function App() {
               onClick={handleReturnToLive}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/5 text-white hover:bg-white/10'
+                : 'bg-white text-black hover:bg-white/10'
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -751,7 +748,7 @@ function App() {
               }}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/5 text-white hover:bg-white/10'
+                : 'bg-white text-black hover:bg-white/10'
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
