@@ -64,8 +64,88 @@ const DEVICE_COLORS = [
   }
 ];
 
-const getDeviceColor = (index) => {
-  return DEVICE_COLORS[index % DEVICE_COLORS.length];
+// --- NUEVO: Sistema de asignación persistente de colores ---
+class DeviceColorManager {
+  constructor() {
+    this.deviceColorMap = new Map();
+    this.usedColorIndices = new Set();
+    this.nextColorIndex = 0;
+  }
+
+  // Asignar un color persistente a un dispositivo
+  getDeviceColor(deviceId) {
+    // Si ya tiene un color asignado, devolverlo
+    if (this.deviceColorMap.has(deviceId)) {
+      return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
+    }
+
+    // Buscar el siguiente color disponible
+    let colorIndex = this.nextColorIndex;
+    let attempts = 0;
+    
+    // Si todos los colores están en uso, comenzar a reutilizar desde el principio
+    if (this.usedColorIndices.size >= DEVICE_COLORS.length) {
+      colorIndex = this.deviceColorMap.size % DEVICE_COLORS.length;
+    } else {
+      // Encontrar el siguiente color no utilizado
+      while (this.usedColorIndices.has(colorIndex) && attempts < DEVICE_COLORS.length) {
+        colorIndex = (colorIndex + 1) % DEVICE_COLORS.length;
+        attempts++;
+      }
+    }
+
+    // Asignar el color al dispositivo
+    this.deviceColorMap.set(deviceId, colorIndex);
+    this.usedColorIndices.add(colorIndex);
+    this.nextColorIndex = (colorIndex + 1) % DEVICE_COLORS.length;
+
+    return DEVICE_COLORS[colorIndex];
+  }
+
+  // Obtener el color de un dispositivo existente
+  getExistingDeviceColor(deviceId) {
+    if (this.deviceColorMap.has(deviceId)) {
+      return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
+    }
+    return null;
+  }
+
+  // Remover un dispositivo (opcional, para limpiar cuando un dispositivo ya no esté activo)
+  removeDevice(deviceId) {
+    if (this.deviceColorMap.has(deviceId)) {
+      const colorIndex = this.deviceColorMap.get(deviceId);
+      this.deviceColorMap.delete(deviceId);
+      this.usedColorIndices.delete(colorIndex);
+    }
+  }
+
+  // Obtener todos los dispositivos con sus colores
+  getAllDeviceColors() {
+    const result = {};
+    for (const [deviceId, colorIndex] of this.deviceColorMap) {
+      result[deviceId] = DEVICE_COLORS[colorIndex];
+    }
+    return result;
+  }
+
+  // Limpiar dispositivos inactivos después de un tiempo
+  cleanupInactiveDevices(activeDeviceIds) {
+    const toRemove = [];
+    for (const deviceId of this.deviceColorMap.keys()) {
+      if (!activeDeviceIds.includes(deviceId)) {
+        toRemove.push(deviceId);
+      }
+    }
+    toRemove.forEach(deviceId => this.removeDevice(deviceId));
+  }
+}
+
+// Instancia global del gestor de colores
+const deviceColorManager = new DeviceColorManager();
+
+// Función actualizada para obtener el color del dispositivo
+const getDeviceColor = (deviceId) => {
+  return deviceColorManager.getDeviceColor(deviceId);
 };
 
 // Arreglo para el ícono por defecto de Leaflet en Vite
@@ -212,7 +292,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- Información de usuarios para móvil con colores ---
+// --- Información de usuarios para móvil con colores persistentes ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   if (!users || users.length === 0) return null;
 
@@ -224,10 +304,10 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       </div>
 
       <div className="space-y-3">
-        {users.map((user, index) => {
+        {users.map((user) => {
           const isActive = isUserActive(user.lastUpdate);
           const isSelected = selectedUserId === user.id;
-          const deviceColor = getDeviceColor(index);
+          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
           
           return (
             <div
@@ -301,7 +381,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// --- Sidebar para desktop con colores ---
+// --- Sidebar para desktop con colores persistentes ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   return (
     <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
@@ -312,10 +392,10 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-          {users.map((user, index) => {
+          {users.map((user) => {
             const isActive = isUserActive(user.lastUpdate);
             const isSelected = selectedUserId === user.id;
-            const deviceColor = getDeviceColor(index);
+            const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
             
             return (
               <div
@@ -395,7 +475,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- Modal de búsqueda por fechas con selector de dispositivo ---
+// --- Modal de búsqueda por fechas con selector de dispositivo y colores persistentes ---
 const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -558,12 +638,12 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           </button>
         </div>
         
-        {/* Device Selector */}
+        {/* Device Selector con colores persistentes */}
         <div className="mb-6">
           <label className="block text-white text-lg font-medium mb-3">Select Device</label>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {users.map((user, index) => {
-              const deviceColor = getDeviceColor(index);
+            {users.map((user) => {
+              const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
               const isSelected = selectedDeviceId === user.id;
               
               return (
@@ -879,10 +959,10 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
         />
 
-        {/* Renderizar marcadores y rutas para cada usuario */}
-        {users.map((user, index) => {
+        {/* Renderizar marcadores y rutas para cada usuario con colores persistentes */}
+        {users.map((user) => {
           const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
-          const deviceColor = getDeviceColor(index);
+          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
           const isActive = isUserActive(user.lastUpdate);
           const userPath = userPaths[user.id] || [userPosition];
           const isSelected = selectedUserId === user.id;
@@ -988,7 +1068,7 @@ function App() {
 
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
-  const [previousUsers, setPreviousUsers] = useState(null); // NUEVO: Estado anterior
+  const [previousUsers, setPreviousUsers] = useState(null); 
   const [selectedUserId, setSelectedUserId] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -1018,6 +1098,10 @@ function App() {
           longitude: device.longitude,
           lastUpdate: device.timestamp_value || device.created_at
         }));
+        
+        // Limpiar dispositivos inactivos del gestor de colores
+        const activeDeviceIds = usersArray.map(user => user.id);
+        deviceColorManager.cleanupInactiveDevices(activeDeviceIds);
         
         // Guardar estado anterior antes de actualizar
         setPreviousUsers(users);
@@ -1273,7 +1357,7 @@ function App() {
               onClick={handleReturnToLive}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white text-black hover:bg-white/10'
+                : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1288,7 +1372,7 @@ function App() {
               }}
               className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white text-black hover:bg-white/10'
+                : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1299,7 +1383,7 @@ function App() {
           </div>
         )}
       </header>
-
+    
       {/* Sidebar solo en desktop */}
       {!isMobile && users.length > 0 && (
         <DesktopUsersSidebar
