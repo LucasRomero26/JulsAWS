@@ -314,8 +314,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
               key={user.id}
               onClick={() => onUserSelect(user.id)}
               className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                  ? 'border-opacity-80 shadow-lg'
-                  : 'border-white/10 hover:border-white/20'
+                ? 'border-opacity-80 shadow-lg'
+                : 'border-white/10 hover:border-white/20'
                 }`}
               style={isSelected ? {
                 backgroundColor: `${deviceColor.hex}20`,
@@ -335,8 +335,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                   <h3 className="font-semibold text-white truncate">{user.name}</h3>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
                   }`}>
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
@@ -400,8 +400,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                 key={user.id}
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                    ? 'border-opacity-80 shadow-lg'
-                    : 'border-white/10 hover:border-white/20'
+                  ? 'border-opacity-80 shadow-lg'
+                  : 'border-white/10 hover:border-white/20'
                   }`}
                 style={isSelected ? {
                   backgroundColor: `${deviceColor.hex}20`,
@@ -421,8 +421,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                     <h3 className="font-semibold text-white truncate">{user.name}</h3>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
                     }`}>
                     {isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -479,6 +479,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [error, setError] = useState('');
 
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const viewportHeight = useViewportHeight();
 
   const darkTheme = createTheme({
     palette: {
@@ -623,9 +624,9 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative glassmorphism-strong rounded-4xl w-full max-w-md md:max-w-6xl max-h-[95vh] overflow-y-auto transform">
+      <div className="relative glassmorphism-strong rounded-4xl w-full max-w-md md:max-w-6xl h-[90vh] flex flex-col">
         {/* Header fijo */}
-        <div className="sticky top-0 z-10 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
+        <div className="flex-shrink-0 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
             <button onClick={onClose} className="text-white/60 cursor-pointer hover:text-white p-1">
@@ -636,12 +637,15 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           </div>
         </div>
 
-        {/* Contenido scrolleable */}
-        <div className="p-6">
-          {/* Device Selector con colores persistentes */}
-          <div className="mb-6">
+        {/* Contenido principal - sin scroll aquí */}
+        <div className="flex-1 p-6 flex flex-col min-h-0">
+          {/* Device Selector con scroll SOLO en los usuarios */}
+          <div className="flex-shrink-0 mb-6">
             <label className="block text-white text-lg font-medium mb-3">Select Device</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-40 overflow-y-auto custom-scrollbar">
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar"
+              style={{ maxHeight: '140px' }}
+            >
               {users.map((user) => {
                 const deviceColor = getDeviceColor(user.id);
                 const isSelected = selectedDeviceId === user.id;
@@ -650,9 +654,9 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
                   <button
                     key={user.id}
                     onClick={() => setSelectedDeviceId(user.id)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
-                        ? 'border-opacity-80 shadow-lg'
-                        : 'border-white/20 hover:border-white/40'
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 flex-shrink-0 ${isSelected
+                      ? 'border-opacity-80 shadow-lg'
+                      : 'border-white/20 hover:border-white/40'
                       }`}
                     style={isSelected ? {
                       backgroundColor: `${deviceColor.hex}30`,
@@ -662,10 +666,10 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 rounded-full flex-shrink-0"
                         style={{ backgroundColor: deviceColor.hex }}
                       ></div>
-                      <div className="text-left">
+                      <div className="text-left min-w-0">
                         <div className="text-white font-semibold truncate">{user.name}</div>
                         <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
                       </div>
@@ -676,81 +680,100 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
             </div>
           </div>
 
-          <ThemeProvider theme={darkTheme}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              {isMobile ? (
-                <div className="flex flex-col gap-6 my-4">
-                  <DateTimePicker
-                    label="Start Date & Time"
-                    value={startDate}
-                    onChange={(newValue) => setStartDate(newValue)}
-                    maxDate={dayjs()}
-                    sx={mobilePickerSx}
-                  />
-                  <DateTimePicker
-                    label="End Date & Time"
-                    value={endDate}
-                    onChange={(newValue) => setEndDate(newValue)}
-                    minDate={startDate}
-                    disabled={!startDate}
-                    sx={mobilePickerSx}
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div>
-                    <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
-                    <StaticDateTimePicker
-                      orientation="landscape"
+          {/* Calendarios - se ajustan al espacio disponible SIN scroll interno */}
+          <div className="flex-1 min-h-0">
+            <ThemeProvider theme={darkTheme}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                {isMobile ? (
+                  <div className="flex flex-col gap-6 h-full justify-center">
+                    <DateTimePicker
+                      label="Start Date & Time"
                       value={startDate}
                       onChange={(newValue) => setStartDate(newValue)}
                       maxDate={dayjs()}
-                      timeSteps={{ minutes: 1 }}
-                      sx={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: '2rem',
-                        maxHeight: '400px',
-                        '& .MuiPickersLayout-contentWrapper': {
-                          maxHeight: '350px'
-                        }
-                      }}
-                      slotProps={{ actionBar: { actions: [] } }}
+                      sx={mobilePickerSx}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-white text-lg font-medium mb-4 text-center">End Date</label>
-                    <StaticDateTimePicker
-                      orientation="landscape"
+                    <DateTimePicker
+                      label="End Date & Time"
                       value={endDate}
                       onChange={(newValue) => setEndDate(newValue)}
                       minDate={startDate}
                       disabled={!startDate}
-                      timeSteps={{ minutes: 1 }}
-                      sx={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: '2rem',
-                        maxHeight: '400px',
-                        '& .MuiPickersLayout-contentWrapper': {
-                          maxHeight: '350px'
-                        }
-                      }}
-                      slotProps={{ actionBar: { actions: [] } }}
+                      sx={mobilePickerSx}
                     />
                   </div>
-                </div>
-              )}
-            </LocalizationProvider>
-          </ThemeProvider>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                    <div className="flex flex-col">
+                      <label className="block text-white text-lg font-medium mb-4 text-center flex-shrink-0">Start Date</label>
+                      <div className="flex-1 flex justify-center items-start overflow-hidden">
+                        <StaticDateTimePicker
+                          orientation="landscape"
+                          value={startDate}
+                          onChange={(newValue) => setStartDate(newValue)}
+                          maxDate={dayjs()}
+                          timeSteps={{ minutes: 1 }}
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                            borderRadius: '2rem',
+                            height: 'fit-content',
+                            maxHeight: '100%',
+                            width: '100%',
+                            '& .MuiPickersLayout-root': {
+                              maxHeight: 'none',
+                            },
+                            '& .MuiPickersLayout-contentWrapper': {
+                              maxHeight: 'none',
+                              overflow: 'visible'
+                            }
+                          }}
+                          slotProps={{ actionBar: { actions: [] } }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="block text-white text-lg font-medium mb-4 text-center flex-shrink-0">End Date</label>
+                      <div className="flex-1 flex justify-center items-start overflow-hidden">
+                        <StaticDateTimePicker
+                          orientation="landscape"
+                          value={endDate}
+                          onChange={(newValue) => setEndDate(newValue)}
+                          minDate={startDate}
+                          disabled={!startDate}
+                          timeSteps={{ minutes: 1 }}
+                          sx={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                            borderRadius: '2rem',
+                            height: 'fit-content',
+                            maxHeight: '100%',
+                            width: '100%',
+                            '& .MuiPickersLayout-root': {
+                              maxHeight: 'none',
+                            },
+                            '& .MuiPickersLayout-contentWrapper': {
+                              maxHeight: 'none',
+                              overflow: 'visible'
+                            }
+                          }}
+                          slotProps={{ actionBar: { actions: [] } }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </LocalizationProvider>
+            </ThemeProvider>
+          </div>
 
           {error && (
-            <div className="mt-4 text-center text-red-400 bg-red-900/50 p-3 rounded-xl">
+            <div className="flex-shrink-0 mt-4 text-center text-red-400 bg-red-900/50 p-3 rounded-xl">
               {error}
             </div>
           )}
         </div>
 
         {/* Footer fijo */}
-        <div className="sticky bottom-0 z-10 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
+        <div className="flex-shrink-0 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
           <div className="flex gap-4">
             <button
               onClick={resetForm}
