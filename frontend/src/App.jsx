@@ -82,7 +82,7 @@ class DeviceColorManager {
     // Buscar el siguiente color disponible
     let colorIndex = this.nextColorIndex;
     let attempts = 0;
-    
+
     // Si todos los colores están en uso, comenzar a reutilizar desde el principio
     if (this.usedColorIndices.size >= DEVICE_COLORS.length) {
       colorIndex = this.deviceColorMap.size % DEVICE_COLORS.length;
@@ -160,13 +160,13 @@ L.Icon.Default.mergeOptions({
 const formatTimestamp = (timestamp) => {
   try {
     let date;
-    
+
     if (!timestamp) {
       return 'Invalid Date';
     }
-    
+
     const timestampStr = String(timestamp);
-    
+
     if (/^\d{13}$/.test(timestampStr)) {
       date = new Date(parseInt(timestampStr));
     } else if (/^\d{10}$/.test(timestampStr)) {
@@ -174,12 +174,12 @@ const formatTimestamp = (timestamp) => {
     } else {
       date = new Date(timestamp);
     }
-    
+
     if (isNaN(date.getTime())) {
       console.warn('Invalid timestamp:', timestamp);
       return 'Invalid Date';
     }
-    
+
     return date.toLocaleString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -198,13 +198,13 @@ const isUserActive = (lastUpdate) => {
   try {
     const now = new Date();
     let lastUpdateTime;
-    
+
     if (!lastUpdate) {
       return false;
     }
-    
+
     const timestampStr = String(lastUpdate);
-    
+
     if (/^\d{13}$/.test(timestampStr)) {
       lastUpdateTime = new Date(parseInt(timestampStr));
     } else if (/^\d{10}$/.test(timestampStr)) {
@@ -212,11 +212,11 @@ const isUserActive = (lastUpdate) => {
     } else {
       lastUpdateTime = new Date(lastUpdate);
     }
-    
+
     if (isNaN(lastUpdateTime.getTime())) {
       return false;
     }
-    
+
     const timeDifference = now.getTime() - lastUpdateTime.getTime();
     return timeDifference <= config.INACTIVE_TIMEOUT;
   } catch (error) {
@@ -308,16 +308,15 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
           const isActive = isUserActive(user.lastUpdate);
           const isSelected = selectedUserId === user.id;
           const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
-          
+
           return (
             <div
               key={user.id}
               onClick={() => onUserSelect(user.id)}
-              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
-                isSelected 
-                  ? 'border-opacity-80 shadow-lg' 
+              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
+                  ? 'border-opacity-80 shadow-lg'
                   : 'border-white/10 hover:border-white/20'
-              }`}
+                }`}
               style={isSelected ? {
                 backgroundColor: `${deviceColor.hex}20`,
                 borderColor: deviceColor.hex,
@@ -326,7 +325,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
             >
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div 
+                  <div
                     className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
                     style={{
                       backgroundColor: isActive ? '#10b981' : '#ef4444',
@@ -335,16 +334,15 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                   ></div>
                   <h3 className="font-semibold text-white truncate">{user.name}</h3>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
-                  isActive 
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                     : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
+                  }`}>
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
-              <div 
+              <div
                 className="w-full h-1 rounded-full mb-3"
                 style={{ backgroundColor: deviceColor.hex }}
               ></div>
@@ -374,7 +372,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="text-xs text-white/50 text-center">
-          <p>Devices go inactive after {config.INACTIVE_TIMEOUT/1000} seconds</p>
+          <p>Devices go inactive after {config.INACTIVE_TIMEOUT / 1000} seconds</p>
         </div>
       </div>
     </div>
@@ -396,16 +394,15 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
             const isActive = isUserActive(user.lastUpdate);
             const isSelected = selectedUserId === user.id;
             const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
-            
+
             return (
               <div
                 key={user.id}
                 onClick={() => onUserSelect(user.id)}
-                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
-                  isSelected 
-                    ? 'border-opacity-80 shadow-lg' 
+                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
+                    ? 'border-opacity-80 shadow-lg'
                     : 'border-white/10 hover:border-white/20'
-                }`}
+                  }`}
                 style={isSelected ? {
                   backgroundColor: `${deviceColor.hex}20`,
                   borderColor: deviceColor.hex,
@@ -414,7 +411,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
               >
                 <div className="flex items-center justify-between mb-3 gap-2">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div 
+                    <div
                       className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
                       style={{
                         backgroundColor: isActive ? '#10b981' : '#ef4444',
@@ -423,16 +420,15 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                     ></div>
                     <h3 className="font-semibold text-white truncate">{user.name}</h3>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
-                    isActive 
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}>
+                    }`}>
                     {isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
-                <div 
+                <div
                   className="w-full h-1 rounded-full mb-3"
                   style={{ backgroundColor: deviceColor.hex }}
                 ></div>
@@ -466,8 +462,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
 
         <div className="mt-4 pt-4 border-t border-white/10">
           <div className="text-xs text-white/50 text-center">
-            <p>Devices go inactive after {config.INACTIVE_TIMEOUT/1000} seconds</p>
-            <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL/1000}s</p>
+            <p>Devices go inactive after {config.INACTIVE_TIMEOUT / 1000} seconds</p>
+            <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL / 1000}s</p>
           </div>
         </div>
       </div>
@@ -475,7 +471,6 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- Modal de búsqueda por fechas con selector de dispositivo y colores persistentes ---
 const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -623,148 +618,170 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative glassmorphism-strong rounded-4xl p-6 md:p-8 mx-4 w-full max-w-md md:max-w-5xl transform">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
-          <button onClick={onClose} className="text-white/60 cursor-pointer hover:text-white p-1">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Device Selector con colores persistentes */}
-        <div className="mb-6">
-          <label className="block text-white text-lg font-medium mb-3">Select Device</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {users.map((user) => {
-              const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
-              const isSelected = selectedDeviceId === user.id;
-              
-              return (
-                <button
-                  key={user.id}
-                  onClick={() => setSelectedDeviceId(user.id)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                    isSelected 
-                      ? 'border-opacity-80 shadow-lg' 
-                      : 'border-white/20 hover:border-white/40'
-                  }`}
-                  style={isSelected ? {
-                    backgroundColor: `${deviceColor.hex}30`,
-                    borderColor: deviceColor.hex,
-                    boxShadow: `0 10px 25px ${deviceColor.hex}20`
-                  } : {}}
-                >
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: deviceColor.hex }}
-                    ></div>
-                    <div className="text-left">
-                      <div className="text-white font-semibold truncate">{user.name}</div>
-                      <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+      <div className="relative glassmorphism-strong rounded-4xl w-full max-w-md md:max-w-6xl max-h-[95vh] overflow-y-auto transform">
+        {/* Header fijo */}
+        <div className="sticky top-0 z-10 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
+            <button onClick={onClose} className="text-white/60 cursor-pointer hover:text-white p-1">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
-        
-        <ThemeProvider theme={darkTheme}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            {isMobile ? (
-              <div className="flex flex-col gap-6 my-4">
-                <DateTimePicker
-                  label="Start Date & Time"
-                  value={startDate}
-                  onChange={(newValue) => setStartDate(newValue)}
-                  maxDate={dayjs()}
-                  sx={mobilePickerSx}
-                />
-                <DateTimePicker
-                  label="End Date & Time"
-                  value={endDate}
-                  onChange={(newValue) => setEndDate(newValue)}
-                  minDate={startDate}
-                  disabled={!startDate}
-                  sx={mobilePickerSx}
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
-                  <StaticDateTimePicker
-                    orientation="landscape"
+
+        {/* Contenido scrolleable */}
+        <div className="p-6">
+          {/* Device Selector con colores persistentes */}
+          <div className="mb-6">
+            <label className="block text-white text-lg font-medium mb-3">Select Device</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-40 overflow-y-auto custom-scrollbar">
+              {users.map((user) => {
+                const deviceColor = getDeviceColor(user.id);
+                const isSelected = selectedDeviceId === user.id;
+
+                return (
+                  <button
+                    key={user.id}
+                    onClick={() => setSelectedDeviceId(user.id)}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
+                        ? 'border-opacity-80 shadow-lg'
+                        : 'border-white/20 hover:border-white/40'
+                      }`}
+                    style={isSelected ? {
+                      backgroundColor: `${deviceColor.hex}30`,
+                      borderColor: deviceColor.hex,
+                      boxShadow: `0 10px 25px ${deviceColor.hex}20`
+                    } : {}}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: deviceColor.hex }}
+                      ></div>
+                      <div className="text-left">
+                        <div className="text-white font-semibold truncate">{user.name}</div>
+                        <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <ThemeProvider theme={darkTheme}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              {isMobile ? (
+                <div className="flex flex-col gap-6 my-4">
+                  <DateTimePicker
+                    label="Start Date & Time"
                     value={startDate}
                     onChange={(newValue) => setStartDate(newValue)}
                     maxDate={dayjs()}
-                    timeSteps={{ minutes: 1 }}
-                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem' }}
-                    slotProps={{ actionBar: { actions: [] } }}
+                    sx={mobilePickerSx}
                   />
-                </div>
-                <div>
-                  <label className="block text-white text-lg font-medium mb-4 text-center">End Date</label>
-                  <StaticDateTimePicker
-                    orientation="landscape"
+                  <DateTimePicker
+                    label="End Date & Time"
                     value={endDate}
                     onChange={(newValue) => setEndDate(newValue)}
                     minDate={startDate}
                     disabled={!startDate}
-                    timeSteps={{ minutes: 1 }}
-                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', borderRadius: '2rem' }}
-                    slotProps={{ actionBar: { actions: [] } }}
+                    sx={mobilePickerSx}
                   />
                 </div>
-              </div>
-            )}
-          </LocalizationProvider>
-        </ThemeProvider>
-        
-        {error && (
-          <div className="mt-4 text-center text-red-400 bg-red-900/50 p-3 rounded-xl">
-            {error}
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-white text-lg font-medium mb-4 text-center">Start Date</label>
+                    <StaticDateTimePicker
+                      orientation="landscape"
+                      value={startDate}
+                      onChange={(newValue) => setStartDate(newValue)}
+                      maxDate={dayjs()}
+                      timeSteps={{ minutes: 1 }}
+                      sx={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '2rem',
+                        maxHeight: '400px',
+                        '& .MuiPickersLayout-contentWrapper': {
+                          maxHeight: '350px'
+                        }
+                      }}
+                      slotProps={{ actionBar: { actions: [] } }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-lg font-medium mb-4 text-center">End Date</label>
+                    <StaticDateTimePicker
+                      orientation="landscape"
+                      value={endDate}
+                      onChange={(newValue) => setEndDate(newValue)}
+                      minDate={startDate}
+                      disabled={!startDate}
+                      timeSteps={{ minutes: 1 }}
+                      sx={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '2rem',
+                        maxHeight: '400px',
+                        '& .MuiPickersLayout-contentWrapper': {
+                          maxHeight: '350px'
+                        }
+                      }}
+                      slotProps={{ actionBar: { actions: [] } }}
+                    />
+                  </div>
+                </div>
+              )}
+            </LocalizationProvider>
+          </ThemeProvider>
+
+          {error && (
+            <div className="mt-4 text-center text-red-400 bg-red-900/50 p-3 rounded-xl">
+              {error}
+            </div>
+          )}
+        </div>
+
+        {/* Footer fijo */}
+        <div className="sticky bottom-0 z-10 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
+          <div className="flex gap-4">
+            <button
+              onClick={resetForm}
+              className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium"
+              disabled={isLoading}
+            >
+              Clean
+            </button>
+            <button
+              onClick={handleSearch}
+              disabled={isLoading || !startDate || !endDate || !selectedDeviceId}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Search
+                </>
+              )}
+            </button>
           </div>
-        )}
-        
-        <div className="flex gap-4 pt-6 mt-4 border-t border-white/20">
-          <button
-            onClick={resetForm}
-            className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium"
-            disabled={isLoading}
-          >
-            Clean
-          </button>
-          <button
-            onClick={handleSearch}
-            disabled={isLoading || !startDate || !endDate || !selectedDeviceId}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Searching...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                Search
-              </>
-            )}
-          </button>
         </div>
       </div>
     </div>
@@ -826,15 +843,15 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
       if (isLiveMode) {
         const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
         const previousActiveUsers = previousUsers ? previousUsers.filter(user => isUserActive(user.lastUpdate)) : [];
-        
+
         // Solo actualizar si hay cambios significativos en los usuarios activos
         const activeUsersChanged = activeUsers.length !== previousActiveUsers.length ||
           activeUsers.some((user, index) => {
             const prevUser = previousActiveUsers[index];
             if (!prevUser) return true;
-            return user.id !== prevUser.id || 
-                   Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
-                   Math.abs(parseFloat(user.longitude) - parseFloat(prevUser.longitude)) > 0.0001;
+            return user.id !== prevUser.id ||
+              Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
+              Math.abs(parseFloat(user.longitude) - parseFloat(prevUser.longitude)) > 0.0001;
           });
 
         if (!activeUsersChanged) return;
@@ -842,22 +859,22 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
         if (activeUsers.length > 1) {
           // Múltiples dispositivos activos: ajustar bounds para mostrar todos
           const allPositions = activeUsers.map(user => [
-            parseFloat(user.latitude), 
+            parseFloat(user.latitude),
             parseFloat(user.longitude)
           ]);
-          
+
           if (allPositions.length > 0) {
             const bounds = L.latLngBounds(allPositions);
-            
+
             // Solo ajustar bounds si hay una diferencia significativa
             const currentBounds = map.getBounds();
-            const needsUpdate = !currentBounds.contains(bounds) || 
-                              !bounds.contains(currentBounds);
-            
+            const needsUpdate = !currentBounds.contains(bounds) ||
+              !bounds.contains(currentBounds);
+
             if (needsUpdate) {
-              map.fitBounds(bounds, { 
-                padding: [50, 50], 
-                animate: true, 
+              map.fitBounds(bounds, {
+                padding: [50, 50],
+                animate: true,
                 duration: 1.0,
                 maxZoom: 16
               });
@@ -868,7 +885,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
           const user = activeUsers[0];
           const newPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
           const currentCenter = map.getCenter();
-          
+
           // Solo centrar si hay una diferencia significativa (más de ~10 metros)
           const distance = currentCenter.distanceTo(L.latLng(newPosition));
           if (distance > 10) {
@@ -885,10 +902,10 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
         const allPaths = Object.values(userPaths).flat();
         if (allPaths && allPaths.length > 1) {
           const bounds = L.latLngBounds(allPaths);
-          map.fitBounds(bounds, { 
-            padding: [20, 20], 
-            animate: true, 
-            duration: 1.0 
+          map.fitBounds(bounds, {
+            padding: [20, 20],
+            animate: true,
+            duration: 1.0
           });
         }
       }
@@ -905,7 +922,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
-  const mapHeight = isMobile 
+  const mapHeight = isMobile
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
 
@@ -917,7 +934,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
   // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
     if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
-    
+
     const firstUser = users[0];
     return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
@@ -946,9 +963,9 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
       <MapContainer
         center={centerPosition}
         zoom={isLiveMode ? 15 : 13}
-        style={{ 
-          height: `${mapHeight}px`, 
-          width: '100%', 
+        style={{
+          height: `${mapHeight}px`,
+          width: '100%',
           borderRadius: '1rem',
           minHeight: '300px'
         }}
@@ -974,14 +991,14 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
 
           // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
           const shouldShow = isLiveMode ? isActive : isSelected;
-          
+
           if (!shouldShow) return null;
 
           return (
             <div key={user.id}>
               {/* Marcador del dispositivo */}
-              <Marker 
-                position={userPosition} 
+              <Marker
+                position={userPosition}
                 icon={customIcon}
                 opacity={isSelected || isLiveMode ? 1 : 0.7}
               >
@@ -1003,13 +1020,13 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
               {userPath.length > 1 && (
                 <>
                   {isLiveMode ? (
-                    <Polyline 
-                      pathOptions={{ 
-                        color: deviceColor.hex, 
-                        weight: 4, 
-                        opacity: 0.8 
-                      }} 
-                      positions={userPath} 
+                    <Polyline
+                      pathOptions={{
+                        color: deviceColor.hex,
+                        weight: 4,
+                        opacity: 0.8
+                      }}
+                      positions={userPath}
                     />
                   ) : (
                     <GradientPolyline path={userPath} deviceColor={deviceColor} />
@@ -1045,9 +1062,9 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           );
         })}
 
-        <MapViewUpdater 
-          userPaths={userPaths} 
-          isLiveMode={isLiveMode} 
+        <MapViewUpdater
+          userPaths={userPaths}
+          isLiveMode={isLiveMode}
           users={users}
           previousUsers={previousUsers}
         />
@@ -1068,7 +1085,7 @@ function App() {
 
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
-  const [previousUsers, setPreviousUsers] = useState(null); 
+  const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -1078,16 +1095,16 @@ function App() {
     try {
       setError(null);
       setErrorType(null);
-      
+
       const response = await fetch(`${config.API_BASE_URL}/api/devices/latest-locations`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const devicesData = await response.json();
       console.log('Devices data received:', devicesData);
-      
+
       if (devicesData && devicesData.length > 0) {
         const usersArray = devicesData.map(device => ({
           id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
@@ -1098,38 +1115,38 @@ function App() {
           longitude: device.longitude,
           lastUpdate: device.timestamp_value || device.created_at
         }));
-        
+
         // Limpiar dispositivos inactivos del gestor de colores
         const activeDeviceIds = usersArray.map(user => user.id);
         deviceColorManager.cleanupInactiveDevices(activeDeviceIds);
-        
+
         // Guardar estado anterior antes de actualizar
         setPreviousUsers(users);
         setUsers(usersArray);
-        
+
         // Actualizar paths en modo live de forma más eficiente
         if (isLiveMode) {
           setUserPaths(prevPaths => {
             const newPaths = { ...prevPaths };
             let hasChanges = false;
-            
+
             usersArray.forEach(user => {
               // Validar coordenadas antes de agregar
               const lat = parseFloat(user.latitude);
               const lng = parseFloat(user.longitude);
-              
+
               if (!isNaN(lat) && !isNaN(lng)) {
                 const userPosition = [lat, lng];
                 const currentPath = newPaths[user.id] || [];
-                
+
                 // Solo agregar si es una posición significativamente diferente
                 const lastPoint = currentPath[currentPath.length - 1];
-                if (!lastPoint || 
-                    Math.abs(lastPoint[0] - userPosition[0]) > 0.00001 || 
-                    Math.abs(lastPoint[1] - userPosition[1]) > 0.00001) {
+                if (!lastPoint ||
+                  Math.abs(lastPoint[0] - userPosition[0]) > 0.00001 ||
+                  Math.abs(lastPoint[1] - userPosition[1]) > 0.00001) {
                   newPaths[user.id] = [...currentPath, userPosition];
                   hasChanges = true;
-                  
+
                   // Limitar el historial para evitar arrays muy grandes
                   if (newPaths[user.id].length > 50) {
                     newPaths[user.id] = newPaths[user.id].slice(-25);
@@ -1137,17 +1154,17 @@ function App() {
                 }
               }
             });
-            
+
             return hasChanges ? newPaths : prevPaths;
           });
         }
-        
+
         // Si no hay usuario seleccionado, seleccionar el primero activo
         if (!selectedUserId && usersArray.length > 0) {
           const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
           setSelectedUserId(activeUser.id);
         }
-        
+
         setLoading(false);
       } else {
         await fetchLatestLocationFallback();
@@ -1162,11 +1179,11 @@ function App() {
   const fetchLatestLocationFallback = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const userData = {
         id: data.device_id || 'device_legacy',
@@ -1177,15 +1194,15 @@ function App() {
         longitude: data.longitude,
         lastUpdate: data.timestamp_value
       };
-      
+
       setPreviousUsers(users);
       setUsers([userData]);
-      
+
       if (!selectedUserId) {
         setSelectedUserId(userData.id);
         const lat = parseFloat(userData.latitude);
         const lng = parseFloat(userData.longitude);
-        
+
         if (!isNaN(lat) && !isNaN(lng)) {
           const userPosition = [lat, lng];
           setUserPaths(prevPaths => ({
@@ -1194,7 +1211,7 @@ function App() {
           }));
         }
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching fallback data:', err);
@@ -1219,11 +1236,11 @@ function App() {
     try {
       const { startDate, endDate, deviceId } = searchData;
       let url = `${config.API_BASE_URL}/api/location/range?startDate=${startDate}&endDate=${endDate}`;
-      
+
       if (deviceId) {
         url += `&deviceId=${deviceId}`;
       }
-      
+
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -1237,14 +1254,14 @@ function App() {
           .map(point => {
             const lat = parseFloat(point.latitude);
             const lng = parseFloat(point.longitude);
-            
+
             if (!isNaN(lat) && !isNaN(lng)) {
               return [lat, lng];
             }
             return null;
           })
           .filter(point => point !== null);
-        
+
         if (newPath.length > 0) {
           setUserPaths({ [deviceId]: newPath });
           setSelectedUserId(deviceId);
@@ -1281,14 +1298,14 @@ function App() {
     if (isLiveMode && !isDateSearchModalOpen) {
       // Fetch inicial
       fetchUsersData();
-      
+
       // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
         if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
         }
       }, config.POLLING_INTERVAL);
-      
+
       return () => clearInterval(interval);
     }
   }, [isLiveMode, isDateSearchModalOpen]);
@@ -1383,7 +1400,7 @@ function App() {
           </div>
         )}
       </header>
-    
+
       {/* Sidebar solo en desktop */}
       {!isMobile && users.length > 0 && (
         <DesktopUsersSidebar
@@ -1394,9 +1411,8 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${
-        !isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
-      }`}>
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
+        }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
@@ -1417,9 +1433,9 @@ function App() {
           </div>
         ) : users.length > 0 ? (
           <>
-            <LocationMap 
+            <LocationMap
               users={users}
-              userPaths={userPaths} 
+              userPaths={userPaths}
               isLiveMode={isLiveMode}
               selectedUserId={selectedUserId}
               previousUsers={previousUsers}
@@ -1437,7 +1453,7 @@ function App() {
           <div className="flex items-center justify-center h-full">
             <div className="glassmorphism-strong min-w-[90%] mx-auto rounded-4xl p-8 text-center">
               <p className="text-white/70 mb-4">Waiting for location data...</p>
-              <button 
+              <button
                 onClick={() => {
                   setLoading(true);
                   fetchUsersData();
