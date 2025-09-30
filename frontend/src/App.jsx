@@ -1198,7 +1198,7 @@ function App() {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching fallback data:', err);
-      setError('Error de conexión con el servidor. Verificar que el backend esté funcionando.');
+      setError('Error fetching fallback data. Please check if the backend is running.');
       setErrorType('connection');
       setLoading(false);
     }
@@ -1227,7 +1227,7 @@ function App() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error('Error al obtener el historial de ubicaciones');
+        throw new Error('Error fetching location history.');
       }
 
       const historicalData = await response.json();
@@ -1249,16 +1249,16 @@ function App() {
           setUserPaths({ [deviceId]: newPath });
           setSelectedUserId(deviceId);
         } else {
-          setError('No se encontraron ubicaciones válidas para el rango seleccionado.');
+          setError('No valid locations were found for the selected range.');
           setErrorType('no-data');
         }
       } else {
         setUserPaths({});
-        setError('No se encontraron datos de ubicación para el rango seleccionado.');
+        setError('No valid locations were found for the selected range.');
         setErrorType('no-data');
       }
     } catch (err) {
-      setError('Error de conexión al buscar el historial.');
+      setError('Error fetching history.');
       setErrorType('connection');
       console.error('Error fetching date range:', err);
     } finally {
