@@ -349,10 +349,6 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between gap-2">
-                  <span className="text-white/70 flex-shrink-0">Device ID:</span>
-                  <span className="text-white font-mono text-xs truncate">{user.deviceId || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
                   <span className="text-white/70 flex-shrink-0">Latitude:</span>
                   <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
                 </div>
