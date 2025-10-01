@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L, { Icon } from 'leaflet';
+import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
 
 // --- MUI Date Picker Imports ---
@@ -32,20 +32,20 @@ const DEVICE_COLORS = [
   { name: 'Red 600', light: '#fca5a5', dark: '#991b1b', main: '#dc2626', hex: '#dc2626' },
   { name: 'Rose 500', light: '#fda4af', dark: '#881337', main: '#f43f5e', hex: '#f43f5e' },
   { name: 'Pink 500', light: '#f9a8d4', dark: '#831843', main: '#ec4899', hex: '#ec4899' },
-  
+
   // Oranges
   { name: 'Orange 500', light: '#fed7aa', dark: '#9a3412', main: '#f97316', hex: '#f97316' },
   { name: 'Orange 600', light: '#fdba74', dark: '#ea580c', main: '#ea580c', hex: '#ea580c' },
   { name: 'Amber 500', light: '#fde68a', dark: '#92400e', main: '#f59e0b', hex: '#f59e0b' },
   { name: 'Yellow 500', light: '#fef3c7', dark: '#78350f', main: '#eab308', hex: '#eab308' },
-  
+
   // Greens
   { name: 'Lime 500', light: '#d9f99d', dark: '#365314', main: '#84cc16', hex: '#84cc16' },
   { name: 'Green 500', light: '#bbf7d0', dark: '#14532d', main: '#22c55e', hex: '#22c55e' },
   { name: 'Green 600', light: '#86efac', dark: '#166534', main: '#16a34a', hex: '#16a34a' },
   { name: 'Emerald 500', light: '#a7f3d0', dark: '#064e3b', main: '#10b981', hex: '#10b981' },
   { name: 'Teal 500', light: '#99f6e4', dark: '#134e4a', main: '#14b8a6', hex: '#14b8a6' },
-  
+
   // Cyans & Blues
   { name: 'Cyan 500', light: '#a5f3fc', dark: '#164e63', main: '#06b6d4', hex: '#06b6d4' },
   { name: 'Cyan 600', light: '#67e8f9', dark: '#0891b2', main: '#0891b2', hex: '#0891b2' },
@@ -53,19 +53,19 @@ const DEVICE_COLORS = [
   { name: 'Blue 500', light: '#dbeafe', dark: '#1e3a8a', main: '#3b82f6', hex: '#3b82f6' },
   { name: 'Blue 600', light: '#93c5fd', dark: '#1d4ed8', main: '#2563eb', hex: '#2563eb' },
   { name: 'Indigo 500', light: '#c7d2fe', dark: '#312e81', main: '#6366f1', hex: '#6366f1' },
-  
+
   // Purples
   { name: 'Violet 500', light: '#ddd6fe', dark: '#4c1d95', main: '#8b5cf6', hex: '#8b5cf6' },
   { name: 'Purple 500', light: '#e9d5ff', dark: '#581c87', main: '#a855f7', hex: '#a855f7' },
   { name: 'Purple 600', light: '#d8b4fe', dark: '#7c2d12', main: '#9333ea', hex: '#9333ea' },
   { name: 'Fuchsia 500', light: '#f0abfc', dark: '#701a75', main: '#d946ef', hex: '#d946ef' },
-  
+
   // Grays & Neutrals
   { name: 'Gray 500', light: '#f3f4f6', dark: '#374151', main: '#6b7280', hex: '#6b7280' },
   { name: 'Slate 500', light: '#f1f5f9', dark: '#334155', main: '#64748b', hex: '#64748b' },
   { name: 'Zinc 500', light: '#f4f4f5', dark: '#3f3f46', main: '#71717a', hex: '#71717a' },
   { name: 'Stone 500', light: '#fafaf9', dark: '#44403c', main: '#78716c', hex: '#78716c' },
-  
+
   // Additional vibrant colors
   { name: 'Red 400', light: '#f87171', dark: '#dc2626', main: '#f87171', hex: '#f87171' },
   { name: 'Orange 400', light: '#fb923c', dark: '#ea580c', main: '#fb923c', hex: '#fb923c' },
@@ -86,40 +86,41 @@ const DEVICE_COLORS = [
   { name: 'Rose 400', light: '#fb7185', dark: '#e11d48', main: '#fb7185', hex: '#fb7185' }
 ];
 
-// --- MEJORADO: Sistema de asignación persistente de colores ---
+// --- Función para generar índices aleatorios ---
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// --- MEJORADO: Sistema de asignación aleatoria de colores ---
 class DeviceColorManager {
   constructor() {
     this.deviceColorMap = new Map();
-    this.usedColorIndices = new Set();
-    this.nextColorIndex = 0;
+    this.availableColorIndices = shuffleArray([...Array(DEVICE_COLORS.length).keys()]);
+    this.currentIndex = 0;
   }
 
-  // Asignar un color persistente a un dispositivo
+  // Asignar un color aleatorio persistente a un dispositivo
   getDeviceColor(deviceId) {
     // Si ya tiene un color asignado, devolverlo
     if (this.deviceColorMap.has(deviceId)) {
       return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
     }
 
-    // Buscar el siguiente color disponible
-    let colorIndex = this.nextColorIndex;
-    let attempts = 0;
-
-    // Si todos los colores están en uso, comenzar a reutilizar desde el principio
-    if (this.usedColorIndices.size >= DEVICE_COLORS.length) {
-      colorIndex = this.deviceColorMap.size % DEVICE_COLORS.length;
-    } else {
-      // Encontrar el siguiente color no utilizado
-      while (this.usedColorIndices.has(colorIndex) && attempts < DEVICE_COLORS.length) {
-        colorIndex = (colorIndex + 1) % DEVICE_COLORS.length;
-        attempts++;
-      }
+    // Si se acabaron los colores disponibles, volver a mezclar y reiniciar
+    if (this.currentIndex >= this.availableColorIndices.length) {
+      this.availableColorIndices = shuffleArray([...Array(DEVICE_COLORS.length).keys()]);
+      this.currentIndex = 0;
     }
 
-    // Asignar el color al dispositivo
+    // Asignar el siguiente color aleatorio disponible
+    const colorIndex = this.availableColorIndices[this.currentIndex];
     this.deviceColorMap.set(deviceId, colorIndex);
-    this.usedColorIndices.add(colorIndex);
-    this.nextColorIndex = (colorIndex + 1) % DEVICE_COLORS.length;
+    this.currentIndex++;
 
     return DEVICE_COLORS[colorIndex];
   }
@@ -137,7 +138,10 @@ class DeviceColorManager {
     if (this.deviceColorMap.has(deviceId)) {
       const colorIndex = this.deviceColorMap.get(deviceId);
       this.deviceColorMap.delete(deviceId);
-      this.usedColorIndices.delete(colorIndex);
+
+      // Agregar el color de vuelta a los disponibles de forma aleatoria
+      const randomPosition = Math.floor(Math.random() * (this.availableColorIndices.length + 1));
+      this.availableColorIndices.splice(randomPosition, 0, colorIndex);
     }
   }
 
@@ -170,7 +174,44 @@ const getDeviceColor = (deviceId) => {
   return deviceColorManager.getDeviceColor(deviceId);
 };
 
-// Arreglo para el ícono por defecto de Leaflet en Vite
+// --- Función para crear íconos circulares personalizados ---
+const createCircularIcon = (color, isActive = true, size = 20) => {
+  const activeRing = isActive ? `
+    <circle cx="25" cy="25" r="22" 
+      fill="none" 
+      stroke="#10b981" 
+      stroke-width="3" 
+      opacity="0.8">
+      <animate attributeName="r" values="18;25;18" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  ` : '';
+
+  return new DivIcon({
+    html: `
+      <div style="position: relative; width: 50px; height: 50px;">
+        <svg width="50" height="50" viewBox="0 0 50 50" style="position: absolute; top: 0; left: 0;">
+          ${activeRing}
+          <circle cx="25" cy="25" r="${size}" 
+            fill="${color}" 
+            stroke="#ffffff" 
+            stroke-width="3" 
+            opacity="0.9"
+            style="filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.3))"/>
+          <circle cx="25" cy="25" r="${size - 6}" 
+            fill="${color}" 
+            opacity="0.7"/>
+        </svg>
+      </div>
+    `,
+    className: 'custom-circular-icon',
+    iconSize: [50, 50],
+    iconAnchor: [25, 25],
+    popupAnchor: [0, -25]
+  });
+};
+
+// Arreglo para el ícono por defecto de Leaflet en Vite (mantenemos por compatibilidad)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -367,7 +408,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
   const selectedUserRef = useRef(null);
-  
+
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
   // Evitar scroll automático innecesario
@@ -376,16 +417,16 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
-      
+
       const containerRect = container.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
-      
-      const isVisible = elementRect.top >= containerRect.top && 
-                       elementRect.bottom <= containerRect.bottom;
-      
+
+      const isVisible = elementRect.top >= containerRect.top &&
+        elementRect.bottom <= containerRect.bottom;
+
       if (!isVisible) {
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
+        element.scrollIntoView({
+          behavior: 'smooth',
           block: 'center',
           inline: 'nearest'
         });
@@ -400,18 +441,18 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
       <div className="mb-4">
         <h2 className="text-xl font-bold text-white">Devices</h2>
         <span className="text-sm text-white/60">
-          {filteredUsers.length} of {users.length} Device{users.length !== 1 ? 's' : ''} 
+          {filteredUsers.length} of {users.length} Device{users.length !== 1 ? 's' : ''}
           {searchTerm && ' (filtered)'}
         </span>
       </div>
 
-      <SearchBar 
+      <SearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         placeholder="Search devices by name or ID..."
       />
 
-      <div 
+      <div
         ref={scrollContainerRef}
         className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"
       >
@@ -427,8 +468,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                 ref={isSelected ? selectedUserRef : null}
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                    ? 'border-opacity-80 shadow-lg'
-                    : 'border-white/10 hover:border-white/20'
+                  ? 'border-opacity-80 shadow-lg'
+                  : 'border-white/10 hover:border-white/20'
                   }`}
                 style={isSelected ? {
                   backgroundColor: `${deviceColor.hex}20`,
@@ -448,8 +489,8 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
                     <h3 className="font-semibold text-white truncate">{user.name}</h3>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
                     }`}>
                     {isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -507,7 +548,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
   const selectedUserRef = useRef(null);
-  
+
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
   // Evitar scroll automático innecesario
@@ -516,16 +557,16 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
       // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
-      
+
       const containerRect = container.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
-      
-      const isVisible = elementRect.top >= containerRect.top && 
-                       elementRect.bottom <= containerRect.bottom;
-      
+
+      const isVisible = elementRect.top >= containerRect.top &&
+        elementRect.bottom <= containerRect.bottom;
+
       if (!isVisible) {
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
+        element.scrollIntoView({
+          behavior: 'smooth',
           block: 'center',
           inline: 'nearest'
         });
@@ -544,13 +585,13 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
           </span>
         </div>
 
-        <SearchBar 
+        <SearchBar
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           placeholder="Search devices..."
         />
 
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto space-y-3 custom-scrollbar"
         >
@@ -566,8 +607,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                   ref={isSelected ? selectedUserRef : null}
                   onClick={() => onUserSelect(user.id)}
                   className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                      ? 'border-opacity-80 shadow-lg'
-                      : 'border-white/10 hover:border-white/20'
+                    ? 'border-opacity-80 shadow-lg'
+                    : 'border-white/10 hover:border-white/20'
                     }`}
                   style={isSelected ? {
                     backgroundColor: `${deviceColor.hex}20`,
@@ -587,8 +628,8 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                       <h3 className="font-semibold text-white truncate">{user.name}</h3>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
                       }`}>
                       {isActive ? 'Active' : 'Inactive'}
                     </span>
@@ -801,13 +842,13 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           {/* Device Selector con barra de búsqueda */}
           <div className="mb-6">
             <label className="block text-white text-lg font-medium mb-3">Select Device</label>
-            
-            <SearchBar 
+
+            <SearchBar
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               placeholder="Search devices for history..."
             />
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-40 overflow-y-auto custom-scrollbar">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => {
@@ -819,8 +860,8 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
                       key={user.id}
                       onClick={() => setSelectedDeviceId(user.id)}
                       className={`p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
-                          ? 'border-opacity-80 shadow-lg'
-                          : 'border-white/20 hover:border-white/40'
+                        ? 'border-opacity-80 shadow-lg'
+                        : 'border-white/20 hover:border-white/40'
                         }`}
                       style={isSelected ? {
                         backgroundColor: `${deviceColor.hex}30`,
@@ -1028,7 +1069,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
     try {
       if (isLiveMode) {
         const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
-        const previousActiveUsers = previousUsersRef.current ? 
+        const previousActiveUsers = previousUsersRef.current ?
           previousUsersRef.current.filter(user => isUserActive(user.lastUpdate)) : [];
 
         // Solo actualizar si hay cambios significativos en los usuarios activos
@@ -1083,7 +1124,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
             });
           }
         }
-        
+
         // Actualizar referencia de usuarios anteriores
         previousUsersRef.current = users;
       } else {
@@ -1114,11 +1155,6 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
   const mapHeight = isMobile
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
-
-  const customIcon = new Icon({
-    iconUrl: "/map.png",
-    iconSize: [50, 50]
-  });
 
   // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
@@ -1183,12 +1219,15 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
 
           if (!shouldShow) return null;
 
+          // Crear el ícono circular personalizado
+          const circularIcon = createCircularIcon(deviceColor.hex, isActive);
+
           return (
             <div key={user.id}>
-              {/* Marcador del dispositivo */}
+              {/* Marcador del dispositivo con ícono circular */}
               <Marker
                 position={userPosition}
-                icon={customIcon}
+                icon={circularIcon}
                 opacity={isSelected || isLiveMode ? 1 : 0.7}
               >
                 <Popup>
@@ -1296,8 +1335,7 @@ function App() {
 
       if (devicesData && devicesData.length > 0) {
         const usersArray = devicesData.map(device => ({
-          id: device.device_id || `device_${Math.random().toString(36).
-          substring(7)}`,
+          id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
           name: device.device_name || device.device_id || 'Unknown Device',
           deviceId: device.device_id,
           deviceType: device.device_type || 'mobile',
