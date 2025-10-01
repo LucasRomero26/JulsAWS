@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon } from 'leaflet';
@@ -25,46 +25,68 @@ const config = {
   INACTIVE_TIMEOUT: 20000
 };
 
-// --- NUEVO: Sistema de colores para múltiples dispositivos ---
+// --- AMPLIADO: Sistema de colores basado en toda la paleta de Tailwind ---
 const DEVICE_COLORS = [
-  {
-    name: 'Cyan',
-    light: '#ecfeff',
-    dark: '#053345',
-    main: '#0092b8',
-    hex: '#0092b8'
-  },
-  {
-    name: 'Yellow',
-    light: '#fef3c7',
-    dark: '#78350f',
-    main: '#f59e0b',
-    hex: '#f59e0b'
-  },
-  {
-    name: 'Red',
-    light: '#fecaca',
-    dark: '#7f1d1d',
-    main: '#dc2626',
-    hex: '#dc2626'
-  },
-  {
-    name: 'Purple',
-    light: '#e9d5ff',
-    dark: '#581c87',
-    main: '#9333ea',
-    hex: '#9333ea'
-  },
-  {
-    name: 'Dark Blue',
-    light: '#dbeafe',
-    dark: '#1e3a8a',
-    main: '#3b82f6',
-    hex: '#3b82f6'
-  }
+  // Reds
+  { name: 'Red 500', light: '#fecaca', dark: '#7f1d1d', main: '#ef4444', hex: '#ef4444' },
+  { name: 'Red 600', light: '#fca5a5', dark: '#991b1b', main: '#dc2626', hex: '#dc2626' },
+  { name: 'Rose 500', light: '#fda4af', dark: '#881337', main: '#f43f5e', hex: '#f43f5e' },
+  { name: 'Pink 500', light: '#f9a8d4', dark: '#831843', main: '#ec4899', hex: '#ec4899' },
+  
+  // Oranges
+  { name: 'Orange 500', light: '#fed7aa', dark: '#9a3412', main: '#f97316', hex: '#f97316' },
+  { name: 'Orange 600', light: '#fdba74', dark: '#ea580c', main: '#ea580c', hex: '#ea580c' },
+  { name: 'Amber 500', light: '#fde68a', dark: '#92400e', main: '#f59e0b', hex: '#f59e0b' },
+  { name: 'Yellow 500', light: '#fef3c7', dark: '#78350f', main: '#eab308', hex: '#eab308' },
+  
+  // Greens
+  { name: 'Lime 500', light: '#d9f99d', dark: '#365314', main: '#84cc16', hex: '#84cc16' },
+  { name: 'Green 500', light: '#bbf7d0', dark: '#14532d', main: '#22c55e', hex: '#22c55e' },
+  { name: 'Green 600', light: '#86efac', dark: '#166534', main: '#16a34a', hex: '#16a34a' },
+  { name: 'Emerald 500', light: '#a7f3d0', dark: '#064e3b', main: '#10b981', hex: '#10b981' },
+  { name: 'Teal 500', light: '#99f6e4', dark: '#134e4a', main: '#14b8a6', hex: '#14b8a6' },
+  
+  // Cyans & Blues
+  { name: 'Cyan 500', light: '#a5f3fc', dark: '#164e63', main: '#06b6d4', hex: '#06b6d4' },
+  { name: 'Cyan 600', light: '#67e8f9', dark: '#0891b2', main: '#0891b2', hex: '#0891b2' },
+  { name: 'Sky 500', light: '#bae6fd', dark: '#0c4a6e', main: '#0ea5e9', hex: '#0ea5e9' },
+  { name: 'Blue 500', light: '#dbeafe', dark: '#1e3a8a', main: '#3b82f6', hex: '#3b82f6' },
+  { name: 'Blue 600', light: '#93c5fd', dark: '#1d4ed8', main: '#2563eb', hex: '#2563eb' },
+  { name: 'Indigo 500', light: '#c7d2fe', dark: '#312e81', main: '#6366f1', hex: '#6366f1' },
+  
+  // Purples
+  { name: 'Violet 500', light: '#ddd6fe', dark: '#4c1d95', main: '#8b5cf6', hex: '#8b5cf6' },
+  { name: 'Purple 500', light: '#e9d5ff', dark: '#581c87', main: '#a855f7', hex: '#a855f7' },
+  { name: 'Purple 600', light: '#d8b4fe', dark: '#7c2d12', main: '#9333ea', hex: '#9333ea' },
+  { name: 'Fuchsia 500', light: '#f0abfc', dark: '#701a75', main: '#d946ef', hex: '#d946ef' },
+  
+  // Grays & Neutrals
+  { name: 'Gray 500', light: '#f3f4f6', dark: '#374151', main: '#6b7280', hex: '#6b7280' },
+  { name: 'Slate 500', light: '#f1f5f9', dark: '#334155', main: '#64748b', hex: '#64748b' },
+  { name: 'Zinc 500', light: '#f4f4f5', dark: '#3f3f46', main: '#71717a', hex: '#71717a' },
+  { name: 'Stone 500', light: '#fafaf9', dark: '#44403c', main: '#78716c', hex: '#78716c' },
+  
+  // Additional vibrant colors
+  { name: 'Red 400', light: '#f87171', dark: '#dc2626', main: '#f87171', hex: '#f87171' },
+  { name: 'Orange 400', light: '#fb923c', dark: '#ea580c', main: '#fb923c', hex: '#fb923c' },
+  { name: 'Amber 400', light: '#fbbf24', dark: '#d97706', main: '#fbbf24', hex: '#fbbf24' },
+  { name: 'Yellow 400', light: '#facc15', dark: '#ca8a04', main: '#facc15', hex: '#facc15' },
+  { name: 'Lime 400', light: '#a3e635', dark: '#65a30d', main: '#a3e635', hex: '#a3e635' },
+  { name: 'Green 400', light: '#4ade80', dark: '#16a34a', main: '#4ade80', hex: '#4ade80' },
+  { name: 'Emerald 400', light: '#34d399', dark: '#059669', main: '#34d399', hex: '#34d399' },
+  { name: 'Teal 400', light: '#2dd4bf', dark: '#0f766e', main: '#2dd4bf', hex: '#2dd4bf' },
+  { name: 'Cyan 400', light: '#22d3ee', dark: '#0e7490', main: '#22d3ee', hex: '#22d3ee' },
+  { name: 'Sky 400', light: '#38bdf8', dark: '#0284c7', main: '#38bdf8', hex: '#38bdf8' },
+  { name: 'Blue 400', light: '#60a5fa', dark: '#2563eb', main: '#60a5fa', hex: '#60a5fa' },
+  { name: 'Indigo 400', light: '#818cf8', dark: '#4f46e5', main: '#818cf8', hex: '#818cf8' },
+  { name: 'Violet 400', light: '#a78bfa', dark: '#7c3aed', main: '#a78bfa', hex: '#a78bfa' },
+  { name: 'Purple 400', light: '#c084fc', dark: '#9333ea', main: '#c084fc', hex: '#c084fc' },
+  { name: 'Fuchsia 400', light: '#e879f9', dark: '#c026d3', main: '#e879f9', hex: '#e879f9' },
+  { name: 'Pink 400', light: '#f472b6', dark: '#db2777', main: '#f472b6', hex: '#f472b6' },
+  { name: 'Rose 400', light: '#fb7185', dark: '#e11d48', main: '#fb7185', hex: '#fb7185' }
 ];
 
-// --- NUEVO: Sistema de asignación persistente de colores ---
+// --- MEJORADO: Sistema de asignación persistente de colores ---
 class DeviceColorManager {
   constructor() {
     this.deviceColorMap = new Map();
@@ -292,108 +314,117 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- Información de usuarios para móvil con colores persistentes ---
+// --- NUEVO: Componente de barra de búsqueda ---
+const SearchBar = ({ searchTerm, onSearchChange, placeholder = "Search devices..." }) => {
+  return (
+    <div className="relative mb-4">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg className="h-5 w-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+        placeholder={placeholder}
+      />
+      {searchTerm && (
+        <button
+          onClick={() => onSearchChange('')}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+        >
+          <svg className="h-5 w-5 text-white/50 hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+};
+
+// --- MEJORADO: Hook para filtrar usuarios con búsqueda ---
+const useFilteredUsers = (users, searchTerm) => {
+  return useMemo(() => {
+    if (!searchTerm.trim()) {
+      return users;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    return users.filter(user => {
+      return (
+        user.name.toLowerCase().includes(term) ||
+        user.deviceId?.toLowerCase().includes(term) ||
+        user.id.toLowerCase().includes(term)
+      );
+    });
+  }, [users, searchTerm]);
+};
+
+// --- MEJORADO: Información de usuarios para móvil con búsqueda y scroll optimizado ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const scrollContainerRef = useRef(null);
+  const selectedUserRef = useRef(null);
+  
+  const filteredUsers = useFilteredUsers(users, searchTerm);
+
+  // Evitar scroll automático innecesario
+  useEffect(() => {
+    if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
+      // Solo hacer scroll si el elemento seleccionado no está visible
+      const container = scrollContainerRef.current;
+      const element = selectedUserRef.current;
+      
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      
+      const isVisible = elementRect.top >= containerRect.top && 
+                       elementRect.bottom <= containerRect.bottom;
+      
+      if (!isVisible) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, [selectedUserId, searchTerm]);
+
   if (!users || users.length === 0) return null;
 
   return (
     <div className="glassmorphism-strong rounded-4xl w-full mt-6 p-6">
       <div className="mb-4">
         <h2 className="text-xl font-bold text-white">Devices</h2>
-        <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''} Connected</span>
+        <span className="text-sm text-white/60">
+          {filteredUsers.length} of {users.length} Device{users.length !== 1 ? 's' : ''} 
+          {searchTerm && ' (filtered)'}
+        </span>
       </div>
 
-      <div className="space-y-3">
-        {users.map((user) => {
-          const isActive = isUserActive(user.lastUpdate);
-          const isSelected = selectedUserId === user.id;
-          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
+      <SearchBar 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search devices by name or ID..."
+      />
 
-          return (
-            <div
-              key={user.id}
-              onClick={() => onUserSelect(user.id)}
-              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                  ? 'border-opacity-80 shadow-lg'
-                  : 'border-white/10 hover:border-white/20'
-                }`}
-              style={isSelected ? {
-                backgroundColor: `${deviceColor.hex}20`,
-                borderColor: deviceColor.hex,
-                boxShadow: `0 10px 25px ${deviceColor.hex}30`
-              } : {}}
-            >
-              <div className="flex items-center justify-between mb-3 gap-2">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div
-                    className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
-                    style={{
-                      backgroundColor: isActive ? '#10b981' : '#ef4444',
-                      borderColor: deviceColor.hex
-                    }}
-                  ></div>
-                  <h3 className="font-semibold text-white truncate">{user.name}</h3>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                  }`}>
-                  {isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-
-              <div
-                className="w-full h-1 rounded-full mb-3"
-                style={{ backgroundColor: deviceColor.hex }}
-              ></div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between gap-2">
-                  <span className="text-white/70 flex-shrink-0">Latitude:</span>
-                  <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-white/70 flex-shrink-0">Longitude:</span>
-                  <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-white/70 flex-shrink-0">Last Update:</span>
-                  <span className="text-white/90 text-xs truncate">{formatTimestamp(user.lastUpdate)}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="text-xs text-white/50 text-center">
-          <p>Devices go inactive after {config.INACTIVE_TIMEOUT / 1000} seconds</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Sidebar para desktop con colores persistentes ---
-const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
-  return (
-    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
-      <div className="p-6 h-full flex flex-col">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Devices</h2>
-          <span className="text-sm text-white/60">{users.length} Device{users.length !== 1 ? 's' : ''} Connected</span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-          {users.map((user) => {
+      <div 
+        ref={scrollContainerRef}
+        className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar"
+      >
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((user) => {
             const isActive = isUserActive(user.lastUpdate);
             const isSelected = selectedUserId === user.id;
-            const deviceColor = getDeviceColor(user.id); // Usar ID del usuario en lugar de índice
+            const deviceColor = getDeviceColor(user.id);
 
             return (
               <div
                 key={user.id}
+                ref={isSelected ? selectedUserRef : null}
                 onClick={() => onUserSelect(user.id)}
                 className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
                     ? 'border-opacity-80 shadow-lg'
@@ -428,9 +459,162 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
                   className="w-full h-1 rounded-full mb-3"
                   style={{ backgroundColor: deviceColor.hex }}
                 ></div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Latitude:</span>
+                    <span className="text-white font-mono">{parseFloat(user.latitude).toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Longitude:</span>
+                    <span className="text-white font-mono">{parseFloat(user.longitude).toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-white/70 flex-shrink-0">Last Update:</span>
+                    <span className="text-white/90 text-xs truncate">{formatTimestamp(user.lastUpdate)}</span>
+                  </div>
+                </div>
               </div>
             );
-          })}
+          })
+        ) : (
+          <div className="text-center py-8">
+            <svg className="w-12 h-12 mx-auto text-white/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <p className="text-white/50">No devices found matching "{searchTerm}"</p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="mt-2 text-cyan-400 hover:text-cyan-300 text-sm"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="text-xs text-white/50 text-center">
+          <p>Devices go inactive after {config.INACTIVE_TIMEOUT / 1000} seconds</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MEJORADO: Sidebar para desktop con búsqueda y scroll optimizado ---
+const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const scrollContainerRef = useRef(null);
+  const selectedUserRef = useRef(null);
+  
+  const filteredUsers = useFilteredUsers(users, searchTerm);
+
+  // Evitar scroll automático innecesario
+  useEffect(() => {
+    if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
+      // Solo hacer scroll si el elemento seleccionado no está visible
+      const container = scrollContainerRef.current;
+      const element = selectedUserRef.current;
+      
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      
+      const isVisible = elementRect.top >= containerRect.top && 
+                       elementRect.bottom <= containerRect.bottom;
+      
+      if (!isVisible) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, [selectedUserId, searchTerm]);
+
+  return (
+    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
+      <div className="p-6 h-full flex flex-col">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white">Devices</h2>
+          <span className="text-sm text-white/60">
+            {filteredUsers.length} of {users.length} Device{users.length !== 1 ? 's' : ''}
+            {searchTerm && ' (filtered)'}
+          </span>
+        </div>
+
+        <SearchBar 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          placeholder="Search devices..."
+        />
+
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto space-y-3 custom-scrollbar"
+        >
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => {
+              const isActive = isUserActive(user.lastUpdate);
+              const isSelected = selectedUserId === user.id;
+              const deviceColor = getDeviceColor(user.id);
+
+              return (
+                <div
+                  key={user.id}
+                  ref={isSelected ? selectedUserRef : null}
+                  onClick={() => onUserSelect(user.id)}
+                  className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
+                      ? 'border-opacity-80 shadow-lg'
+                      : 'border-white/10 hover:border-white/20'
+                    }`}
+                  style={isSelected ? {
+                    backgroundColor: `${deviceColor.hex}20`,
+                    borderColor: deviceColor.hex,
+                    boxShadow: `0 10px 25px ${deviceColor.hex}30`
+                  } : {}}
+                >
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${isActive ? 'animate-pulse' : ''}`}
+                        style={{
+                          backgroundColor: isActive ? '#10b981' : '#ef4444',
+                          borderColor: deviceColor.hex
+                        }}
+                      ></div>
+                      <h3 className="font-semibold text-white truncate">{user.name}</h3>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${isActive
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      }`}>
+                      {isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  <div
+                    className="w-full h-1 rounded-full mb-3"
+                    style={{ backgroundColor: deviceColor.hex }}
+                  ></div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-8">
+              <svg className="w-12 h-12 mx-auto text-white/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p className="text-white/50 text-sm">No devices found matching "{searchTerm}"</p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="mt-2 text-cyan-400 hover:text-cyan-300 text-sm"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mt-4 pt-4 border-t border-white/10">
@@ -450,8 +634,10 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const filteredUsers = useFilteredUsers(users, searchTerm);
 
   const darkTheme = createTheme({
     palette: {
@@ -573,6 +759,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
     setEndDate(null);
     setSelectedDeviceId('');
     setError('');
+    setSearchTerm('');
   };
 
   useEffect(() => {
@@ -611,42 +798,67 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
 
         {/* Contenido scrolleable */}
         <div className="p-6">
-          {/* Device Selector con colores persistentes */}
+          {/* Device Selector con barra de búsqueda */}
           <div className="mb-6">
             <label className="block text-white text-lg font-medium mb-3">Select Device</label>
+            
+            <SearchBar 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              placeholder="Search devices for history..."
+            />
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-40 overflow-y-auto custom-scrollbar">
-              {users.map((user) => {
-                const deviceColor = getDeviceColor(user.id);
-                const isSelected = selectedDeviceId === user.id;
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => {
+                  const deviceColor = getDeviceColor(user.id);
+                  const isSelected = selectedDeviceId === user.id;
 
-                return (
-                  <button
-                    key={user.id}
-                    onClick={() => setSelectedDeviceId(user.id)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
-                        ? 'border-opacity-80 shadow-lg'
-                        : 'border-white/20 hover:border-white/40'
-                      }`}
-                    style={isSelected ? {
-                      backgroundColor: `${deviceColor.hex}30`,
-                      borderColor: deviceColor.hex,
-                      boxShadow: `0 10px 25px ${deviceColor.hex}20`
-                    } : {}}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: deviceColor.hex }}
-                      ></div>
-                      <div className="text-left">
-                        <div className="text-white font-semibold truncate">{user.name}</div>
-                        <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
+                  return (
+                    <button
+                      key={user.id}
+                      onClick={() => setSelectedDeviceId(user.id)}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${isSelected
+                          ? 'border-opacity-80 shadow-lg'
+                          : 'border-white/20 hover:border-white/40'
+                        }`}
+                      style={isSelected ? {
+                        backgroundColor: `${deviceColor.hex}30`,
+                        borderColor: deviceColor.hex,
+                        boxShadow: `0 10px 25px ${deviceColor.hex}20`
+                      } : {}}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: deviceColor.hex }}
+                        ></div>
+                        <div className="text-left">
+                          <div className="text-white font-semibold truncate">{user.name}</div>
+                          <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
+                        </div>
                       </div>
-                    </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-4">
+                  <p className="text-white/50">No devices found matching "{searchTerm}"</p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="mt-2 text-cyan-400 hover:text-cyan-300 text-sm"
+                  >
+                    Clear search
                   </button>
-                );
-              })}
+                </div>
+              )}
             </div>
+
+            {filteredUsers.length > 0 && (
+              <div className="mt-3 text-sm text-white/60">
+                Showing {filteredUsers.length} of {users.length} devices
+              </div>
+            )}
           </div>
 
           <ThemeProvider theme={darkTheme}>
@@ -808,6 +1020,7 @@ const GradientPolyline = ({ path, deviceColor }) => {
 // --- NUEVO: Componente mejorado para actualizar la vista del mapa ---
 const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
   const map = useMap();
+  const previousUsersRef = useRef(previousUsers);
 
   useEffect(() => {
     if (!users || users.length === 0) return;
@@ -815,15 +1028,15 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
     try {
       if (isLiveMode) {
         const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
-        const previousActiveUsers = previousUsers ? previousUsers.filter(user => isUserActive(user.lastUpdate)) : [];
+        const previousActiveUsers = previousUsersRef.current ? 
+          previousUsersRef.current.filter(user => isUserActive(user.lastUpdate)) : [];
 
         // Solo actualizar si hay cambios significativos en los usuarios activos
         const activeUsersChanged = activeUsers.length !== previousActiveUsers.length ||
           activeUsers.some((user, index) => {
-            const prevUser = previousActiveUsers[index];
+            const prevUser = previousActiveUsers.find(pu => pu.id === user.id);
             if (!prevUser) return true;
-            return user.id !== prevUser.id ||
-              Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
+            return Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
               Math.abs(parseFloat(user.longitude) - parseFloat(prevUser.longitude)) > 0.0001;
           });
 
@@ -870,6 +1083,9 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
             });
           }
         }
+        
+        // Actualizar referencia de usuarios anteriores
+        previousUsersRef.current = users;
       } else {
         // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
         const allPaths = Object.values(userPaths).flat();
@@ -885,7 +1101,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
     } catch (error) {
       console.error('Error updating map view:', error);
     }
-  }, [users, userPaths, isLiveMode, map, previousUsers]);
+  }, [users, userPaths, isLiveMode, map]);
 
   return null;
 };
@@ -1080,7 +1296,8 @@ function App() {
 
       if (devicesData && devicesData.length > 0) {
         const usersArray = devicesData.map(device => ({
-          id: device.device_id || `device_${Math.random().toString(36).substring(7)}`,
+          id: device.device_id || `device_${Math.random().toString(36).
+          substring(7)}`,
           name: device.device_name || device.device_id || 'Unknown Device',
           deviceId: device.device_id,
           deviceType: device.device_type || 'mobile',
@@ -1133,7 +1350,14 @@ function App() {
         }
 
         // Si no hay usuario seleccionado, seleccionar el primero activo
-        if (!selectedUserId && usersArray.length > 0) {
+        // MEJORADO: Mantener la selección actual si el usuario sigue existiendo
+        if (selectedUserId) {
+          const selectedUserStillExists = usersArray.find(user => user.id === selectedUserId);
+          if (!selectedUserStillExists && usersArray.length > 0) {
+            const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
+            setSelectedUserId(activeUser.id);
+          }
+        } else if (usersArray.length > 0) {
           const activeUser = usersArray.find(user => isUserActive(user.lastUpdate)) || usersArray[0];
           setSelectedUserId(activeUser.id);
         }
@@ -1194,10 +1418,13 @@ function App() {
     }
   };
 
-  // Manejar selección de usuario
+  // MEJORADO: Manejar selección de usuario sin causar scroll automático innecesario
   const handleUserSelect = (userId) => {
     console.log('User selected:', userId);
-    setSelectedUserId(userId);
+    // Solo actualizar si es diferente al seleccionado actual
+    if (selectedUserId !== userId) {
+      setSelectedUserId(userId);
+    }
   };
 
   // Búsqueda por fecha
@@ -1281,7 +1508,7 @@ function App() {
 
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, isDateSearchModalOpen]);
+  }, [isLiveMode, isDateSearchModalOpen, selectedUserId]); // Agregado selectedUserId para evitar efectos no deseados
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
