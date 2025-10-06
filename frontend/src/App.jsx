@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker, Circle, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -286,22 +286,6 @@ const isUserActive = (lastUpdate) => {
     console.error('Error checking user activity:', error, lastUpdate);
     return false;
   }
-};
-
-// Función para calcular distancia entre dos puntos
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; // Radio de la Tierra en metros
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
 };
 
 // --- Componentes de UI ---
@@ -685,445 +669,6 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   );
 };
 
-// --- NUEVO: Sidebar para History by Area ---
-const HistoryByAreaSidebar = ({ users, selectedVehicles, onToggleVehicle, vehicleHistoryData }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  return (
-    <div className="absolute left-4 top-4 bottom-4 w-80 bg-black/80 backdrop-blur-md rounded-2xl shadow-2xl p-4 overflow-y-auto z-[1000] border border-white/10">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-white mb-2">Vehículos</h2>
-        <p className="text-sm text-white/60">Selecciona los vehículos a visualizar</p>
-      </div>
-
-      <SearchBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        placeholder="Buscar vehículos..."
-      />
-
-      <div className="space-y-2">
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map((vehicle) => {
-            const deviceColor = getDeviceColor(vehicle.id);
-            const isChecked = selectedVehicles.includes(vehicle.id);
-            const passedThroughArea = vehicleHistoryData[vehicle.id]?.pointsInArea?.length > 0;
-
-            return (
-              <div
-                key={vehicle.id}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
-              >
-                <input
-                  type="checkbox"
-                  id={`vehicle-${vehicle.id}`}
-                  checked={isChecked}
-                  onChange={() => onToggleVehicle(vehicle.id)}
-                  className="w-5 h-5 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
-                />
-                <label
-                  htmlFor={`vehicle-${vehicle.id}`}
-                  className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
-                >
-                  <div
-                    className="w-4 h-4 rounded-full border-2 border-white shadow flex-shrink-0"
-                    style={{ backgroundColor: deviceColor.hex }}
-                  />
-                  <span className="font-medium text-white truncate">{vehicle.name}</span>
-                </label>
-                {passedThroughArea && (
-                  <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded-full flex-shrink-0 border border-cyan-500/30">
-                    {vehicleHistoryData[vehicle.id].pointsInArea.length} pts
-                  </span>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-white/50">No se encontraron vehículos con "{searchTerm}"</p>
-            <button
-              onClick={() => setSearchTerm('')}
-              className="mt-2 text-cyan-400 hover:text-cyan-300 text-sm"
-            >
-              Limpiar búsqueda
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// --- NUEVO: Componente para manejar clicks en el mapa ---
-const MapClickHandler = ({ onMapClick, isSelectionMode }) => {
-  useMapEvents({
-    click: (e) => {
-      if (isSelectionMode) {
-        onMapClick(e.latlng);
-      }
-    },
-  });
-  return null;
-};
-
-// --- NUEVO: Componente History by Area ---
-const HistoryByArea = ({ users, onBack, config }) => {
-  const [selectedArea, setSelectedArea] = useState(null);
-  const [radius, setRadius] = useState(500);
-  const [isSelectionMode, setIsSelectionMode] = useState(true);
-  const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [selectedVehicles, setSelectedVehicles] = useState([]);
-  const [vehicleHistoryData, setVehicleHistoryData] = useState({});
-  const [loading, setLoading] = useState(false);
-
-  const handleMapClick = (latlng) => {
-    if (isSelectionMode) {
-      setSelectedArea(latlng);
-      setShowVehicleModal(true);
-      setIsSelectionMode(false);
-    }
-  };
-
-  const handleDeleteArea = () => {
-    setSelectedArea(null);
-    setIsSelectionMode(true);
-    setSelectedVehicles([]);
-    setVehicleHistoryData({});
-  };
-
-  const toggleVehicleSelection = (vehicleId) => {
-    setSelectedVehicles(prev => {
-      if (prev.includes(vehicleId)) {
-        return prev.filter(id => id !== vehicleId);
-      } else {
-        return [...prev, vehicleId];
-      }
-    });
-  };
-
-  const fetchVehicleHistory = async (vehicleId) => {
-    try {
-      setLoading(true);
-      // Llamada a la API para obtener todo el historial del vehículo
-      const response = await fetch(`${config.API_BASE_URL}/api/location/range/all?deviceId=${vehicleId}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Filtrar puntos que están dentro del área
-      const pointsInArea = data.filter(point => {
-        const distance = calculateDistance(
-          selectedArea.lat,
-          selectedArea.lng,
-          parseFloat(point.latitude),
-          parseFloat(point.longitude)
-        );
-        return distance <= radius;
-      });
-
-      return { vehicleId, history: data, pointsInArea };
-    } catch (error) {
-      console.error(`Error fetching history for vehicle ${vehicleId}:`, error);
-      return { vehicleId, history: [], pointsInArea: [] };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConfirmVehicles = async () => {
-    setShowVehicleModal(false);
-
-    // Cargar historial de todos los vehículos seleccionados
-    const historyPromises = selectedVehicles.map(vehicleId =>
-      fetchVehicleHistory(vehicleId)
-    );
-
-    const results = await Promise.all(historyPromises);
-
-    const historyMap = {};
-    results.forEach(result => {
-      historyMap[result.vehicleId] = result;
-    });
-
-    setVehicleHistoryData(historyMap);
-  };
-
-  // Efecto para cargar historial cuando se agregan/quitan vehículos desde el panel
-  useEffect(() => {
-    if (selectedArea && selectedVehicles.length > 0) {
-      const loadMissingHistory = async () => {
-        const vehiclesWithoutHistory = selectedVehicles.filter(
-          id => !vehicleHistoryData[id]
-        );
-
-        if (vehiclesWithoutHistory.length > 0) {
-          const historyPromises = vehiclesWithoutHistory.map(vehicleId =>
-            fetchVehicleHistory(vehicleId)
-          );
-
-          const results = await Promise.all(historyPromises);
-
-          const newHistoryMap = { ...vehicleHistoryData };
-          results.forEach(result => {
-            newHistoryMap[result.vehicleId] = result;
-          });
-
-          setVehicleHistoryData(newHistoryMap);
-        }
-      };
-
-      loadMissingHistory();
-    }
-  }, [selectedVehicles]);
-
-  const getVehicleName = (vehicleId) => {
-    const vehicle = users.find(v => v.id === vehicleId);
-    return vehicle ? vehicle.name : vehicleId;
-  };
-
-  // Obtener posición central para el mapa
-  const centerPosition = users && users.length > 0
-    ? [parseFloat(users[0].latitude), parseFloat(users[0].longitude)]
-    : [0, 0];
-
-  return (
-    <div className="relative w-full h-screen">
-      {/* Mapa en pantalla completa */}
-      <MapContainer
-        center={centerPosition}
-        zoom={13}
-        style={{ height: '100%', width: '100%' }}
-      >
-        <TileLayer
-          url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
-          attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
-        />
-
-        <MapClickHandler
-          onMapClick={handleMapClick}
-          isSelectionMode={isSelectionMode}
-        />
-
-        {/* Área seleccionada */}
-        {selectedArea && (
-          <>
-            <Circle
-              center={selectedArea}
-              radius={radius}
-              pathOptions={{
-                color: '#3B82F6',
-                fillColor: '#3B82F6',
-                fillOpacity: 0.2,
-                weight: 2
-              }}
-            />
-            <Marker
-              position={selectedArea}
-              icon={L.divIcon({
-                className: 'custom-center-marker',
-                html: `<div style="background-color: #3B82F6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-              })}
-            >
-              <Popup>
-                <div className="text-center">
-                  <p className="font-semibold mb-2">Área Seleccionada</p>
-                  <p className="text-sm mb-2">Radio: {radius}m</p>
-                  <button
-                    onClick={handleDeleteArea}
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
-                  >
-                    Eliminar Área
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          </>
-        )}
-
-        {/* Recorridos de vehículos */}
-        {Object.entries(vehicleHistoryData).map(([vehicleId, data]) => {
-          if (!selectedVehicles.includes(vehicleId)) return null;
-
-          const points = data.history.map(point => [parseFloat(point.latitude), parseFloat(point.longitude)]);
-          const deviceColor = getDeviceColor(vehicleId);
-
-          return (
-            <div key={vehicleId}>
-              <Polyline
-                positions={points}
-                pathOptions={{
-                  color: deviceColor.hex,
-                  weight: 3,
-                  opacity: 0.7
-                }}
-              />
-
-              {/* Marcadores para puntos dentro del área */}
-              {data.pointsInArea.map((point, idx) => (
-                <CircleMarker
-                  key={`${vehicleId}-${idx}`}
-                  center={[parseFloat(point.latitude), parseFloat(point.longitude)]}
-                  radius={6}
-                  pathOptions={{
-                    color: deviceColor.hex,
-                    fillColor: deviceColor.light,
-                    fillOpacity: 0.8,
-                    weight: 2
-                  }}
-                >
-                  <Popup>
-                    <div>
-                      <p className="font-semibold" style={{ color: deviceColor.hex }}>
-                        {getVehicleName(vehicleId)}
-                      </p>
-                      <p className="text-sm">{formatTimestamp(point.timestamp_value || point.created_at)}</p>
-                    </div>
-                  </Popup>
-                </CircleMarker>
-              ))}
-            </div>
-          );
-        })}
-      </MapContainer>
-
-      {/* Panel lateral de vehículos */}
-      {selectedArea && !showVehicleModal && (
-        <HistoryByAreaSidebar
-          users={users}
-          selectedVehicles={selectedVehicles}
-          onToggleVehicle={toggleVehicleSelection}
-          vehicleHistoryData={vehicleHistoryData}
-        />
-      )}
-
-      {/* Controles superiores */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={onBack}
-          className="bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-xl shadow-lg hover:bg-black/90 transition-all font-semibold border border-white/10"
-        >
-          ← Volver
-        </button>
-
-        {selectedArea && (
-          <div className="bg-black/80 backdrop-blur-md rounded-xl shadow-lg p-4 border border-white/10">
-            <label className="block text-sm font-semibold text-white mb-2">
-              Radio del área (m)
-            </label>
-            <input
-              type="range"
-              min="100"
-              max="5000"
-              step="50"
-              value={radius}
-              onChange={(e) => setRadius(parseInt(e.target.value))}
-              className="w-full accent-cyan-500"
-            />
-            <div className="text-center mt-2 font-semibold text-cyan-400">
-              {radius}m
-            </div>
-            <button
-              onClick={handleDeleteArea}
-              className="w-full mt-3 bg-red-500/80 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all"
-            >
-              Eliminar Círculo
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Instrucciones */}
-      {isSelectionMode && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-cyan-600 text-white px-6 py-3 rounded-full shadow-lg">
-          Haz clic en el mapa para seleccionar un área
-        </div>
-      )}
-
-      {/* Loading indicator */}
-      {loading && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1001] bg-black/80 backdrop-blur-md rounded-2xl p-6">
-          <div className="flex flex-col items-center gap-3">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-cyan-500 border-t-transparent"></div>
-            <p className="text-white font-semibold">Cargando historial...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de selección inicial de vehículos */}
-      {showVehicleModal && (
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1001]">
-          <div className="bg-black/90 backdrop-blur-md rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Seleccionar Vehículos
-            </h2>
-            <p className="text-white/70 mb-4">
-              Elige los vehículos para revisar si pasaron por esta área
-            </p>
-
-            <div className="space-y-2 mb-6">
-              {users.map((vehicle) => {
-                const deviceColor = getDeviceColor(vehicle.id);
-                const isChecked = selectedVehicles.includes(vehicle.id);
-
-                return (
-                  <div
-                    key={vehicle.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`modal-vehicle-${vehicle.id}`}
-                      checked={isChecked}
-                      onChange={() => toggleVehicleSelection(vehicle.id)}
-                      className="w-5 h-5 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`modal-vehicle-${vehicle.id}`}
-                      className="flex items-center gap-2 cursor-pointer flex-1"
-                    >
-                      <div
-                        className="w-4 h-4 rounded-full border-2 border-white shadow"
-                        style={{ backgroundColor: deviceColor.hex }}
-                      />
-                      <span className="font-medium text-white">{vehicle.name}</span>
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowVehicleModal(false);
-                  handleDeleteArea();
-                }}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition-all font-semibold"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleConfirmVehicles}
-                disabled={selectedVehicles.length === 0}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-xl transition-all font-semibold disabled:bg-gray-600 disabled:cursor-not-allowed"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -1443,7 +988,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
             <button
               onClick={handleSearch}
               disabled={isLoading || !startDate || !endDate || !selectedDeviceId}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -1766,9 +1311,6 @@ function App() {
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // NUEVO: Estados para History by Area
-  const [isHistoryByAreaMode, setIsHistoryByAreaMode] = useState(false);
-
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
@@ -1981,7 +1523,6 @@ function App() {
 
   const handleReturnToLive = () => {
     setIsLiveMode(true);
-    setIsHistoryByAreaMode(false);
     setUserPaths({});
     setError(null);
     setErrorType(null);
@@ -1990,60 +1531,22 @@ function App() {
     setPreviousUsers(null); // Resetear estado anterior
   };
 
-  // NUEVO: Función para cambiar a modo History by Area
-  const handleHistoryByArea = () => {
-    setIsHistoryByAreaMode(true);
-    setIsLiveMode(false);
-    setIsMobileMenuOpen(false);
-  };
-
-  // NUEVO: Función para volver desde History by Area
-  const handleReturnFromAreaMode = () => {
-    setIsHistoryByAreaMode(false);
-    handleReturnToLive();
-  };
-
   // Effect principal para polling MEJORADO
   useEffect(() => {
-    if (isLiveMode && !isDateSearchModalOpen && !isHistoryByAreaMode) {
+    if (isLiveMode && !isDateSearchModalOpen) {
       // Fetch inicial
       fetchUsersData();
 
       // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
-        if (isLiveMode && !isDateSearchModalOpen && !isHistoryByAreaMode && document.visibilityState === 'visible') {
+        if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
         }
       }, config.POLLING_INTERVAL);
 
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, isDateSearchModalOpen, isHistoryByAreaMode, selectedUserId]);
-
-  // Si estamos en modo History by Area, renderizar solo ese componente
-  if (isHistoryByAreaMode) {
-    return (
-      <div className="min-h-screen transition-all duration-500 dark">
-        {/* ANIMATED BACKGROUND */}
-        <div className="fixed inset-0 -z-10 animate-gradient-shift">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#011640] via-[#163e57] to-[#052940]"></div>
-          <div className="absolute inset-0 bg-gradient-to-tl from-[#052940] via-[#0a1a2e] to-[#16213e] opacity-70 animate-gradient-overlay"></div>
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-20 left-10 w-72 h-72 md:w-96 md:h-96 bg-[#0092b8] rounded-full filter blur-3xl opacity-30 animate-float-slow"></div>
-            <div className="absolute bottom-20 right-10 w-64 h-64 md:w-80 md:h-80 bg-[#163e57] rounded-full filter blur-3xl opacity-25 animate-float-slower"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-64 md:h-64 bg-[#052940] rounded-full filter blur-3xl opacity-20 animate-float"></div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0092b8]/5 to-transparent animate-shimmer"></div>
-        </div>
-
-        <HistoryByArea
-          users={users}
-          onBack={handleReturnFromAreaMode}
-          config={config}
-        />
-      </div>
-    );
-  }
+  }, [isLiveMode, isDateSearchModalOpen, selectedUserId]); // Agregado selectedUserId para evitar efectos no deseados
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -2069,48 +1572,37 @@ function App() {
             </h1>
           </div>
 
-          <div className="flex items-center">
-            {isMobile ? (
+          {isMobile ? (
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-white hover:text-white/70 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          ) : (
+            <div className="flex items-center gap-4 p-1">
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-white hover:text-white/70 transition-colors"
+                onClick={handleReturnToLive}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white border-transparent hover:text-white/50'
+                  }`}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                Live Tracking
               </button>
-            ) : (
-              <div className="flex items-center gap-4 p-1">
-                <button
-                  onClick={handleReturnToLive}
-                  className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
-                    ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                    : 'pb-2 text-white border-transparent hover:text-white/50'
-                    }`}
-                >
-                  Live Tracking
-                </button>
-                <button
-                  onClick={() => setIsDateSearchModalOpen(true)}
-                  className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode && !isHistoryByAreaMode
-                    ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                    : 'pb-2 text-white/50 border-transparent hover:text-white'
-                    }`}
-                >
-                  History
-                </button>
-                <button
-                  onClick={handleHistoryByArea}
-                  className={`flex items-center text-center cursor-pointer justify-center gap-2 w-44 text-lg transition-all duration-300 border-b-2 pt-2 ${isHistoryByAreaMode
-                    ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                    : 'pb-2 text-white/50 border-transparent hover:text-white'
-                    }`}
-                >
-                  History by Area
-                </button>
-              </div>
-            )}
-          </div>
+              <button
+                onClick={() => setIsDateSearchModalOpen(true)}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                  }`}
+              >
+                History
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Dropdown */}
@@ -2133,7 +1625,7 @@ function App() {
                 setIsDateSearchModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${!isLiveMode && !isHistoryByAreaMode
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
@@ -2142,21 +1634,6 @@ function App() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               History
-            </button>
-            <button
-              onClick={() => {
-                handleHistoryByArea();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${isHistoryByAreaMode
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              History by Area
             </button>
           </div>
         )}
