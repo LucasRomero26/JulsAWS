@@ -313,6 +313,82 @@ app.get('/api/location/range', async (req, res) => {
   }
 });
 
+// NUEVO: Endpoint para obtener historial dentro de un área circular
+app.get('/api/location/area', async (req, res) => {
+  try {
+    const { latitude, longitude, radius, deviceIds, startDate, endDate } = req.query;
+
+    if (!latitude || !longitude || !radius) {
+      return res.status(400).json({ 
+        error: 'Los parámetros latitude, longitude y radius son requeridos' 
+      });
+    }
+
+    const centerLat = parseFloat(latitude);
+    const centerLon = parseFloat(longitude);
+    const radiusMeters = parseFloat(radius);
+
+    // Función para calcular distancia Haversine
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371000; // Radio de la Tierra en metros
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    // Construir query base
+    let query = `SELECT * FROM location_data WHERE 1=1`;
+    const values = [];
+    let paramCount = 1;
+
+    // Filtrar por dispositivos si se especifican
+    if (deviceIds) {
+      const deviceIdArray = deviceIds.split(',');
+      query += ` AND device_id = ANY($${paramCount})`;
+      values.push(deviceIdArray);
+      paramCount++;
+    }
+
+    // Filtrar por rango de fechas si se especifican
+    if (startDate) {
+      query += ` AND timestamp_value >= $${paramCount}`;
+      values.push(new Date(startDate).getTime());
+      paramCount++;
+    }
+
+    if (endDate) {
+      query += ` AND timestamp_value <= $${paramCount}`;
+      values.push(new Date(endDate).getTime());
+      paramCount++;
+    }
+
+    query += ` ORDER BY timestamp_value DESC LIMIT 10000;`;
+
+    const result = await pool.query(query, values);
+
+    // Filtrar puntos dentro del área circular
+    const pointsInArea = result.rows.filter(point => {
+      const distance = calculateDistance(
+        centerLat,
+        centerLon,
+        parseFloat(point.latitude),
+        parseFloat(point.longitude)
+      );
+      return distance <= radiusMeters;
+    });
+
+    res.json(pointsInArea);
+  } catch (error) {
+    console.error('Error obteniendo datos por área:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
