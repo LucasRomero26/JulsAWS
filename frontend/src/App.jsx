@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker, Circle, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -25,37 +25,68 @@ const config = {
   INACTIVE_TIMEOUT: 20000
 };
 
-// --- Sistema de colores (sin cambios) ---
+// --- AMPLIADO: Sistema de colores basado en toda la paleta de Tailwind ---
 const DEVICE_COLORS = [
+  // Reds
   { name: 'Red 500', light: '#fecaca', dark: '#7f1d1d', main: '#ef4444', hex: '#ef4444' },
   { name: 'Red 600', light: '#fca5a5', dark: '#991b1b', main: '#dc2626', hex: '#dc2626' },
   { name: 'Rose 500', light: '#fda4af', dark: '#881337', main: '#f43f5e', hex: '#f43f5e' },
   { name: 'Pink 500', light: '#f9a8d4', dark: '#831843', main: '#ec4899', hex: '#ec4899' },
+
+  // Oranges
   { name: 'Orange 500', light: '#fed7aa', dark: '#9a3412', main: '#f97316', hex: '#f97316' },
   { name: 'Orange 600', light: '#fdba74', dark: '#ea580c', main: '#ea580c', hex: '#ea580c' },
   { name: 'Amber 500', light: '#fde68a', dark: '#92400e', main: '#f59e0b', hex: '#f59e0b' },
   { name: 'Yellow 500', light: '#fef3c7', dark: '#78350f', main: '#eab308', hex: '#eab308' },
+
+  // Greens
   { name: 'Lime 500', light: '#d9f99d', dark: '#365314', main: '#84cc16', hex: '#84cc16' },
   { name: 'Green 500', light: '#bbf7d0', dark: '#14532d', main: '#22c55e', hex: '#22c55e' },
   { name: 'Green 600', light: '#86efac', dark: '#166534', main: '#16a34a', hex: '#16a34a' },
   { name: 'Emerald 500', light: '#a7f3d0', dark: '#064e3b', main: '#10b981', hex: '#10b981' },
   { name: 'Teal 500', light: '#99f6e4', dark: '#134e4a', main: '#14b8a6', hex: '#14b8a6' },
+
+  // Cyans & Blues
   { name: 'Cyan 500', light: '#a5f3fc', dark: '#164e63', main: '#06b6d4', hex: '#06b6d4' },
   { name: 'Cyan 600', light: '#67e8f9', dark: '#0891b2', main: '#0891b2', hex: '#0891b2' },
   { name: 'Sky 500', light: '#bae6fd', dark: '#0c4a6e', main: '#0ea5e9', hex: '#0ea5e9' },
   { name: 'Blue 500', light: '#dbeafe', dark: '#1e3a8a', main: '#3b82f6', hex: '#3b82f6' },
   { name: 'Blue 600', light: '#93c5fd', dark: '#1d4ed8', main: '#2563eb', hex: '#2563eb' },
   { name: 'Indigo 500', light: '#c7d2fe', dark: '#312e81', main: '#6366f1', hex: '#6366f1' },
+
+  // Purples
   { name: 'Violet 500', light: '#ddd6fe', dark: '#4c1d95', main: '#8b5cf6', hex: '#8b5cf6' },
   { name: 'Purple 500', light: '#e9d5ff', dark: '#581c87', main: '#a855f7', hex: '#a855f7' },
   { name: 'Purple 600', light: '#d8b4fe', dark: '#7c2d12', main: '#9333ea', hex: '#9333ea' },
   { name: 'Fuchsia 500', light: '#f0abfc', dark: '#701a75', main: '#d946ef', hex: '#d946ef' },
+
+  // Grays & Neutrals
   { name: 'Gray 500', light: '#f3f4f6', dark: '#374151', main: '#6b7280', hex: '#6b7280' },
   { name: 'Slate 500', light: '#f1f5f9', dark: '#334155', main: '#64748b', hex: '#64748b' },
   { name: 'Zinc 500', light: '#f4f4f5', dark: '#3f3f46', main: '#71717a', hex: '#71717a' },
   { name: 'Stone 500', light: '#fafaf9', dark: '#44403c', main: '#78716c', hex: '#78716c' },
+
+  // Additional vibrant colors
+  { name: 'Red 400', light: '#f87171', dark: '#dc2626', main: '#f87171', hex: '#f87171' },
+  { name: 'Orange 400', light: '#fb923c', dark: '#ea580c', main: '#fb923c', hex: '#fb923c' },
+  { name: 'Amber 400', light: '#fbbf24', dark: '#d97706', main: '#fbbf24', hex: '#fbbf24' },
+  { name: 'Yellow 400', light: '#facc15', dark: '#ca8a04', main: '#facc15', hex: '#facc15' },
+  { name: 'Lime 400', light: '#a3e635', dark: '#65a30d', main: '#a3e635', hex: '#a3e635' },
+  { name: 'Green 400', light: '#4ade80', dark: '#16a34a', main: '#4ade80', hex: '#4ade80' },
+  { name: 'Emerald 400', light: '#34d399', dark: '#059669', main: '#34d399', hex: '#34d399' },
+  { name: 'Teal 400', light: '#2dd4bf', dark: '#0f766e', main: '#2dd4bf', hex: '#2dd4bf' },
+  { name: 'Cyan 400', light: '#22d3ee', dark: '#0e7490', main: '#22d3ee', hex: '#22d3ee' },
+  { name: 'Sky 400', light: '#38bdf8', dark: '#0284c7', main: '#38bdf8', hex: '#38bdf8' },
+  { name: 'Blue 400', light: '#60a5fa', dark: '#2563eb', main: '#60a5fa', hex: '#60a5fa' },
+  { name: 'Indigo 400', light: '#818cf8', dark: '#4f46e5', main: '#818cf8', hex: '#818cf8' },
+  { name: 'Violet 400', light: '#a78bfa', dark: '#7c3aed', main: '#a78bfa', hex: '#a78bfa' },
+  { name: 'Purple 400', light: '#c084fc', dark: '#9333ea', main: '#c084fc', hex: '#c084fc' },
+  { name: 'Fuchsia 400', light: '#e879f9', dark: '#c026d3', main: '#e879f9', hex: '#e879f9' },
+  { name: 'Pink 400', light: '#f472b6', dark: '#db2777', main: '#f472b6', hex: '#f472b6' },
+  { name: 'Rose 400', light: '#fb7185', dark: '#e11d48', main: '#fb7185', hex: '#fb7185' }
 ];
 
+// --- Función para generar índices aleatorios ---
 const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -65,6 +96,7 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+// --- MEJORADO: Sistema de asignación aleatoria de colores ---
 class DeviceColorManager {
   constructor() {
     this.deviceColorMap = new Map();
@@ -72,16 +104,20 @@ class DeviceColorManager {
     this.currentIndex = 0;
   }
 
+  // Asignar un color aleatorio persistente a un dispositivo
   getDeviceColor(deviceId) {
+    // Si ya tiene un color asignado, devolverlo
     if (this.deviceColorMap.has(deviceId)) {
       return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
     }
 
+    // Si se acabaron los colores disponibles, volver a mezclar y reiniciar
     if (this.currentIndex >= this.availableColorIndices.length) {
       this.availableColorIndices = shuffleArray([...Array(DEVICE_COLORS.length).keys()]);
       this.currentIndex = 0;
     }
 
+    // Asignar el siguiente color aleatorio disponible
     const colorIndex = this.availableColorIndices[this.currentIndex];
     this.deviceColorMap.set(deviceId, colorIndex);
     this.currentIndex++;
@@ -89,6 +125,7 @@ class DeviceColorManager {
     return DEVICE_COLORS[colorIndex];
   }
 
+  // Obtener el color de un dispositivo existente
   getExistingDeviceColor(deviceId) {
     if (this.deviceColorMap.has(deviceId)) {
       return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
@@ -96,15 +133,19 @@ class DeviceColorManager {
     return null;
   }
 
+  // Remover un dispositivo (opcional, para limpiar cuando un dispositivo ya no esté activo)
   removeDevice(deviceId) {
     if (this.deviceColorMap.has(deviceId)) {
       const colorIndex = this.deviceColorMap.get(deviceId);
       this.deviceColorMap.delete(deviceId);
+
+      // Agregar el color de vuelta a los disponibles de forma aleatoria
       const randomPosition = Math.floor(Math.random() * (this.availableColorIndices.length + 1));
       this.availableColorIndices.splice(randomPosition, 0, colorIndex);
     }
   }
 
+  // Obtener todos los dispositivos con sus colores
   getAllDeviceColors() {
     const result = {};
     for (const [deviceId, colorIndex] of this.deviceColorMap) {
@@ -113,6 +154,7 @@ class DeviceColorManager {
     return result;
   }
 
+  // Limpiar dispositivos inactivos después de un tiempo
   cleanupInactiveDevices(activeDeviceIds) {
     const toRemove = [];
     for (const deviceId of this.deviceColorMap.keys()) {
@@ -124,13 +166,15 @@ class DeviceColorManager {
   }
 }
 
+// Instancia global del gestor de colores
 const deviceColorManager = new DeviceColorManager();
 
+// Función actualizada para obtener el color del dispositivo
 const getDeviceColor = (deviceId) => {
   return deviceColorManager.getDeviceColor(deviceId);
 };
 
-// --- Funciones utilitarias (sin cambios significativos) ---
+// --- Función para crear íconos circulares personalizados ---
 const createCircularIcon = (color, isActive = true, size = 20) => {
   const activeRing = isActive ? `
     <circle cx="25" cy="25" r="22" 
@@ -167,6 +211,7 @@ const createCircularIcon = (color, isActive = true, size = 20) => {
   });
 };
 
+// Arreglo para el ícono por defecto de Leaflet en Vite (mantenemos por compatibilidad)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -174,10 +219,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+// --- Funciones utilitarias ---
 const formatTimestamp = (timestamp) => {
   try {
     let date;
-    if (!timestamp) return 'Invalid Date';
+
+    if (!timestamp) {
+      return 'Invalid Date';
+    }
+
     const timestampStr = String(timestamp);
 
     if (/^\d{13}$/.test(timestampStr)) {
@@ -212,7 +262,10 @@ const isUserActive = (lastUpdate) => {
     const now = new Date();
     let lastUpdateTime;
 
-    if (!lastUpdate) return false;
+    if (!lastUpdate) {
+      return false;
+    }
+
     const timestampStr = String(lastUpdate);
 
     if (/^\d{13}$/.test(timestampStr)) {
@@ -223,7 +276,9 @@ const isUserActive = (lastUpdate) => {
       lastUpdateTime = new Date(lastUpdate);
     }
 
-    if (isNaN(lastUpdateTime.getTime())) return false;
+    if (isNaN(lastUpdateTime.getTime())) {
+      return false;
+    }
 
     const timeDifference = now.getTime() - lastUpdateTime.getTime();
     return timeDifference <= config.INACTIVE_TIMEOUT;
@@ -233,6 +288,7 @@ const isUserActive = (lastUpdate) => {
   }
 };
 
+// --- Componentes de UI ---
 const LoadingSpinner = () => (
   <div className="flex items-center mx-auto justify-center p-8">
     <ThreeDot color="#FFFFFF" size="medium" text="" textColor="" />
@@ -266,6 +322,7 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
   </div>
 );
 
+// --- Hook para detectar el tamaño de la pantalla ---
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
@@ -282,6 +339,7 @@ const useMediaQuery = (query) => {
   return matches;
 };
 
+// --- Hook para altura dinámica del viewport ---
 const useViewportHeight = () => {
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
@@ -297,6 +355,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
+// --- NUEVO: Componente de barra de búsqueda ---
 const SearchBar = ({ searchTerm, onSearchChange, placeholder = "Search devices..." }) => {
   return (
     <div className="relative mb-4">
@@ -326,6 +385,7 @@ const SearchBar = ({ searchTerm, onSearchChange, placeholder = "Search devices..
   );
 };
 
+// --- MEJORADO: Hook para filtrar usuarios con búsqueda ---
 const useFilteredUsers = (users, searchTerm) => {
   return useMemo(() => {
     if (!searchTerm.trim()) {
@@ -343,279 +403,7 @@ const useFilteredUsers = (users, searchTerm) => {
   }, [users, searchTerm]);
 };
 
-// --- NUEVO: Modal para selección de dispositivos en Area Mode ---
-const AreaDeviceSelectionModal = ({ isOpen, onClose, users, onConfirm, selectedDeviceIds }) => {
-  const [tempSelectedDevices, setTempSelectedDevices] = useState(selectedDeviceIds || []);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  useEffect(() => {
-    if (isOpen) {
-      setTempSelectedDevices(selectedDeviceIds || []);
-    }
-  }, [isOpen, selectedDeviceIds]);
-
-  const toggleDevice = (deviceId) => {
-    setTempSelectedDevices(prev => {
-      if (prev.includes(deviceId)) {
-        return prev.filter(id => id !== deviceId);
-      } else {
-        return [...prev, deviceId];
-      }
-    });
-  };
-
-  const handleConfirm = () => {
-    if (tempSelectedDevices.length === 0) {
-      alert('Please select at least one device');
-      return;
-    }
-    onConfirm(tempSelectedDevices);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative glassmorphism-strong rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-white">Select Devices for Area</h2>
-            <button onClick={onClose} className="text-white/60 hover:text-white p-1">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} placeholder="Search devices..." />
-        </div>
-
-        <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {filteredUsers.map((user) => {
-              const deviceColor = getDeviceColor(user.id);
-              const isSelected = tempSelectedDevices.includes(user.id);
-
-              return (
-                <div
-                  key={user.id}
-                  onClick={() => toggleDevice(user.id)}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${isSelected
-                      ? 'border-opacity-80 shadow-lg'
-                      : 'border-white/20 hover:border-white/40'
-                    }`}
-                  style={isSelected ? {
-                    backgroundColor: `${deviceColor.hex}30`,
-                    borderColor: deviceColor.hex,
-                    boxShadow: `0 10px 25px ${deviceColor.hex}20`
-                  } : {}}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleDevice(user.id)}
-                      className="w-5 h-5 rounded accent-cyan-500"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <div
-                      className="w-4 h-4 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: deviceColor.hex }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-semibold truncate">{user.name}</div>
-                      <div className="text-white/60 text-xs truncate">{user.deviceId}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-white/10">
-          <div className="flex gap-4">
-            <button
-              onClick={onClose}
-              className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={tempSelectedDevices.length === 0}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Confirm ({tempSelectedDevices.length} selected)
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- NUEVO: Sidebar para Area Mode con checkboxes ---
-const AreaModeSidebar = ({ users, selectedDeviceIds, onDeviceToggle, circleArea, onDeleteArea }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  return (
-    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
-      <div className="p-6 h-full flex flex-col">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Area Mode</h2>
-          <span className="text-sm text-white/60">
-            {selectedDeviceIds.length} of {users.length} selected
-          </span>
-        </div>
-
-        {circleArea && (
-          <div className="mb-4 p-4 bg-white/10 rounded-xl">
-            <div className="text-white text-sm mb-2">
-              <strong>Area Info:</strong>
-            </div>
-            <div className="text-white/70 text-xs space-y-1">
-              <div>Center: {circleArea.center[0].toFixed(6)}, {circleArea.center[1].toFixed(6)}</div>
-              <div>Radius: {circleArea.radius.toFixed(0)}m</div>
-            </div>
-            <button
-              onClick={onDeleteArea}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-all"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete Area
-            </button>
-          </div>
-        )}
-
-        <SearchBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          placeholder="Search devices..."
-        />
-
-        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-          {filteredUsers.map((user) => {
-            const deviceColor = getDeviceColor(user.id);
-            const isSelected = selectedDeviceIds.includes(user.id);
-
-            return (
-              <div
-                key={user.id}
-                onClick={() => onDeviceToggle(user.id)}
-                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                    ? 'border-opacity-80 shadow-lg'
-                    : 'border-white/10 hover:border-white/20'
-                  }`}
-                style={isSelected ? {
-                  backgroundColor: `${deviceColor.hex}20`,
-                  borderColor: deviceColor.hex,
-                  boxShadow: `0 10px 25px ${deviceColor.hex}30`
-                } : {}}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onDeviceToggle(user.id)}
-                    className="w-5 h-5 rounded accent-cyan-500"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <div
-                    className="w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: deviceColor.hex }}
-                  />
-                  <h3 className="font-semibold text-white truncate flex-1">{user.name}</h3>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- NUEVO: Componente para dibujar área circular en el mapa ---
-const CircleDrawer = ({ onCircleComplete, circleArea }) => {
-  const map = useMap();
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState(null);
-  const [currentRadius, setCurrentRadius] = useState(0);
-
-  useMapEvents({
-    mousedown: (e) => {
-      if (!circleArea) {
-        setIsDrawing(true);
-        setStartPoint(e.latlng);
-        setCurrentRadius(0);
-      }
-    },
-    mousemove: (e) => {
-      if (isDrawing && startPoint) {
-        const radius = startPoint.distanceTo(e.latlng);
-        setCurrentRadius(radius);
-      }
-    },
-    mouseup: (e) => {
-      if (isDrawing && startPoint) {
-        const radius = startPoint.distanceTo(e.latlng);
-        if (radius > 10) { // Mínimo 10 metros
-          onCircleComplete({
-            center: [startPoint.lat, startPoint.lng],
-            radius: radius
-          });
-        }
-        setIsDrawing(false);
-        setStartPoint(null);
-        setCurrentRadius(0);
-      }
-    }
-  });
-
-  return (
-    <>
-      {isDrawing && startPoint && (
-        <Circle
-          center={startPoint}
-          radius={currentRadius}
-          pathOptions={{
-            color: '#06b6d4',
-            fillColor: '#06b6d4',
-            fillOpacity: 0.2,
-            weight: 2,
-            dashArray: '5, 5'
-          }}
-        />
-      )}
-      {circleArea && (
-        <Circle
-          center={circleArea.center}
-          radius={circleArea.radius}
-          pathOptions={{
-            color: '#06b6d4',
-            fillColor: '#06b6d4',
-            fillOpacity: 0.2,
-            weight: 3
-          }}
-        />
-      )}
-    </>
-  );
-};
-
-// --- Componentes existentes (MobileUsersInfo, DesktopUsersSidebar, DateSearchModal, etc.) ---
-// [Mantener todos los componentes existentes sin cambios]
-
-// Aquí incluirías todos los componentes existentes que ya tienes...
-// Por brevedad, no los repito, pero deben estar presentes
-
+// --- MEJORADO: Información de usuarios para móvil con búsqueda y scroll optimizado ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
@@ -623,8 +411,10 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
+  // Evitar scroll automático innecesario
   useEffect(() => {
     if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
+      // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
 
@@ -753,6 +543,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
+// --- MEJORADO: Sidebar para desktop con búsqueda y scroll optimizado ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
@@ -760,8 +551,10 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
 
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
+  // Evitar scroll automático innecesario
   useEffect(() => {
     if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
+      // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
 
@@ -1032,6 +825,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
         onClick={onClose}
       />
       <div className="relative glassmorphism-strong rounded-4xl w-full max-w-md md:max-w-6xl max-h-[95vh] overflow-y-auto transform">
+        {/* Header fijo */}
         <div className="sticky top-0 z-10 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
@@ -1043,7 +837,9 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           </div>
         </div>
 
+        {/* Contenido scrolleable */}
         <div className="p-6">
+          {/* Device Selector con barra de búsqueda */}
           <div className="mb-6">
             <label className="block text-white text-lg font-medium mb-3">Select Device</label>
 
@@ -1179,6 +975,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           )}
         </div>
 
+        {/* Footer fijo */}
         <div className="sticky bottom-0 z-10 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
           <div className="flex gap-4">
             <button
@@ -1217,6 +1014,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   );
 };
 
+// --- Funciones para gradientes de colores ---
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -1260,6 +1058,7 @@ const GradientPolyline = ({ path, deviceColor }) => {
   return <>{segments}</>;
 };
 
+// --- NUEVO: Componente mejorado para actualizar la vista del mapa ---
 const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
   const map = useMap();
   const previousUsersRef = useRef(previousUsers);
@@ -1273,6 +1072,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
         const previousActiveUsers = previousUsersRef.current ?
           previousUsersRef.current.filter(user => isUserActive(user.lastUpdate)) : [];
 
+        // Solo actualizar si hay cambios significativos en los usuarios activos
         const activeUsersChanged = activeUsers.length !== previousActiveUsers.length ||
           activeUsers.some((user, index) => {
             const prevUser = previousActiveUsers.find(pu => pu.id === user.id);
@@ -1284,6 +1084,7 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
         if (!activeUsersChanged) return;
 
         if (activeUsers.length > 1) {
+          // Múltiples dispositivos activos: ajustar bounds para mostrar todos
           const allPositions = activeUsers.map(user => [
             parseFloat(user.latitude),
             parseFloat(user.longitude)
@@ -1291,6 +1092,8 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
 
           if (allPositions.length > 0) {
             const bounds = L.latLngBounds(allPositions);
+
+            // Solo ajustar bounds si hay una diferencia significativa
             const currentBounds = map.getBounds();
             const needsUpdate = !currentBounds.contains(bounds) ||
               !bounds.contains(currentBounds);
@@ -1305,12 +1108,15 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
             }
           }
         } else if (activeUsers.length === 1) {
+          // Un solo dispositivo activo: solo centrar manteniendo el zoom
           const user = activeUsers[0];
           const newPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
           const currentCenter = map.getCenter();
 
+          // Solo centrar si hay una diferencia significativa (más de ~10 metros)
           const distance = currentCenter.distanceTo(L.latLng(newPosition));
           if (distance > 10) {
+            // Usar setView en lugar de flyTo para mantener el zoom actual
             const currentZoom = map.getZoom();
             map.setView(newPosition, currentZoom, {
               animate: true,
@@ -1319,8 +1125,10 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
           }
         }
 
+        // Actualizar referencia de usuarios anteriores
         previousUsersRef.current = users;
       } else {
+        // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
         const allPaths = Object.values(userPaths).flat();
         if (allPaths && allPaths.length > 1) {
           const bounds = L.latLngBounds(allPaths);
@@ -1339,7 +1147,8 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
   return null;
 };
 
-const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers, isAreaMode, circleArea, onCircleComplete }) => {
+// --- Mapa principal con soporte multi-dispositivo MEJORADO ---
+const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1347,14 +1156,17 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
 
+  // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
-    if (!users || users.length === 0) return [37.7749, -122.4194];
+    if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
+
     const firstUser = users[0];
     return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
 
   const centerPosition = getInitialCenterPosition();
 
+  // Validar que las coordenadas sean válidas
   if (!centerPosition || isNaN(centerPosition[0]) || isNaN(centerPosition[1])) {
     return (
       <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
@@ -1368,7 +1180,8 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
     );
   }
 
-  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}-${isAreaMode ? 'area' : 'normal'}`;
+  // Crear una key estable que no cambie con cada actualización
+  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}`;
 
   return (
     <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
@@ -1379,37 +1192,39 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           height: `${mapHeight}px`,
           width: '100%',
           borderRadius: '1rem',
-          minHeight: '300px',
-          cursor: isAreaMode && !circleArea ? 'crosshair' : 'grab'
+          minHeight: '300px'
         }}
-        key={mapKey}
+        key={mapKey} // Key estable para evitar recreación del mapa
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
           attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
         />
 
-        {isAreaMode && <CircleDrawer onCircleComplete={onCircleComplete} circleArea={circleArea} />}
-
+        {/* Renderizar marcadores y rutas para cada usuario con colores persistentes */}
         {users.map((user) => {
           const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
-          const deviceColor = getDeviceColor(user.id);
+          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
           const isActive = isUserActive(user.lastUpdate);
           const userPath = userPaths[user.id] || [userPosition];
           const isSelected = selectedUserId === user.id;
 
+          // Validar coordenadas del usuario
           if (isNaN(userPosition[0]) || isNaN(userPosition[1])) {
             return null;
           }
 
+          // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
           const shouldShow = isLiveMode ? isActive : isSelected;
 
           if (!shouldShow) return null;
 
+          // Crear el ícono circular personalizado
           const circularIcon = createCircularIcon(deviceColor.hex, isActive);
 
           return (
             <div key={user.id}>
+              {/* Marcador del dispositivo con ícono circular */}
               <Marker
                 position={userPosition}
                 icon={circularIcon}
@@ -1429,6 +1244,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
                 </Popup>
               </Marker>
 
+              {/* Ruta del dispositivo */}
               {userPath.length > 1 && (
                 <>
                   {isLiveMode ? (
@@ -1446,6 +1262,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
                 </>
               )}
 
+              {/* Puntos históricos clickeables (solo en modo histórico) */}
               {!isLiveMode && userPath.map((point, pointIndex) => (
                 <CircleMarker
                   key={`${user.id}-${pointIndex}`}
@@ -1473,19 +1290,18 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           );
         })}
 
-        {!isAreaMode && (
-          <MapViewUpdater
-            userPaths={userPaths}
-            isLiveMode={isLiveMode}
-            users={users}
-            previousUsers={previousUsers}
-          />
-        )}
+        <MapViewUpdater
+          userPaths={userPaths}
+          isLiveMode={isLiveMode}
+          users={users}
+          previousUsers={previousUsers}
+        />
       </MapContainer>
     </div>
   );
 };
 
+// --- Componente Principal MEJORADO ---
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1494,18 +1310,15 @@ function App() {
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
-  // NUEVO: Estados para History by Area
-  const [viewMode, setViewMode] = useState('live'); // 'live', 'history', 'area'
-  const [circleArea, setCircleArea] = useState(null);
-  const [areaSelectedDevices, setAreaSelectedDevices] = useState([]);
-  const [showAreaDeviceModal, setShowAreaDeviceModal] = useState(false);
-
   const isMobile = useMediaQuery('(max-width: 768px)');
 
+  // Función para obtener datos de múltiples dispositivos MEJORADA
   const fetchUsersData = async () => {
     try {
       setError(null);
@@ -1518,6 +1331,7 @@ function App() {
       }
 
       const devicesData = await response.json();
+      console.log('Devices data received:', devicesData);
 
       if (devicesData && devicesData.length > 0) {
         const usersArray = devicesData.map(device => ({
@@ -1530,18 +1344,22 @@ function App() {
           lastUpdate: device.timestamp_value || device.created_at
         }));
 
+        // Limpiar dispositivos inactivos del gestor de colores
         const activeDeviceIds = usersArray.map(user => user.id);
         deviceColorManager.cleanupInactiveDevices(activeDeviceIds);
 
+        // Guardar estado anterior antes de actualizar
         setPreviousUsers(users);
         setUsers(usersArray);
 
-        if (isLiveMode && viewMode === 'live') {
+        // Actualizar paths en modo live de forma más eficiente
+        if (isLiveMode) {
           setUserPaths(prevPaths => {
             const newPaths = { ...prevPaths };
             let hasChanges = false;
 
             usersArray.forEach(user => {
+              // Validar coordenadas antes de agregar
               const lat = parseFloat(user.latitude);
               const lng = parseFloat(user.longitude);
 
@@ -1549,6 +1367,7 @@ function App() {
                 const userPosition = [lat, lng];
                 const currentPath = newPaths[user.id] || [];
 
+                // Solo agregar si es una posición significativamente diferente
                 const lastPoint = currentPath[currentPath.length - 1];
                 if (!lastPoint ||
                   Math.abs(lastPoint[0] - userPosition[0]) > 0.00001 ||
@@ -1556,6 +1375,7 @@ function App() {
                   newPaths[user.id] = [...currentPath, userPosition];
                   hasChanges = true;
 
+                  // Limitar el historial para evitar arrays muy grandes
                   if (newPaths[user.id].length > 50) {
                     newPaths[user.id] = newPaths[user.id].slice(-25);
                   }
@@ -1567,6 +1387,8 @@ function App() {
           });
         }
 
+        // Si no hay usuario seleccionado, seleccionar el primero activo
+        // MEJORADO: Mantener la selección actual si el usuario sigue existiendo
         if (selectedUserId) {
           const selectedUserStillExists = usersArray.find(user => user.id === selectedUserId);
           if (!selectedUserStillExists && usersArray.length > 0) {
@@ -1588,6 +1410,7 @@ function App() {
     }
   };
 
+  // Función de fallback MEJORADA
   const fetchLatestLocationFallback = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
@@ -1633,16 +1456,19 @@ function App() {
     }
   };
 
+  // MEJORADO: Manejar selección de usuario sin causar scroll automático innecesario
   const handleUserSelect = (userId) => {
+    console.log('User selected:', userId);
+    // Solo actualizar si es diferente al seleccionado actual
     if (selectedUserId !== userId) {
       setSelectedUserId(userId);
     }
   };
 
+  // Búsqueda por fecha
   const handleDateSearch = async (searchData) => {
     setLoading(true);
     setIsLiveMode(false);
-    setViewMode('history');
     setError(null);
 
     try {
@@ -1695,130 +1521,23 @@ function App() {
     }
   };
 
-  // NUEVO: Función para calcular si un punto está dentro del círculo
-  const isPointInCircle = (point, center, radiusMeters) => {
-    const R = 6371000; // Radio de la Tierra en metros
-    const lat1 = center[0] * Math.PI / 180;
-    const lat2 = point[0] * Math.PI / 180;
-    const deltaLat = (point[0] - center[0]) * Math.PI / 180;
-    const deltaLon = (point[1] - center[1]) * Math.PI / 180;
-
-    const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-      Math.cos(lat1) * Math.cos(lat2) *
-      Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distance = R * c;
-    return distance <= radiusMeters;
-  };
-
-  // NUEVO: Manejar completado del círculo
-  const handleCircleComplete = (area) => {
-    setCircleArea(area);
-    setShowAreaDeviceModal(true);
-  };
-
-  // NUEVO: Confirmar dispositivos seleccionados y buscar datos
-  const handleAreaDevicesConfirm = async (deviceIds) => {
-    setAreaSelectedDevices(deviceIds);
-    setLoading(true);
-
-    try {
-      // Obtener todo el historial de los dispositivos seleccionados
-      const devicePromises = deviceIds.map(deviceId =>
-        fetch(`${config.API_BASE_URL}/api/location/device/${deviceId}/history?limit=1000`)
-          .then(res => res.json())
-      );
-
-      const deviceHistories = await Promise.all(devicePromises);
-
-      // Filtrar puntos dentro del área circular
-      const filteredPaths = {};
-      deviceHistories.forEach((history, index) => {
-        const deviceId = deviceIds[index];
-        const pointsInArea = history
-          .map(point => {
-            const lat = parseFloat(point.latitude);
-            const lng = parseFloat(point.longitude);
-            if (!isNaN(lat) && !isNaN(lng)) {
-              return [lat, lng];
-            }
-            return null;
-          })
-          .filter(point => point !== null && isPointInCircle(point, circleArea.center, circleArea.radius));
-
-        if (pointsInArea.length > 0) {
-          filteredPaths[deviceId] = pointsInArea;
-        }
-      });
-
-      setUserPaths(filteredPaths);
-
-      if (Object.keys(filteredPaths).length === 0) {
-        setError('No data points found within the selected area.');
-        setErrorType('no-data');
-      }
-    } catch (err) {
-      console.error('Error fetching area history:', err);
-      setError('Error fetching location data for the selected area.');
-      setErrorType('connection');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // NUEVO: Toggle de dispositivo en Area Mode
-  const handleAreaDeviceToggle = (deviceId) => {
-    setAreaSelectedDevices(prev => {
-      const newSelection = prev.includes(deviceId)
-        ? prev.filter(id => id !== deviceId)
-        : [...prev, deviceId];
-
-      // Recargar datos con la nueva selección
-      if (newSelection.length > 0) {
-        handleAreaDevicesConfirm(newSelection);
-      } else {
-        setUserPaths({});
-      }
-
-      return newSelection;
-    });
-  };
-
-  // NUEVO: Eliminar área
-  const handleDeleteArea = () => {
-    setCircleArea(null);
-    setAreaSelectedDevices([]);
-    setUserPaths({});
-  };
-
-  // NUEVO: Cambiar a modo History by Area
-  const handleSwitchToAreaMode = () => {
-    setViewMode('area');
-    setIsLiveMode(false);
-    setCircleArea(null);
-    setAreaSelectedDevices([]);
-    setUserPaths({});
-    setIsMobileMenuOpen(false);
-  };
-
   const handleReturnToLive = () => {
     setIsLiveMode(true);
-    setViewMode('live');
     setUserPaths({});
     setError(null);
     setErrorType(null);
     setLoading(true);
     setIsMobileMenuOpen(false);
-    setPreviousUsers(null);
-    setCircleArea(null);
-    setAreaSelectedDevices([]);
+    setPreviousUsers(null); // Resetear estado anterior
   };
 
+  // Effect principal para polling MEJORADO
   useEffect(() => {
-    if (isLiveMode && !isDateSearchModalOpen && viewMode === 'live') {
+    if (isLiveMode && !isDateSearchModalOpen) {
+      // Fetch inicial
       fetchUsersData();
 
+      // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
         if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
@@ -1827,7 +1546,7 @@ function App() {
 
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, isDateSearchModalOpen, selectedUserId, viewMode]);
+  }, [isLiveMode, isDateSearchModalOpen, selectedUserId]); // Agregado selectedUserId para evitar efectos no deseados
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -1866,7 +1585,7 @@ function App() {
             <div className="flex items-center gap-4 p-1">
               <button
                 onClick={handleReturnToLive}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'live'
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
                   ? 'pb-[5px] text-cyan-600 border-cyan-600'
                   : 'pb-2 text-white border-transparent hover:text-white/50'
                   }`}
@@ -1875,21 +1594,12 @@ function App() {
               </button>
               <button
                 onClick={() => setIsDateSearchModalOpen(true)}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'history'
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode
                   ? 'pb-[5px] text-cyan-600 border-cyan-600'
                   : 'pb-2 text-white/50 border-transparent hover:text-white'
                   }`}
               >
                 History
-              </button>
-              <button
-                onClick={handleSwitchToAreaMode}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'area'
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                History by Area
               </button>
             </div>
           )}
@@ -1900,7 +1610,7 @@ function App() {
           <div className="mt-4 glassmorphism rounded-2xl p-4 animate-fade-in">
             <button
               onClick={handleReturnToLive}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${viewMode === 'live'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
@@ -1915,7 +1625,7 @@ function App() {
                 setIsDateSearchModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${viewMode === 'history'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
@@ -1925,46 +1635,21 @@ function App() {
               </svg>
               History
             </button>
-            <button
-              onClick={handleSwitchToAreaMode}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${viewMode === 'area'
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              History by Area
-            </button>
           </div>
         )}
       </header>
 
-      {/* Sidebar según el modo */}
+      {/* Sidebar solo en desktop */}
       {!isMobile && users.length > 0 && (
-        <>
-          {viewMode === 'live' && (
-            <DesktopUsersSidebar
-              users={users}
-              onUserSelect={handleUserSelect}
-              selectedUserId={selectedUserId}
-            />
-          )}
-          {viewMode === 'area' && (
-            <AreaModeSidebar
-              users={users}
-              selectedDeviceIds={areaSelectedDevices}
-              onDeviceToggle={handleAreaDeviceToggle}
-              circleArea={circleArea}
-              onDeleteArea={handleDeleteArea}
-            />
-          )}
-        </>
+        <DesktopUsersSidebar
+          users={users}
+          onUserSelect={handleUserSelect}
+          selectedUserId={selectedUserId}
+        />
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && (viewMode === 'live' || viewMode === 'area') ? 'md:ml-96 md:mr-8' : ''
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -1990,13 +1675,11 @@ function App() {
               users={users}
               userPaths={userPaths}
               isLiveMode={isLiveMode}
-              selectedUserId={viewMode === 'area' ? null : selectedUserId}
+              selectedUserId={selectedUserId}
               previousUsers={previousUsers}
-              isAreaMode={viewMode === 'area'}
-              circleArea={circleArea}
-              onCircleComplete={handleCircleComplete}
             />
-            {isMobile && viewMode === 'live' && (
+            {/* Información de dispositivos solo en móvil */}
+            {isMobile && (
               <MobileUsersInfo
                 users={users}
                 selectedUserId={selectedUserId}
@@ -2022,20 +1705,11 @@ function App() {
         )}
       </main>
 
-      {/* Modals */}
       <DateSearchModal
         isOpen={isDateSearchModalOpen}
         onClose={() => setIsDateSearchModalOpen(false)}
         onSearch={handleDateSearch}
         users={users}
-      />
-
-      <AreaDeviceSelectionModal
-        isOpen={showAreaDeviceModal}
-        onClose={() => setShowAreaDeviceModal(false)}
-        users={users}
-        onConfirm={handleAreaDevicesConfirm}
-        selectedDeviceIds={areaSelectedDevices}
       />
     </div>
   );
