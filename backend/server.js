@@ -334,8 +334,24 @@ app.get('/api/location/area', async (req, res) => {
 
     // Usar la fórmula de Haversine para calcular distancias
     // Esta query usa una aproximación simple basada en grados para filtrar primero,
-    // luego calcula la distancia exacta
-    let query = `
+    // luego calcula la distancia exacta usando una subquery
+    
+    // Add bounding box filter for performance (approximate)
+    const latDelta = (radiusMeters / 111000); // ~111km per degree latitude
+    const lngDelta = (radiusMeters / (111000 * Math.cos(centerLat * Math.PI / 180)));
+    
+    let whereClause = `
+      WHERE latitude BETWEEN $3 AND $4
+      AND longitude BETWEEN $5 AND $6
+    `;
+    const values = [centerLat, centerLng, centerLat - latDelta, centerLat + latDelta, centerLng - lngDelta, centerLng + lngDelta];
+    
+    if (deviceId) {
+      whereClause += ` AND device_id = $${values.length + 1}`;
+      values.push(deviceId);
+    }
+    
+    const query = `
       SELECT 
         latitude, 
         longitude, 
@@ -343,35 +359,28 @@ app.get('/api/location/area', async (req, res) => {
         device_id, 
         device_name, 
         device_type,
-        (
-          6371000 * acos(
-            cos(radians($1)) * cos(radians(latitude)) * 
-            cos(radians(longitude) - radians($2)) + 
-            sin(radians($1)) * sin(radians(latitude))
-          )
-        ) AS distance
-      FROM location_data
-      WHERE 1=1
-    `;
-    const values = [centerLat, centerLng];
-    
-    if (deviceId) {
-      query += ` AND device_id = $${values.length + 1}`;
-      values.push(deviceId);
-    }
-    
-    // Add bounding box filter for performance (approximate)
-    const latDelta = (radiusMeters / 111000); // ~111km per degree latitude
-    const lngDelta = (radiusMeters / (111000 * Math.cos(centerLat * Math.PI / 180)));
-    
-    query += ` 
-      AND latitude BETWEEN $${values.length + 1} AND $${values.length + 2}
-      AND longitude BETWEEN $${values.length + 3} AND $${values.length + 4}
-    `;
-    values.push(centerLat - latDelta, centerLat + latDelta, centerLng - lngDelta, centerLng + lngDelta);
-    
-    query += `
-      HAVING distance <= $${values.length + 1}
+        distance
+      FROM (
+        SELECT 
+          latitude, 
+          longitude, 
+          timestamp_value, 
+          device_id, 
+          device_name, 
+          device_type,
+          (
+            6371000 * acos(
+              LEAST(1.0, GREATEST(-1.0,
+                cos(radians($1)) * cos(radians(latitude)) * 
+                cos(radians(longitude) - radians($2)) + 
+                sin(radians($1)) * sin(radians(latitude))
+              ))
+            )
+          ) AS distance
+        FROM location_data
+        ${whereClause}
+      ) AS subquery
+      WHERE distance <= $${values.length + 1}
       ORDER BY timestamp_value ASC;
     `;
     values.push(radiusMeters);
