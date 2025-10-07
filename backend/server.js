@@ -313,7 +313,7 @@ app.get('/api/location/range', async (req, res) => {
   }
 });
 
-// --- NEW ENDPOINT FOR AREA SEARCH ---
+// --- NEW ENDPOINT FOR AREA SEARCH (Corrected) ---
 app.post('/api/location/area', async (req, res) => {
     const { center, radius, deviceIds } = req.body;
 
@@ -325,8 +325,9 @@ app.post('/api/location/area', async (req, res) => {
     }
 
     try {
-        // SQL query that calculates the distance on a plane. It's a good approximation for small distances.
-        // Earth radius in kilometers = 6371
+        // SQL query that calculates the distance using the Haversine formula.
+        // Earth radius in kilometers = 6371.
+        // --- FIX: Cast latitude and longitude columns to double precision for trigonometric functions ---
         const query = `
             SELECT 
                 device_id, latitude, longitude, timestamp_value 
@@ -337,9 +338,9 @@ app.post('/api/location/area', async (req, res) => {
                 (
                     6371 * 2 * ASIN(
                         SQRT(
-                            POWER(SIN(RADIANS(latitude - $2) / 2), 2) +
-                            COS(RADIANS($2)) * COS(RADIANS(latitude)) *
-                            POWER(SIN(RADIANS(longitude - $3) / 2), 2)
+                            POWER(SIN(RADIANS(latitude::double precision - $2) / 2), 2) +
+                            COS(RADIANS($2)) * COS(RADIANS(latitude::double precision)) *
+                            POWER(SIN(RADIANS(longitude::double precision - $3) / 2), 2)
                         )
                     )
                 ) <= $4
@@ -347,11 +348,12 @@ app.post('/api/location/area', async (req, res) => {
                 device_id, timestamp_value ASC;
         `;
 
-        const values = [deviceIds, center.lat, center.lng, radius / 1000]; // Radius is converted from meters to km
+        // Radius from frontend is in meters, convert to km for the query
+        const values = [deviceIds, center.lat, center.lng, radius / 1000]; 
 
         const result = await pool.query(query, values);
         
-        // Group results by device_id
+        // Group results by device_id to return structured paths
         const pathsByDevice = result.rows.reduce((acc, row) => {
             const { device_id, latitude, longitude } = row;
             if (!acc[device_id]) {
