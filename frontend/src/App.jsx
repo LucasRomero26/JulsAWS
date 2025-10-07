@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker 
 import 'leaflet/dist/leaflet.css';
 import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
-import { Circle, FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
+
 // --- MUI Date Picker Imports ---
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -544,153 +543,6 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// Desktop Sidebar for Area Mode with checkboxes
-const DesktopAreaSidebar = ({ users, selectedDevices, onToggleDevice }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  return (
-    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
-      <div className="p-6 h-full flex flex-col">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Area Devices</h2>
-          <span className="text-sm text-white/60">
-            {selectedDevices.length} of {users.length} selected
-          </span>
-        </div>
-
-        <SearchBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          placeholder="Search devices..."
-        />
-
-        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => {
-              const isSelected = selectedDevices.includes(user.id);
-              const deviceColor = getDeviceColor(user.id);
-
-              return (
-                <div
-                  key={user.id}
-                  onClick={() => onToggleDevice(user.id)}
-                  className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                    ? 'border-opacity-80 shadow-lg'
-                    : 'border-white/10 hover:border-white/20'
-                    }`}
-                  style={isSelected ? {
-                    backgroundColor: `${deviceColor.hex}20`,
-                    borderColor: deviceColor.hex,
-                    boxShadow: `0 10px 25px ${deviceColor.hex}30`
-                  } : {}}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div
-                        className="w-4 h-4 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: deviceColor.hex }}
-                      ></div>
-                      <h3 className="font-semibold text-white truncate">{user.name}</h3>
-                    </div>
-                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${isSelected
-                      ? 'bg-cyan-500 border-cyan-500'
-                      : 'border-white/30'
-                      }`}>
-                      {isSelected && (
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-
-                  <div
-                    className="w-full h-1 rounded-full mt-3"
-                    style={{ backgroundColor: deviceColor.hex }}
-                  ></div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-white/50 text-sm">No devices found</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Mobile version for Area Mode
-const MobileAreaDevices = ({ users, selectedDevices, onToggleDevice }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  return (
-    <div className="glassmorphism-strong rounded-4xl w-full mt-6 p-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-white">Area Devices</h2>
-        <span className="text-sm text-white/60">
-          {selectedDevices.length} of {users.length} selected
-        </span>
-      </div>
-
-      <SearchBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        placeholder="Search devices..."
-      />
-
-      <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-        {filteredUsers.map((user) => {
-          const isSelected = selectedDevices.includes(user.id);
-          const deviceColor = getDeviceColor(user.id);
-
-          return (
-            <div
-              key={user.id}
-              onClick={() => onToggleDevice(user.id)}
-              className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                ? 'border-opacity-80 shadow-lg'
-                : 'border-white/10 hover:border-white/20'
-                }`}
-              style={isSelected ? {
-                backgroundColor: `${deviceColor.hex}20`,
-                borderColor: deviceColor.hex,
-                boxShadow: `0 10px 25px ${deviceColor.hex}30`
-              } : {}}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div
-                    className="w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: deviceColor.hex }}
-                  ></div>
-                  <h3 className="font-semibold text-white truncate">{user.name}</h3>
-                </div>
-                <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all flex-shrink-0 ${isSelected
-                  ? 'bg-cyan-500 border-cyan-500'
-                  : 'border-white/30'
-                  }`}>
-                  {isSelected && (
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 // --- MEJORADO: Sidebar para desktop con búsqueda y scroll optimizado ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -810,149 +662,6 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
           <div className="text-xs text-white/50 text-center">
             <p>Devices go inactive after {config.INACTIVE_TIMEOUT / 1000} seconds</p>
             <p className="mt-1">Auto-refresh every {config.POLLING_INTERVAL / 1000}s</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Device Selection Modal for Area Search
-const DeviceSelectionModal = ({ isOpen, onClose, onSelect, users }) => {
-  const [selectedDevices, setSelectedDevices] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  const handleToggleDevice = (deviceId) => {
-    setSelectedDevices(prev =>
-      prev.includes(deviceId)
-        ? prev.filter(id => id !== deviceId)
-        : [...prev, deviceId]
-    );
-  };
-
-  const handleSubmit = () => {
-    if (selectedDevices.length > 0) {
-      onSelect(selectedDevices);
-      onClose();
-      setSelectedDevices([]);
-      setSearchTerm('');
-    }
-  };
-
-  const handleCancel = () => {
-    setSelectedDevices([]);
-    setSearchTerm('');
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleCancel}
-      />
-      <div className="relative glassmorphism-strong rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="sticky top-0 z-10 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-white">Select Devices for Area</h2>
-            <button onClick={handleCancel} className="text-white/60 hover:text-white p-1">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          <SearchBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            placeholder="Search devices..."
-          />
-
-          <div className="space-y-3 mt-4">
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user) => {
-                const deviceColor = getDeviceColor(user.id);
-                const isSelected = selectedDevices.includes(user.id);
-
-                return (
-                  <div
-                    key={user.id}
-                    onClick={() => handleToggleDevice(user.id)}
-                    className={`p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${isSelected
-                      ? 'border-opacity-80 shadow-lg'
-                      : 'border-white/10 hover:border-white/20'
-                      }`}
-                    style={isSelected ? {
-                      backgroundColor: `${deviceColor.hex}20`,
-                      borderColor: deviceColor.hex,
-                      boxShadow: `0 10px 25px ${deviceColor.hex}30`
-                    } : {}}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: deviceColor.hex }}
-                        ></div>
-                        <div>
-                          <div className="text-white font-semibold">{user.name}</div>
-                          <div className="text-white/60 text-xs">{user.deviceId}</div>
-                        </div>
-                      </div>
-                      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${isSelected
-                        ? 'bg-cyan-500 border-cyan-500'
-                        : 'border-white/30'
-                        }`}>
-                        {isSelected && (
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-white/50">No devices found matching "{searchTerm}"</p>
-              </div>
-            )}
-          </div>
-
-          {selectedDevices.length > 0 && (
-            <div className="mt-4 p-3 bg-cyan-500/20 rounded-xl border border-cyan-500/30">
-              <p className="text-cyan-400 text-sm">
-                {selectedDevices.length} device{selectedDevices.length !== 1 ? 's' : ''} selected
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 z-10 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
-          <div className="flex gap-4">
-            <button
-              onClick={handleCancel}
-              className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={selectedDevices.length === 0}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Show Tracks ({selectedDevices.length})
-            </button>
           </div>
         </div>
       </div>
@@ -1439,84 +1148,43 @@ const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
 };
 
 // --- Mapa principal con soporte multi-dispositivo MEJORADO ---
-// Location Map with drawing controls for area mode
-const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers, isAreaMode, isDrawingMode, onCircleCreated, drawnCircle }) => {
+const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const mapRef = useRef(null);
 
   const mapHeight = isMobile
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
 
+  // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
-    if (!users || users.length === 0) return [37.7749, -122.4194];
+    if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
+
     const firstUser = users[0];
     return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
 
   const centerPosition = getInitialCenterPosition();
 
+  // Validar que las coordenadas sean válidas
   if (!centerPosition || isNaN(centerPosition[0]) || isNaN(centerPosition[1])) {
     return (
       <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
         <div className="flex items-center justify-center" style={{ height: `${mapHeight}px` }}>
           <div className="text-center text-white">
             <p>Error: Invalid coordinates</p>
+            <p className="text-sm text-white/60 mt-2">Please check your location data</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}-${isAreaMode ? 'area' : 'normal'}`;
+  // Crear una key estable que no cambie con cada actualización
+  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}`;
 
   return (
-    <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4 relative'>
-      {/* Draw Circle Button - only in area mode */}
-      {isAreaMode && (
-        <button
-          onClick={() => {
-            // Toggle drawing mode - this will be handled by the parent
-            const newDrawingMode = !isDrawingMode;
-            if (mapRef.current) {
-              if (newDrawingMode) {
-                // Enable drawing
-                const map = mapRef.current;
-                const drawControl = new L.Control.Draw({
-                  draw: {
-                    circle: {
-                      shapeOptions: {
-                        color: '#06b6d4',
-                        fillColor: '#06b6d4',
-                        fillOpacity: 0.2
-                      }
-                    },
-                    marker: false,
-                    polyline: false,
-                    polygon: false,
-                    rectangle: false,
-                    circlemarker: false
-                  },
-                  edit: false
-                });
-                map.addControl(drawControl);
-              }
-            }
-          }}
-          className={`absolute top-6 right-6 z-[1000] w-12 h-12 rounded-full glassmorphism-strong border-2 flex items-center justify-center transition-all duration-300 ${isDrawingMode
-            ? 'border-cyan-500 bg-cyan-500/20'
-            : 'border-white/20 hover:border-cyan-500 hover:bg-cyan-500/10'
-            }`}
-          title="Draw search area"
-        >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" strokeWidth="2" />
-            <circle cx="12" cy="12" r="3" fill="currentColor" />
-          </svg>
-        </button>
-      )}
-
+    <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
       <MapContainer
         center={centerPosition}
         zoom={isLiveMode ? 15 : 13}
@@ -1526,86 +1194,41 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           borderRadius: '1rem',
           minHeight: '300px'
         }}
-        key={mapKey}
-        ref={mapRef}
+        key={mapKey} // Key estable para evitar recreación del mapa
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
           attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
         />
 
-        {/* Drawing controls for area mode */}
-        {isAreaMode && (
-          <FeatureGroup>
-            <EditControl
-              position="topright"
-              onCreated={(e) => {
-                if (e.layerType === 'circle') {
-                  onCircleCreated(e.layer);
-                }
-              }}
-              draw={{
-                circle: {
-                  shapeOptions: {
-                    color: '#06b6d4',
-                    fillColor: '#06b6d4',
-                    fillOpacity: 0.2,
-                    weight: 3
-                  }
-                },
-                marker: false,
-                polyline: false,
-                polygon: false,
-                rectangle: false,
-                circlemarker: false
-              }}
-              edit={{
-                edit: false,
-                remove: false
-              }}
-            />
-          </FeatureGroup>
-        )}
-
-        {/* Show drawn circle */}
-        {isAreaMode && drawnCircle && (
-          <Circle
-            center={drawnCircle.center}
-            radius={drawnCircle.radius}
-            pathOptions={{
-              color: '#06b6d4',
-              fillColor: '#06b6d4',
-              fillOpacity: 0.2,
-              weight: 3
-            }}
-          />
-        )}
-
-        {/* Render markers and routes */}
+        {/* Renderizar marcadores y rutas para cada usuario con colores persistentes */}
         {users.map((user) => {
           const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
-          const deviceColor = getDeviceColor(user.id);
+          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
           const isActive = isUserActive(user.lastUpdate);
           const userPath = userPaths[user.id] || [userPosition];
           const isSelected = selectedUserId === user.id;
 
+          // Validar coordenadas del usuario
           if (isNaN(userPosition[0]) || isNaN(userPosition[1])) {
             return null;
           }
 
+          // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
           const shouldShow = isLiveMode ? isActive : isSelected;
 
-          if (!shouldShow && !isAreaMode) return null;
-          if (isAreaMode && !userPaths[user.id]) return null;
+          if (!shouldShow) return null;
 
+          // Crear el ícono circular personalizado
           const circularIcon = createCircularIcon(deviceColor.hex, isActive);
 
           return (
             <div key={user.id}>
+              {/* Marcador del dispositivo con ícono circular */}
               <Marker
                 position={userPosition}
                 icon={circularIcon}
-                opacity={isSelected || isLiveMode || isAreaMode ? 1 : 0.7}
+                opacity={isSelected || isLiveMode ? 1 : 0.7}
               >
                 <Popup>
                   <div className="text-center">
@@ -1621,6 +1244,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
                 </Popup>
               </Marker>
 
+              {/* Ruta del dispositivo */}
               {userPath.length > 1 && (
                 <>
                   {isLiveMode ? (
@@ -1638,7 +1262,8 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
                 </>
               )}
 
-              {(!isLiveMode || isAreaMode) && userPath.map((point, pointIndex) => (
+              {/* Puntos históricos clickeables (solo en modo histórico) */}
+              {!isLiveMode && userPath.map((point, pointIndex) => (
                 <CircleMarker
                   key={`${user.id}-${pointIndex}`}
                   center={point}
@@ -1677,7 +1302,6 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
 };
 
 // --- Componente Principal MEJORADO ---
-// --- Componente Principal MEJORADO ---
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1691,14 +1315,6 @@ function App() {
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
-
-  // Estados para History by Area
-  const [isAreaMode, setIsAreaMode] = useState(false);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [drawnCircle, setDrawnCircle] = useState(null);
-  const [isDeviceSelectionModalOpen, setIsDeviceSelectionModalOpen] = useState(false);
-  const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
-  const [areaDevicePaths, setAreaDevicePaths] = useState({});
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1915,146 +1531,6 @@ function App() {
     setPreviousUsers(null); // Resetear estado anterior
   };
 
-  // Handle circle creation for area search
-  const handleCircleCreated = (circle) => {
-    const center = circle.getLatLng();
-    const radius = circle.getRadius();
-
-    setDrawnCircle({
-      center: [center.lat, center.lng],
-      radius: radius
-    });
-
-    setIsDrawingMode(false);
-    setIsDeviceSelectionModalOpen(true);
-  };
-
-  // Handle device selection for area search
-  const handleDeviceSelectionForArea = async (deviceIds) => {
-    if (!drawnCircle || deviceIds.length === 0) return;
-
-    setLoading(true);
-    setIsLiveMode(false);
-    setIsAreaMode(true);
-    setError(null);
-
-    try {
-      const newPaths = {};
-
-      for (const deviceId of deviceIds) {
-        const url = `${config.API_BASE_URL}/api/location/area?centerLat=${drawnCircle.center[0]}&centerLng=${drawnCircle.center[1]}&radiusMeters=${drawnCircle.radius}&deviceId=${deviceId}`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(`Error fetching area data for device ${deviceId}`);
-        }
-
-        const areaData = await response.json();
-
-        if (areaData.length > 0) {
-          const devicePath = areaData
-            .map(point => {
-              const lat = parseFloat(point.latitude);
-              const lng = parseFloat(point.longitude);
-
-              if (!isNaN(lat) && !isNaN(lng)) {
-                return [lat, lng];
-              }
-              return null;
-            })
-            .filter(point => point !== null);
-
-          if (devicePath.length > 0) {
-            newPaths[deviceId] = devicePath;
-          }
-        }
-      }
-
-      if (Object.keys(newPaths).length > 0) {
-        setAreaDevicePaths(newPaths);
-        setSelectedDevicesForArea(deviceIds);
-        setUserPaths(newPaths);
-      } else {
-        setError('No locations found within the selected area for the chosen devices.');
-        setErrorType('no-data');
-      }
-    } catch (err) {
-      setError('Error fetching area history.');
-      setErrorType('connection');
-      console.error('Error fetching area data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Toggle device in area mode
-  const handleToggleDeviceInArea = async (deviceId) => {
-    const isCurrentlySelected = selectedDevicesForArea.includes(deviceId);
-
-    if (isCurrentlySelected) {
-      // Remove device
-      const newSelectedDevices = selectedDevicesForArea.filter(id => id !== deviceId);
-      setSelectedDevicesForArea(newSelectedDevices);
-
-      const newPaths = { ...areaDevicePaths };
-      delete newPaths[deviceId];
-      setAreaDevicePaths(newPaths);
-      setUserPaths(newPaths);
-    } else {
-      // Add device
-      if (!drawnCircle) return;
-
-      setLoading(true);
-
-      try {
-        const url = `${config.API_BASE_URL}/api/location/area?centerLat=${drawnCircle.center[0]}&centerLng=${drawnCircle.center[1]}&radiusMeters=${drawnCircle.radius}&deviceId=${deviceId}`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          throw new Error(`Error fetching area data for device ${deviceId}`);
-        }
-
-        const areaData = await response.json();
-
-        if (areaData.length > 0) {
-          const devicePath = areaData
-            .map(point => {
-              const lat = parseFloat(point.latitude);
-              const lng = parseFloat(point.longitude);
-
-              if (!isNaN(lat) && !isNaN(lng)) {
-                return [lat, lng];
-              }
-              return null;
-            })
-            .filter(point => point !== null);
-
-          if (devicePath.length > 0) {
-            const newPaths = { ...areaDevicePaths, [deviceId]: devicePath };
-            setAreaDevicePaths(newPaths);
-            setUserPaths(newPaths);
-            setSelectedDevicesForArea([...selectedDevicesForArea, deviceId]);
-          }
-        }
-      } catch (err) {
-        console.error('Error adding device to area:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleReturnToLiveFromArea = () => {
-    setIsAreaMode(false);
-    setIsDrawingMode(false);
-    setDrawnCircle(null);
-    setSelectedDevicesForArea([]);
-    setAreaDevicePaths({});
-    handleReturnToLive();
-  };
-
   // Effect principal para polling MEJORADO
   useEffect(() => {
     if (isLiveMode && !isDateSearchModalOpen) {
@@ -2109,7 +1585,7 @@ function App() {
             <div className="flex items-center gap-4 p-1">
               <button
                 onClick={handleReturnToLive}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode && !isAreaMode
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
                   ? 'pb-[5px] text-cyan-600 border-cyan-600'
                   : 'pb-2 text-white border-transparent hover:text-white/50'
                   }`}
@@ -2118,26 +1594,12 @@ function App() {
               </button>
               <button
                 onClick={() => setIsDateSearchModalOpen(true)}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode && !isAreaMode
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode
                   ? 'pb-[5px] text-cyan-600 border-cyan-600'
                   : 'pb-2 text-white/50 border-transparent hover:text-white'
                   }`}
               >
                 History
-              </button>
-              <button
-                onClick={() => {
-                  setIsAreaMode(true);
-                  setIsLiveMode(false);
-                  setError(null);
-                  setUserPaths({});
-                }}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isAreaMode
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                History by Area
               </button>
             </div>
           )}
@@ -2148,7 +1610,7 @@ function App() {
           <div className="mt-4 glassmorphism rounded-2xl p-4 animate-fade-in">
             <button
               onClick={handleReturnToLive}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode && !isAreaMode
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
@@ -2163,7 +1625,7 @@ function App() {
                 setIsDateSearchModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${!isLiveMode && !isAreaMode
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
@@ -2173,49 +1635,19 @@ function App() {
               </svg>
               History
             </button>
-            <button
-              onClick={() => {
-                setIsAreaMode(true);
-                setIsLiveMode(false);
-                setError(null);
-                setUserPaths({});
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${isAreaMode
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                <circle cx="12" cy="12" r="3" fill="currentColor" />
-              </svg>
-              History by Area
-            </button>
           </div>
         )}
       </header>
 
       {/* Sidebar solo en desktop */}
       {!isMobile && users.length > 0 && (
-        <>
-          {isAreaMode ? (
-            <DesktopAreaSidebar
-              users={users}
-              selectedDevices={selectedDevicesForArea}
-              onToggleDevice={handleToggleDeviceInArea}
-            />
-          ) : (
-            <DesktopUsersSidebar
-              users={users}
-              onUserSelect={handleUserSelect}
-              selectedUserId={selectedUserId}
-            />
-          )}
-        </>
+        <DesktopUsersSidebar
+          users={users}
+          onUserSelect={handleUserSelect}
+          selectedUserId={selectedUserId}
+        />
       )}
 
-      {/* Main container */}
       {/* Main container */}
       <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
         }`}>
@@ -2231,13 +1663,9 @@ function App() {
                 setLoading(true);
                 setError(null);
                 setErrorType(null);
-                if (isAreaMode) {
-                  handleReturnToLiveFromArea();
-                } else {
-                  fetchUsersData();
-                }
+                fetchUsersData();
               }}
-              onReturnToLive={isAreaMode ? handleReturnToLiveFromArea : handleReturnToLive}
+              onReturnToLive={handleReturnToLive}
               isNoDataError={errorType === 'no-data'}
             />
           </div>
@@ -2249,28 +1677,14 @@ function App() {
               isLiveMode={isLiveMode}
               selectedUserId={selectedUserId}
               previousUsers={previousUsers}
-              isAreaMode={isAreaMode}
-              isDrawingMode={isDrawingMode}
-              onCircleCreated={handleCircleCreated}
-              drawnCircle={drawnCircle}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && (
-              <>
-                {isAreaMode ? (
-                  <MobileAreaDevices
-                    users={users}
-                    selectedDevices={selectedDevicesForArea}
-                    onToggleDevice={handleToggleDeviceInArea}
-                  />
-                ) : (
-                  <MobileUsersInfo
-                    users={users}
-                    selectedUserId={selectedUserId}
-                    onUserSelect={handleUserSelect}
-                  />
-                )}
-              </>
+              <MobileUsersInfo
+                users={users}
+                selectedUserId={selectedUserId}
+                onUserSelect={handleUserSelect}
+              />
             )}
           </>
         ) : (
@@ -2295,16 +1709,6 @@ function App() {
         isOpen={isDateSearchModalOpen}
         onClose={() => setIsDateSearchModalOpen(false)}
         onSearch={handleDateSearch}
-        users={users}
-      />
-
-      <DeviceSelectionModal
-        isOpen={isDeviceSelectionModalOpen}
-        onClose={() => {
-          setIsDeviceSelectionModalOpen(false);
-          setDrawnCircle(null);
-        }}
-        onSelect={handleDeviceSelectionForArea}
         users={users}
       />
     </div>
