@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker, Circle } from 'react-leaflet'; import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
 
@@ -1194,7 +1195,6 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           minHeight: '300px'
         }}
         key={mapKey} // Key estable para evitar recreación del mapa
-        whenCreated={m => window.leafletMap = m}  // ← aquí
       >
         <TileLayer
           url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
@@ -1290,23 +1290,6 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           );
         })}
 
-        {/* Area paths */}
-        {areaMode && Object.entries(areaPaths).map(([deviceId, pts]) => {
-          const c = getDeviceColor(deviceId);
-          return pts.length > 1 ? (
-            <GradientPolyline key={'area-' + deviceId} path={pts} deviceColor={c} />
-          ) : null;
-        })}
-
-        {/* Area circle */}
-        {areaMode && areaCenter && areaRadius > 0 && (
-          <Circle
-            center={areaCenter}
-            radius={areaRadius}
-            pathOptions={{ color: '#06b6d4', weight: 2, fillOpacity: 0.05 }}
-          />
-        )}
-
         <MapViewUpdater
           userPaths={userPaths}
           isLiveMode={isLiveMode}
@@ -1327,14 +1310,6 @@ function App() {
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [areaMode, setAreaMode] = useState(false);          // dibujando área
-  const [areaCenter, setAreaCenter] = useState(null);       // [lat, lng]
-  const [areaRadius, setAreaRadius] = useState(0);          // metros
-  const [areaDevices, setAreaDevices] = useState([]);       // [{deviceId, color, name}, ...]
-  const [areaPaths, setAreaPaths] = useState({});           // { deviceId: [[lat,lng], ...] }
-  const [isAreaPickerOpen, setIsAreaPickerOpen] = useState(false);
-  const [areaSearch, setAreaSearch] = useState('');
-
 
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
@@ -1573,48 +1548,6 @@ function App() {
     }
   }, [isLiveMode, isDateSearchModalOpen, selectedUserId]); // Agregado selectedUserId para evitar efectos no deseados
 
-  // --- NEW: Area drawing effect ---
-  useEffect(() => {
-    if (!areaMode) return;
-    const map = window.leafletMap; // we attach it in MapContainer ref
-    if (!map) return;
-
-    let circle = null;
-    let mouseIsDown = false;
-
-    const onMouseDown = (e) => {
-      if (circle) map.removeLayer(circle);
-      setAreaCenter([e.latlng.lat, e.latlng.lng]);
-      setAreaRadius(0);
-      mouseIsDown = true;
-    };
-    const onMouseMove = (e) => {
-      if (!mouseIsDown) return;
-      const r = map.distance(e.latlng, L.latLng(areaCenter));
-      setAreaRadius(r);
-      if (circle) map.removeLayer(circle);
-      circle = L.circle(areaCenter, { radius: r, color: '#06b6d4', weight: 2 }).addTo(map);
-    };
-    const onMouseUp = async (e) => {
-      mouseIsDown = false;
-      if (circle) map.removeLayer(circle);
-      if (areaCenter && areaRadius > 0) {
-        setIsAreaPickerOpen(true);
-      }
-    };
-
-    map.on('mousedown', onMouseDown);
-    map.on('mousemove', onMouseMove);
-    map.on('mouseup', onMouseUp);
-
-    return () => {
-      map.off('mousedown', onMouseDown);
-      map.off('mousemove', onMouseMove);
-      map.off('mouseup', onMouseUp);
-      if (circle) map.removeLayer(circle);
-    };
-  }, [areaMode, areaCenter]);
-
   return (
     <div className="min-h-screen transition-all duration-500 dark">
       {/* ANIMATED BACKGROUND */}
@@ -1668,19 +1601,6 @@ function App() {
               >
                 History
               </button>
-              <button
-                onClick={() => {
-                  setAreaMode(p => !p);
-                  if (!areaMode) { setIsLiveMode(false); setUserPaths({}); }
-                  else { setAreaCenter(null); setAreaRadius(0); setAreaDevices([]); setAreaPaths({}); }
-                }}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${areaMode
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                History by Area
-              </button>
             </div>
           )}
         </div>
@@ -1728,45 +1648,9 @@ function App() {
         />
       )}
 
-      {!isMobile && areaMode && (
-        <div className="fixed top-24 right-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-l border-white/10 z-40">
-          <div className="p-6 h-full flex flex-col">
-            <h2 className="text-2xl font-bold text-white mb-2">History by Area</h2>
-            <p className="text-white/60 text-sm mb-4">Showing paths inside drawn circle</p>
-            <SearchBar searchTerm={areaSearch} onSearchChange={setAreaSearch} placeholder="Filter added devices..." />
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 mt-4">
-              {areaDevices.map(d => (
-                <div key={d.deviceId} className="p-4 rounded-xl border-2 border-white/20" style={{ borderColor: d.color.hex }}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: d.color.hex }} />
-                      <span className="text-white font-semibold truncate">{d.name}</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setAreaDevices(prev => prev.filter(x => x.deviceId !== d.deviceId));
-                        setAreaPaths(p => { const n = { ...p }; delete n[d.deviceId]; return n; });
-                      }}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => setIsAreaPickerOpen(true)}
-              className="mt-4 w-full px-4 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl"
-            >
-              + Add device
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? (areaMode ? 'md:ml-96 md:mr-96' : 'md:ml-96 md:mr-8') : ''}`}>
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
+        }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
@@ -1793,10 +1677,6 @@ function App() {
               isLiveMode={isLiveMode}
               selectedUserId={selectedUserId}
               previousUsers={previousUsers}
-              areaMode={areaMode}
-              areaCenter={areaCenter}
-              areaRadius={areaRadius}
-              areaPaths={areaPaths}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && (
@@ -1824,63 +1704,6 @@ function App() {
           </div>
         )}
       </main>
-
-      {isAreaPickerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsAreaPickerOpen(false)} />
-          <div className="glassmorphism-strong rounded-4xl w-full max-w-md p-6">
-            <h2 className="text-white text-xl font-bold mb-4">Pick device for area</h2>
-            <SearchBar searchTerm={areaSearch} onSearchChange={setAreaSearch} placeholder="Search device..." />
-            <div className="max-h-64 overflow-y-auto custom-scrollbar space-y-2 mt-4">
-              {users
-                .filter(u => !areaDevices.map(d => d.deviceId).includes(u.id))
-                .filter(u => u.name.toLowerCase().includes(areaSearch.toLowerCase()) || u.id.toLowerCase().includes(areaSearch.toLowerCase()))
-                .map(u => {
-                  const c = getDeviceColor(u.id);
-                  return (
-                    <button
-                      key={u.id}
-                      onClick={async () => {
-                        setAreaDevices(prev => [...prev, { deviceId: u.id, name: u.name, color: c }]);
-                        setIsAreaPickerOpen(false);
-                        setAreaSearch('');
-                        // fetch points
-                        const params = new URLSearchParams({ lat: areaCenter[0], lng: areaCenter[1], radius: areaRadius, deviceId: u.id });
-                        const res = await fetch(`${config.API_BASE_URL}/api/location/area?` + params);
-                        const pts = await res.json();
-                        setAreaPaths(p => ({ ...p, [u.id]: pts.map(r => [parseFloat(r.latitude), parseFloat(r.longitude)]) }));
-                      }}
-                      className="w-full p-3 rounded-xl border-2 border-white/20 hover:border-white/40 flex items-center gap-3"
-                    >
-                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: c.hex }} />
-                      <span className="text-white truncate">{u.name}</span>
-                    </button>
-                  );
-                })}
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button onClick={() => setIsAreaPickerOpen(false)} className="flex-1 px-4 py-2 bg-white/10 text-white rounded-xl">Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!isMobile && (
-        <div className="fixed bottom-8 right-8 z-50">
-          <button
-            onClick={() => {
-              setAreaMode(p => !p);
-              if (areaMode) { // cancel -> clean
-                setAreaCenter(null); setAreaRadius(0); setAreaDevices([]); setAreaPaths({});
-              }
-            }}
-            className={`w-16 h-16 rounded-full shadow-xl grid place-items-center text-2xl transition-all ${areaMode ? 'bg-red-600' : 'bg-cyan-600'}`}
-            title={areaMode ? 'Cancel area selection' : 'Select area'}
-          >
-            📍
-          </button>
-        </div>
-      )}
 
       <DateSearchModal
         isOpen={isDateSearchModalOpen}

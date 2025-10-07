@@ -313,36 +313,6 @@ app.get('/api/location/range', async (req, res) => {
   }
 });
 
-// NEW: get all points of a device inside a circular area
-// Query: ?lat=...&lng=...&radius=...&deviceId=... (radius in meters)
-app.get('/api/location/area', async (req, res) => {
-  const { lat, lng, radius, deviceId } = req.query;
-  if (!lat || !lng || !radius || !deviceId) {
-    return res.status(400).json({ message: 'lat, lng, radius and deviceId required' });
-  }
-  try {
-    // earth distance in meters (PostGIS not required)
-    const q = `
-      SELECT latitude, longitude, timestamp_value, device_id, device_name, device_type
-      FROM location_data
-      WHERE device_id = $4
-        AND (
-          6371000 * acos(
-            cos(radians($1)) * cos(radians(latitude)) *
-            cos(radians(longitude) - radians($2)) +
-            sin(radians($1)) * sin(radians(latitude))
-          )
-        ) <= $3
-      ORDER BY timestamp_value ASC;
-    `;
-    const result = await pool.query(q, [lat, lng, radius, deviceId]);
-    res.json(result.rows);
-  } catch (e) {
-    console.error('Error in /area', e);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
