@@ -1,5 +1,7 @@
 // Exportar todos los componentes desde un solo lugar
 export { default as AnimatedBackground } from './AnimatedBackground';
+export { default as AreaSearchModal } from './AreaSearchModal';
+export { default as AreaSidebar } from './AreaSidebar';
 export { default as DateSearchModal } from './DateSearchModal';
 export { default as DesktopUsersSidebar } from './DesktopUsersSidebar';
 export { default as ErrorMessage } from './ErrorMessage';

@@ -313,6 +313,80 @@ app.get('/api/location/range', async (req, res) => {
   }
 });
 
+// NUEVO: Endpoint para obtener ubicaciones dentro de un área circular
+app.get('/api/location/area', async (req, res) => {
+  const { lat, lng, radius, deviceId } = req.query;
+
+  if (!lat || !lng || !radius) {
+    return res.status(400).json({ 
+      message: 'Los parámetros lat, lng y radius son requeridos' 
+    });
+  }
+
+  try {
+    const centerLat = parseFloat(lat);
+    const centerLng = parseFloat(lng);
+    const radiusMeters = parseFloat(radius);
+
+    if (isNaN(centerLat) || isNaN(centerLng) || isNaN(radiusMeters)) {
+      return res.status(400).json({ message: 'Parámetros inválidos' });
+    }
+
+    // Usar la fórmula de Haversine para calcular distancias
+    // Esta query usa una aproximación simple basada en grados para filtrar primero,
+    // luego calcula la distancia exacta
+    let query = `
+      SELECT 
+        latitude, 
+        longitude, 
+        timestamp_value, 
+        device_id, 
+        device_name, 
+        device_type,
+        (
+          6371000 * acos(
+            cos(radians($1)) * cos(radians(latitude)) * 
+            cos(radians(longitude) - radians($2)) + 
+            sin(radians($1)) * sin(radians(latitude))
+          )
+        ) AS distance
+      FROM location_data
+      WHERE 1=1
+    `;
+    const values = [centerLat, centerLng];
+    
+    if (deviceId) {
+      query += ` AND device_id = $${values.length + 1}`;
+      values.push(deviceId);
+    }
+    
+    // Add bounding box filter for performance (approximate)
+    const latDelta = (radiusMeters / 111000); // ~111km per degree latitude
+    const lngDelta = (radiusMeters / (111000 * Math.cos(centerLat * Math.PI / 180)));
+    
+    query += ` 
+      AND latitude BETWEEN $${values.length + 1} AND $${values.length + 2}
+      AND longitude BETWEEN $${values.length + 3} AND $${values.length + 4}
+    `;
+    values.push(centerLat - latDelta, centerLat + latDelta, centerLng - lngDelta, centerLng + lngDelta);
+    
+    query += `
+      HAVING distance <= $${values.length + 1}
+      ORDER BY timestamp_value ASC;
+    `;
+    values.push(radiusMeters);
+    
+    const result = await pool.query(query, values);
+    
+    console.log(`Found ${result.rows.length} locations within ${radiusMeters}m radius for device ${deviceId || 'all'}`);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo ubicaciones por área:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

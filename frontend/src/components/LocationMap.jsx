@@ -1,4 +1,5 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker, Circle, useMapEvents } from 'react-leaflet';
+import { useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { config } from '../config/appConfig';
 import { useViewportHeight } from '../hooks/useViewportHeight';
@@ -9,8 +10,82 @@ import { createCircularIcon } from '../utils/mapUtils';
 import GradientPolyline from './GradientPolyline';
 import MapViewUpdater from './MapViewUpdater';
 
+// Component to handle circle drawing interaction
+const CircleDrawer = ({ isDrawingMode, onCircleComplete, drawnCircle }) => {
+  const [tempCircle, setTempCircle] = useState(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const startPointRef = useRef(null);
+
+  useMapEvents({
+    mousedown(e) {
+      if (isDrawingMode && !isDrawing) {
+        setIsDrawing(true);
+        startPointRef.current = e.latlng;
+        setTempCircle({ center: [e.latlng.lat, e.latlng.lng], radius: 10 });
+      }
+    },
+    mousemove(e) {
+      if (isDrawingMode && isDrawing && startPointRef.current) {
+        const distance = startPointRef.current.distanceTo(e.latlng);
+        setTempCircle({ 
+          center: [startPointRef.current.lat, startPointRef.current.lng], 
+          radius: Math.max(distance, 10) 
+        });
+      }
+    },
+    mouseup(e) {
+      if (isDrawingMode && isDrawing && startPointRef.current) {
+        const distance = startPointRef.current.distanceTo(e.latlng);
+        const finalCircle = {
+          center: [startPointRef.current.lat, startPointRef.current.lng],
+          radius: Math.max(distance, 10)
+        };
+        setIsDrawing(false);
+        setTempCircle(null);
+        startPointRef.current = null;
+        onCircleComplete(finalCircle);
+      }
+    }
+  });
+
+  // Show temporary circle while drawing
+  if (tempCircle) {
+    return (
+      <Circle
+        center={tempCircle.center}
+        radius={tempCircle.radius}
+        pathOptions={{ color: '#00b8d4', fillColor: '#00b8d4', fillOpacity: 0.2, weight: 2 }}
+      />
+    );
+  }
+
+  // Show completed circle
+  if (drawnCircle) {
+    return (
+      <Circle
+        center={drawnCircle.center}
+        radius={drawnCircle.radius}
+        pathOptions={{ color: '#0092b8', fillColor: '#0092b8', fillOpacity: 0.15, weight: 3 }}
+      />
+    );
+  }
+
+  return null;
+};
+
 // --- Mapa principal con soporte multi-dispositivo MEJORADO ---
-const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers }) => {
+const LocationMap = ({ 
+  users, 
+  userPaths, 
+  isLiveMode, 
+  selectedUserId, 
+  previousUsers,
+  mode = 'live',
+  isDrawingMode = false,
+  onCircleComplete,
+  drawnCircle,
+  selectedDevicesForArea = []
+}) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -76,8 +151,15 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
             return null;
           }
 
-          // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
-          const shouldShow = isLiveMode ? isActive : isSelected;
+          // Determine if device should be shown based on mode
+          let shouldShow = false;
+          if (mode === 'live') {
+            shouldShow = isActive;
+          } else if (mode === 'history') {
+            shouldShow = isSelected;
+          } else if (mode === 'areaHistory') {
+            shouldShow = selectedDevicesForArea.includes(user.id);
+          }
 
           if (!shouldShow) return null;
 
@@ -109,7 +191,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
               {/* Ruta del dispositivo */}
               {userPath.length > 1 && (
                 <>
-                  {isLiveMode ? (
+                  {mode === 'live' ? (
                     <Polyline
                       pathOptions={{
                         color: deviceColor.hex,
@@ -124,8 +206,8 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
                 </>
               )}
 
-              {/* Puntos históricos clickeables (solo en modo histórico) */}
-              {!isLiveMode && userPath.map((point, pointIndex) => (
+              {/* Puntos históricos clickeables (solo en modo histórico y area history) */}
+              {(mode === 'history' || mode === 'areaHistory') && userPath.map((point, pointIndex) => (
                 <CircleMarker
                   key={`${user.id}-${pointIndex}`}
                   center={point}
@@ -152,9 +234,18 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
           );
         })}
 
+        {/* Circle drawer for area history mode */}
+        {mode === 'areaHistory' && (
+          <CircleDrawer 
+            isDrawingMode={isDrawingMode} 
+            onCircleComplete={onCircleComplete}
+            drawnCircle={drawnCircle}
+          />
+        )}
+
         <MapViewUpdater
           userPaths={userPaths}
-          isLiveMode={isLiveMode}
+          isLiveMode={mode === 'live'}
           users={users}
           previousUsers={previousUsers}
         />

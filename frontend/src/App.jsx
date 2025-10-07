@@ -17,9 +17,11 @@ import Header from './components/Header';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import DesktopUsersSidebar from './components/DesktopUsersSidebar';
+import AreaSidebar from './components/AreaSidebar';
 import MobileUsersInfo from './components/MobileUsersInfo';
 import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
+import AreaSearchModal from './components/AreaSearchModal';
 
 // --- Componente Principal ---
 function App() {
@@ -28,13 +30,19 @@ function App() {
   const [errorType, setErrorType] = useState(null);
   const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
-  const [isLiveMode, setIsLiveMode] = useState(true);
+  const [mode, setMode] = useState('live'); // 'live', 'history', or 'areaHistory'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // Estados para History by Area
+  const [isAreaSearchModalOpen, setIsAreaSearchModalOpen] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawnCircle, setDrawnCircle] = useState(null);
+  const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -73,7 +81,7 @@ function App() {
         setUsers(usersArray);
 
         // Actualizar paths en modo live de forma más eficiente
-        if (isLiveMode) {
+        if (mode === 'live') {
           setUserPaths(prevPaths => {
             const newPaths = { ...prevPaths };
             let hasChanges = false;
@@ -188,7 +196,7 @@ function App() {
   // Búsqueda por fecha
   const handleDateSearch = async (searchData) => {
     setLoading(true);
-    setIsLiveMode(false);
+    setMode('history');
     setError(null);
 
     try {
@@ -242,31 +250,159 @@ function App() {
   };
 
   const handleReturnToLive = () => {
-    setIsLiveMode(true);
+    setMode('live');
     setUserPaths({});
     setError(null);
     setErrorType(null);
     setLoading(true);
     setIsMobileMenuOpen(false);
-    setPreviousUsers(null); // Resetear estado anterior
+    setPreviousUsers(null);
+    // Reset area history states
+    setDrawnCircle(null);
+    setIsDrawingMode(false);
+    setSelectedDevicesForArea([]);
+  };
+
+  // Handle area history mode
+  const handleSetAreaHistoryMode = () => {
+    setMode('areaHistory');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+    setIsDrawingMode(false);
+    setDrawnCircle(null);
+    setSelectedDevicesForArea([]);
+  };
+
+  // Handle circle complete - open device selection modal
+  const handleCircleComplete = (circle) => {
+    setDrawnCircle(circle);
+    setIsDrawingMode(false);
+    setIsAreaSearchModalOpen(true);
+  };
+
+  // Handle device selection for area
+  const handleDeviceSelectForArea = async (deviceId) => {
+    if (!drawnCircle) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
+      
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Error fetching area history.');
+      }
+
+      const areaData = await response.json();
+
+      if (areaData.length > 0) {
+        const newPath = areaData
+          .map(point => {
+            const lat = parseFloat(point.latitude);
+            const lng = parseFloat(point.longitude);
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+              return [lat, lng];
+            }
+            return null;
+          })
+          .filter(point => point !== null);
+
+        if (newPath.length > 0) {
+          setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
+          setSelectedDevicesForArea(prev => [...prev, deviceId]);
+        } else {
+          setError(`No locations found for this device in the selected area.`);
+          setErrorType('no-data');
+        }
+      } else {
+        setError(`No locations found for this device in the selected area.`);
+        setErrorType('no-data');
+      }
+    } catch (err) {
+      setError('Error fetching area history.');
+      setErrorType('connection');
+      console.error('Error fetching area data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle device toggle in area sidebar
+  const handleDeviceToggleForArea = async (deviceId) => {
+    if (selectedDevicesForArea.includes(deviceId)) {
+      // Remove device
+      setSelectedDevicesForArea(prev => prev.filter(id => id !== deviceId));
+      setUserPaths(prev => {
+        const newPaths = { ...prev };
+        delete newPaths[deviceId];
+        return newPaths;
+      });
+    } else {
+      // Add device - fetch its data
+      if (!drawnCircle) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
+        
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error('Error fetching area history.');
+        }
+
+        const areaData = await response.json();
+
+        if (areaData.length > 0) {
+          const newPath = areaData
+            .map(point => {
+              const lat = parseFloat(point.latitude);
+              const lng = parseFloat(point.longitude);
+
+              if (!isNaN(lat) && !isNaN(lng)) {
+                return [lat, lng];
+              }
+              return null;
+            })
+            .filter(point => point !== null);
+
+          if (newPath.length > 0) {
+            setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
+            setSelectedDevicesForArea(prev => [...prev, deviceId]);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching area data for device:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   // Effect principal para polling MEJORADO
   useEffect(() => {
-    if (isLiveMode && !isDateSearchModalOpen) {
+    if (mode === 'live' && !isDateSearchModalOpen) {
       // Fetch inicial
       fetchUsersData();
 
       // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
-        if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
+        if (mode === 'live' && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
         }
       }, config.POLLING_INTERVAL);
 
       return () => clearInterval(interval);
     }
-  }, [isLiveMode, isDateSearchModalOpen, selectedUserId]);
+  }, [mode, isDateSearchModalOpen, selectedUserId]);
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -278,17 +414,28 @@ function App() {
         isMobile={isMobile}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
-        isLiveMode={isLiveMode}
+        mode={mode}
         handleReturnToLive={handleReturnToLive}
         setIsDateSearchModalOpen={setIsDateSearchModalOpen}
+        setIsAreaHistoryMode={handleSetAreaHistoryMode}
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && (
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
           selectedUserId={selectedUserId}
+        />
+      )}
+
+      {/* Area Sidebar for area history mode */}
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && (
+        <AreaSidebar
+          users={users}
+          selectedDevices={selectedDevicesForArea}
+          onDeviceToggle={handleDeviceToggleForArea}
+          areaInfo={drawnCircle}
         />
       )}
 
@@ -316,15 +463,55 @@ function App() {
           </div>
         ) : users.length > 0 ? (
           <>
+            {/* Floating button to enable drawing mode in area history */}
+            {mode === 'areaHistory' && !drawnCircle && (
+              <button
+                onClick={() => setIsDrawingMode(!isDrawingMode)}
+                className={`fixed top-32 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 ${
+                  isDrawingMode 
+                    ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse' 
+                    : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
+                }`}
+                title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            )}
+
+            {/* Button to redraw circle if one exists */}
+            {mode === 'areaHistory' && drawnCircle && (
+              <button
+                onClick={() => {
+                  setDrawnCircle(null);
+                  setSelectedDevicesForArea([]);
+                  setUserPaths({});
+                  setIsDrawingMode(true);
+                }}
+                className="fixed top-32 right-8 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-2xl transition-all duration-300"
+                title="Redraw area"
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            )}
+
             <LocationMap
               users={users}
               userPaths={userPaths}
-              isLiveMode={isLiveMode}
+              isLiveMode={mode === 'live'}
               selectedUserId={selectedUserId}
               previousUsers={previousUsers}
+              mode={mode}
+              isDrawingMode={isDrawingMode}
+              onCircleComplete={handleCircleComplete}
+              drawnCircle={drawnCircle}
+              selectedDevicesForArea={selectedDevicesForArea}
             />
             {/* Información de dispositivos solo en móvil */}
-            {isMobile && (
+            {isMobile && mode !== 'areaHistory' && (
               <MobileUsersInfo
                 users={users}
                 selectedUserId={selectedUserId}
@@ -355,6 +542,14 @@ function App() {
         onClose={() => setIsDateSearchModalOpen(false)}
         onSearch={handleDateSearch}
         users={users}
+      />
+
+      <AreaSearchModal
+        isOpen={isAreaSearchModalOpen}
+        onClose={() => setIsAreaSearchModalOpen(false)}
+        onDeviceSelect={handleDeviceSelectForArea}
+        users={users}
+        areaInfo={drawnCircle}
       />
     </div>
   );
