@@ -465,19 +465,35 @@ function App() {
           <>
             {/* Floating button to enable drawing mode in area history */}
             {mode === 'areaHistory' && !drawnCircle && (
-              <button
-                onClick={() => setIsDrawingMode(!isDrawingMode)}
-                className={`fixed top-32 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 ${
-                  isDrawingMode 
-                    ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse' 
-                    : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
-                }`}
-                title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
+              <>
+                <button
+                  onClick={() => setIsDrawingMode(!isDrawingMode)}
+                  className={`fixed top-32 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 ${
+                    isDrawingMode 
+                      ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse' 
+                      : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
+                  }`}
+                  title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+                
+                {/* Indicator when drawing mode is active */}
+                {isDrawingMode && (
+                  <div className="fixed top-48 right-8 z-50 glassmorphism-strong rounded-2xl p-4 shadow-2xl animate-fade-in">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                      <div className="text-white">
+                        <p className="text-sm font-semibold">Drawing Mode Active</p>
+                        <p className="text-xs text-white/70">Click and drag to draw circle</p>
+                        <p className="text-xs text-white/50 mt-1">Map panning disabled</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Button to redraw circle if one exists */}

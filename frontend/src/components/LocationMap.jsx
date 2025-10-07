@@ -10,15 +10,40 @@ import { createCircularIcon } from '../utils/mapUtils';
 import GradientPolyline from './GradientPolyline';
 import MapViewUpdater from './MapViewUpdater';
 
+// Component to disable map interactions when drawing
+const MapInteractionController = ({ isDrawingMode }) => {
+  const map = useMapEvents({});
+  
+  // Disable dragging, zooming, and other interactions when in drawing mode
+  if (isDrawingMode) {
+    map.dragging.disable();
+    map.touchZoom.disable();
+    map.doubleClickZoom.disable();
+    map.scrollWheelZoom.disable();
+    map.boxZoom.disable();
+    map.keyboard.disable();
+  } else {
+    map.dragging.enable();
+    map.touchZoom.enable();
+    map.doubleClickZoom.enable();
+    map.scrollWheelZoom.enable();
+    map.boxZoom.enable();
+    map.keyboard.enable();
+  }
+  
+  return null;
+};
+
 // Component to handle circle drawing interaction
 const CircleDrawer = ({ isDrawingMode, onCircleComplete, drawnCircle }) => {
   const [tempCircle, setTempCircle] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const startPointRef = useRef(null);
 
-  useMapEvents({
+  const map = useMapEvents({
     mousedown(e) {
       if (isDrawingMode && !isDrawing) {
+        e.originalEvent.preventDefault();
         setIsDrawing(true);
         startPointRef.current = e.latlng;
         setTempCircle({ center: [e.latlng.lat, e.latlng.lng], radius: 10 });
@@ -26,6 +51,7 @@ const CircleDrawer = ({ isDrawingMode, onCircleComplete, drawnCircle }) => {
     },
     mousemove(e) {
       if (isDrawingMode && isDrawing && startPointRef.current) {
+        e.originalEvent.preventDefault();
         const distance = startPointRef.current.distanceTo(e.latlng);
         setTempCircle({ 
           center: [startPointRef.current.lat, startPointRef.current.lng], 
@@ -35,6 +61,7 @@ const CircleDrawer = ({ isDrawingMode, onCircleComplete, drawnCircle }) => {
     },
     mouseup(e) {
       if (isDrawingMode && isDrawing && startPointRef.current) {
+        e.originalEvent.preventDefault();
         const distance = startPointRef.current.distanceTo(e.latlng);
         const finalCircle = {
           center: [startPointRef.current.lat, startPointRef.current.lng],
@@ -129,7 +156,8 @@ const LocationMap = ({
           height: `${mapHeight}px`,
           width: '100%',
           borderRadius: '1rem',
-          minHeight: '300px'
+          minHeight: '300px',
+          cursor: isDrawingMode ? 'crosshair' : 'grab'
         }}
         key={mapKey}
       >
@@ -233,6 +261,11 @@ const LocationMap = ({
             </div>
           );
         })}
+
+        {/* Map interaction controller - disable interactions when drawing */}
+        {mode === 'areaHistory' && (
+          <MapInteractionController isDrawingMode={isDrawingMode} />
+        )}
 
         {/* Circle drawer for area history mode */}
         {mode === 'areaHistory' && (
