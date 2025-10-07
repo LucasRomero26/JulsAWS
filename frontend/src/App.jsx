@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L, { Icon, DivIcon } from 'leaflet';
 import { ThreeDot } from 'react-loading-indicators';
@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 
 import './App.css';
 
-// --- Basic Configuration ---
+// --- Configuración Básica ---
 const config = {
   API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   APP_NAME: 'Juls Tracker',
@@ -25,7 +25,7 @@ const config = {
   INACTIVE_TIMEOUT: 20000
 };
 
-// --- EXPANDED: Color system based on the entire Tailwind palette ---
+// --- AMPLIADO: Sistema de colores basado en toda la paleta de Tailwind ---
 const DEVICE_COLORS = [
   // Reds
   { name: 'Red 500', light: '#fecaca', dark: '#7f1d1d', main: '#ef4444', hex: '#ef4444' },
@@ -86,7 +86,7 @@ const DEVICE_COLORS = [
   { name: 'Rose 400', light: '#fb7185', dark: '#e11d48', main: '#fb7185', hex: '#fb7185' }
 ];
 
-// --- Function to generate random indexes ---
+// --- Función para generar índices aleatorios ---
 const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -96,7 +96,7 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
-// --- IMPROVED: Random color assignment system ---
+// --- MEJORADO: Sistema de asignación aleatoria de colores ---
 class DeviceColorManager {
   constructor() {
     this.deviceColorMap = new Map();
@@ -104,20 +104,20 @@ class DeviceColorManager {
     this.currentIndex = 0;
   }
 
-  // Assign a persistent random color to a device
+  // Asignar un color aleatorio persistente a un dispositivo
   getDeviceColor(deviceId) {
-    // If it already has a color assigned, return it
+    // Si ya tiene un color asignado, devolverlo
     if (this.deviceColorMap.has(deviceId)) {
       return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
     }
 
-    // If available colors are exhausted, reshuffle and reset
+    // Si se acabaron los colores disponibles, volver a mezclar y reiniciar
     if (this.currentIndex >= this.availableColorIndices.length) {
       this.availableColorIndices = shuffleArray([...Array(DEVICE_COLORS.length).keys()]);
       this.currentIndex = 0;
     }
 
-    // Assign the next available random color
+    // Asignar el siguiente color aleatorio disponible
     const colorIndex = this.availableColorIndices[this.currentIndex];
     this.deviceColorMap.set(deviceId, colorIndex);
     this.currentIndex++;
@@ -125,7 +125,7 @@ class DeviceColorManager {
     return DEVICE_COLORS[colorIndex];
   }
 
-  // Get the color of an existing device
+  // Obtener el color de un dispositivo existente
   getExistingDeviceColor(deviceId) {
     if (this.deviceColorMap.has(deviceId)) {
       return DEVICE_COLORS[this.deviceColorMap.get(deviceId)];
@@ -133,19 +133,19 @@ class DeviceColorManager {
     return null;
   }
 
-  // Remove a device (optional, to clean up when a device is no longer active)
+  // Remover un dispositivo (opcional, para limpiar cuando un dispositivo ya no esté activo)
   removeDevice(deviceId) {
     if (this.deviceColorMap.has(deviceId)) {
       const colorIndex = this.deviceColorMap.get(deviceId);
       this.deviceColorMap.delete(deviceId);
 
-      // Add the color back to the available ones randomly
+      // Agregar el color de vuelta a los disponibles de forma aleatoria
       const randomPosition = Math.floor(Math.random() * (this.availableColorIndices.length + 1));
       this.availableColorIndices.splice(randomPosition, 0, colorIndex);
     }
   }
 
-  // Get all devices with their colors
+  // Obtener todos los dispositivos con sus colores
   getAllDeviceColors() {
     const result = {};
     for (const [deviceId, colorIndex] of this.deviceColorMap) {
@@ -154,7 +154,7 @@ class DeviceColorManager {
     return result;
   }
 
-  // Clean up inactive devices after a while
+  // Limpiar dispositivos inactivos después de un tiempo
   cleanupInactiveDevices(activeDeviceIds) {
     const toRemove = [];
     for (const deviceId of this.deviceColorMap.keys()) {
@@ -166,15 +166,15 @@ class DeviceColorManager {
   }
 }
 
-// Global instance of the color manager
+// Instancia global del gestor de colores
 const deviceColorManager = new DeviceColorManager();
 
-// Updated function to get the device color
+// Función actualizada para obtener el color del dispositivo
 const getDeviceColor = (deviceId) => {
   return deviceColorManager.getDeviceColor(deviceId);
 };
 
-// --- Function to create custom circular icons ---
+// --- Función para crear íconos circulares personalizados ---
 const createCircularIcon = (color, isActive = true, size = 20) => {
   const activeRing = isActive ? `
     <circle cx="25" cy="25" r="22" 
@@ -211,7 +211,7 @@ const createCircularIcon = (color, isActive = true, size = 20) => {
   });
 };
 
-// Fix for default Leaflet icon in Vite (kept for compatibility)
+// Arreglo para el ícono por defecto de Leaflet en Vite (mantenemos por compatibilidad)
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -219,7 +219,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// --- Utility functions ---
+// --- Funciones utilitarias ---
 const formatTimestamp = (timestamp) => {
   try {
     let date;
@@ -288,7 +288,7 @@ const isUserActive = (lastUpdate) => {
   }
 };
 
-// --- UI Components ---
+// --- Componentes de UI ---
 const LoadingSpinner = () => (
   <div className="flex items-center mx-auto justify-center p-8">
     <ThreeDot color="#FFFFFF" size="medium" text="" textColor="" />
@@ -302,7 +302,7 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
       </svg>
       <h3 className="text-xl font-bold">
-        {isNoDataError ? 'No Data Found' : 'Connection Error'}
+        {isNoDataError ? 'No Data Found' : 'Error de Conexión'}
       </h3>
     </div>
     <p className="text-white/70 mb-4">{error}</p>
@@ -316,13 +316,13 @@ const ErrorMessage = ({ error, onRetry, onReturnToLive, isNoDataError }) => (
       </button>
     ) : (
       <button onClick={onRetry} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors">
-        Retry
+        Reintentar
       </button>
     )}
   </div>
 );
 
-// --- Hook to detect screen size ---
+// --- Hook para detectar el tamaño de la pantalla ---
 const useMediaQuery = (query) => {
   const [matches, setMatches] = useState(false);
 
@@ -339,7 +339,7 @@ const useMediaQuery = (query) => {
   return matches;
 };
 
-// --- Hook for dynamic viewport height ---
+// --- Hook para altura dinámica del viewport ---
 const useViewportHeight = () => {
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
@@ -355,7 +355,7 @@ const useViewportHeight = () => {
   return viewportHeight;
 };
 
-// --- NEW: Search bar component ---
+// --- NUEVO: Componente de barra de búsqueda ---
 const SearchBar = ({ searchTerm, onSearchChange, placeholder = "Search devices..." }) => {
   return (
     <div className="relative mb-4">
@@ -385,7 +385,7 @@ const SearchBar = ({ searchTerm, onSearchChange, placeholder = "Search devices..
   );
 };
 
-// --- IMPROVED: Hook to filter users with search ---
+// --- MEJORADO: Hook para filtrar usuarios con búsqueda ---
 const useFilteredUsers = (users, searchTerm) => {
   return useMemo(() => {
     if (!searchTerm.trim()) {
@@ -403,7 +403,7 @@ const useFilteredUsers = (users, searchTerm) => {
   }, [users, searchTerm]);
 };
 
-// --- IMPROVED: User information for mobile with search and optimized scroll ---
+// --- MEJORADO: Información de usuarios para móvil con búsqueda y scroll optimizado ---
 const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
@@ -411,10 +411,10 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
 
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
-  // Avoid unnecessary automatic scrolling
+  // Evitar scroll automático innecesario
   useEffect(() => {
     if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
-      // Only scroll if the selected element is not visible
+      // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
 
@@ -543,7 +543,7 @@ const MobileUsersInfo = ({ users, selectedUserId, onUserSelect }) => {
   );
 };
 
-// --- IMPROVED: Sidebar for desktop with search and optimized scroll ---
+// --- MEJORADO: Sidebar para desktop con búsqueda y scroll optimizado ---
 const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const scrollContainerRef = useRef(null);
@@ -551,10 +551,10 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
 
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
-  // Avoid unnecessary automatic scrolling
+  // Evitar scroll automático innecesario
   useEffect(() => {
     if (selectedUserRef.current && scrollContainerRef.current && !searchTerm) {
-      // Only scroll if the selected element is not visible
+      // Solo hacer scroll si el elemento seleccionado no está visible
       const container = scrollContainerRef.current;
       const element = selectedUserRef.current;
 
@@ -668,83 +668,6 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
     </div>
   );
 };
-
-// --- NEW: Sidebar for Area History mode ---
-const AreaHistorySidebar = ({ users, selectedDevices, onDeviceSelectionChange, onClearArea }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const filteredUsers = useFilteredUsers(users, searchTerm);
-
-  const handleCheckboxChange = (deviceId) => {
-    const newSelection = new Set(selectedDevices);
-    if (newSelection.has(deviceId)) {
-      newSelection.delete(deviceId);
-    } else {
-      newSelection.add(deviceId);
-    }
-    onDeviceSelectionChange(Array.from(newSelection));
-  };
-
-  return (
-    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
-      <div className="p-6 h-full flex flex-col">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">Area History</h2>
-          <span className="text-sm text-white/60">Select devices to view their path in the area.</span>
-        </div>
-
-        <SearchBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          placeholder="Search devices..."
-        />
-
-        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => {
-              const deviceColor = getDeviceColor(user.id);
-              const isChecked = selectedDevices.includes(user.id);
-
-              return (
-                <label
-                  key={user.id}
-                  htmlFor={`device-checkbox-${user.id}`}
-                  className={`p-3 rounded-xl cursor-pointer flex items-center gap-4 transition-all duration-300 border-2 ${isChecked ? 'border-opacity-80' : 'border-white/10 hover:border-white/20'}`}
-                  style={isChecked ? { backgroundColor: `${deviceColor.hex}20`, borderColor: deviceColor.hex } : {}}
-                >
-                  <input
-                    type="checkbox"
-                    id={`device-checkbox-${user.id}`}
-                    checked={isChecked}
-                    onChange={() => handleCheckboxChange(user.id)}
-                    className="h-5 w-5 rounded bg-white/20 border-white/30 text-cyan-500 focus:ring-cyan-500"
-                    style={{ accentColor: deviceColor.hex }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white truncate">{user.name}</h3>
-                    <p className="text-xs text-white/60 truncate">{user.deviceId}</p>
-                  </div>
-                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: deviceColor.hex }}></div>
-                </label>
-              );
-            })
-          ) : (
-            <div className="text-center py-8 text-white/50">No devices found.</div>
-          )}
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-white/10">
-          <button
-            onClick={onClearArea}
-            className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-          >
-            Draw New Area
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 
 const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [startDate, setStartDate] = useState(null);
@@ -865,7 +788,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
       onSearch(searchData);
       onClose();
     } catch (err) {
-      console.error('Error in search:', err);
+      console.error('Error en búsqueda:', err);
       setError('An unexpected error occurred during the search.');
     } finally {
       setIsLoading(false);
@@ -902,7 +825,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
         onClick={onClose}
       />
       <div className="relative glassmorphism-strong rounded-4xl w-full max-w-md md:max-w-6xl max-h-[95vh] overflow-y-auto transform">
-        {/* Fixed header */}
+        {/* Header fijo */}
         <div className="sticky top-0 z-10 glassmorphism-strong rounded-t-4xl p-6 border-b border-white/10">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-white">Select Date Range & Device</h2>
@@ -914,9 +837,9 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           </div>
         </div>
 
-        {/* Scrollable content */}
+        {/* Contenido scrolleable */}
         <div className="p-6">
-          {/* Device Selector with search bar */}
+          {/* Device Selector con barra de búsqueda */}
           <div className="mb-6">
             <label className="block text-white text-lg font-medium mb-3">Select Device</label>
 
@@ -1052,7 +975,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
           )}
         </div>
 
-        {/* Fixed footer */}
+        {/* Footer fijo */}
         <div className="sticky bottom-0 z-10 glassmorphism-strong rounded-b-4xl p-6 border-t border-white/10">
           <div className="flex gap-4">
             <button
@@ -1091,7 +1014,7 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   );
 };
 
-// --- Functions for color gradients ---
+// --- Funciones para gradientes de colores ---
 const interpolateColor = (color1, color2, factor) => {
   const c1 = parseInt(color1.substring(1), 16);
   const r1 = (c1 >> 16) & 255;
@@ -1135,137 +1058,116 @@ const GradientPolyline = ({ path, deviceColor }) => {
   return <>{segments}</>;
 };
 
-// --- NEW: Improved component to update the map view ---
-const MapViewUpdater = ({ userPaths, viewMode, users, previousUsers, area, areaUserPaths }) => {
+// --- NUEVO: Componente mejorado para actualizar la vista del mapa ---
+const MapViewUpdater = ({ userPaths, isLiveMode, users, previousUsers }) => {
   const map = useMap();
   const previousUsersRef = useRef(previousUsers);
 
   useEffect(() => {
+    if (!users || users.length === 0) return;
+
     try {
-      if (viewMode === 'live') {
-        if (!users || users.length === 0) return;
+      if (isLiveMode) {
         const activeUsers = users.filter(user => isUserActive(user.lastUpdate));
+        const previousActiveUsers = previousUsersRef.current ?
+          previousUsersRef.current.filter(user => isUserActive(user.lastUpdate)) : [];
+
+        // Solo actualizar si hay cambios significativos en los usuarios activos
+        const activeUsersChanged = activeUsers.length !== previousActiveUsers.length ||
+          activeUsers.some((user, index) => {
+            const prevUser = previousActiveUsers.find(pu => pu.id === user.id);
+            if (!prevUser) return true;
+            return Math.abs(parseFloat(user.latitude) - parseFloat(prevUser.latitude)) > 0.0001 ||
+              Math.abs(parseFloat(user.longitude) - parseFloat(prevUser.longitude)) > 0.0001;
+          });
+
+        if (!activeUsersChanged) return;
+
         if (activeUsers.length > 1) {
-          const allPositions = activeUsers.map(user => [parseFloat(user.latitude), parseFloat(user.longitude)]);
+          // Múltiples dispositivos activos: ajustar bounds para mostrar todos
+          const allPositions = activeUsers.map(user => [
+            parseFloat(user.latitude),
+            parseFloat(user.longitude)
+          ]);
+
           if (allPositions.length > 0) {
             const bounds = L.latLngBounds(allPositions);
-            map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0, maxZoom: 16 });
+
+            // Solo ajustar bounds si hay una diferencia significativa
+            const currentBounds = map.getBounds();
+            const needsUpdate = !currentBounds.contains(bounds) ||
+              !bounds.contains(currentBounds);
+
+            if (needsUpdate) {
+              map.fitBounds(bounds, {
+                padding: [50, 50],
+                animate: true,
+                duration: 1.0,
+                maxZoom: 16
+              });
+            }
           }
         } else if (activeUsers.length === 1) {
+          // Un solo dispositivo activo: solo centrar manteniendo el zoom
           const user = activeUsers[0];
           const newPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
-          const currentZoom = map.getZoom();
-          map.setView(newPosition, currentZoom, { animate: true, duration: 0.5 });
+          const currentCenter = map.getCenter();
+
+          // Solo centrar si hay una diferencia significativa (más de ~10 metros)
+          const distance = currentCenter.distanceTo(L.latLng(newPosition));
+          if (distance > 10) {
+            // Usar setView en lugar de flyTo para mantener el zoom actual
+            const currentZoom = map.getZoom();
+            map.setView(newPosition, currentZoom, {
+              animate: true,
+              duration: 0.5
+            });
+          }
         }
+
+        // Actualizar referencia de usuarios anteriores
         previousUsersRef.current = users;
-      } else if (viewMode === 'history') {
+      } else {
+        // En modo histórico, ajustar para mostrar todo el path del dispositivo seleccionado
         const allPaths = Object.values(userPaths).flat();
         if (allPaths && allPaths.length > 1) {
           const bounds = L.latLngBounds(allPaths);
-          map.fitBounds(bounds, { padding: [20, 20], animate: true, duration: 1.0 });
-        }
-      } else if (viewMode === 'area') {
-        const allAreaPaths = Object.values(areaUserPaths).flat();
-        if (allAreaPaths.length > 1) {
-          const bounds = L.latLngBounds(allAreaPaths);
-          if (area) {
-            const areaBounds = L.latLng(area.center).toBounds(area.radius);
-            bounds.extend(areaBounds);
-          }
-          map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.0 });
-        } else if (area) {
-          map.fitBounds(L.latLng(area.center).toBounds(area.radius), { padding: [50, 50], animate: true, duration: 1.0 });
+          map.fitBounds(bounds, {
+            padding: [20, 20],
+            animate: true,
+            duration: 1.0
+          });
         }
       }
     } catch (error) {
       console.error('Error updating map view:', error);
     }
-  }, [users, userPaths, viewMode, map, area, areaUserPaths]);
+  }, [users, userPaths, isLiveMode, map]);
 
   return null;
 };
 
-// --- Main map with multi-device support IMPROVED ---
-const LocationMap = ({ users, userPaths, viewMode, selectedUserId, previousUsers, area, areaUserPaths, isDrawingArea, onAreaDraw }) => {
+// --- Mapa principal con soporte multi-dispositivo MEJORADO ---
+const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUsers }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const map = useMap();
-
-  const drawStartPos = useRef(null);
-  const tempCircle = useRef(null);
-
-  useEffect(() => {
-    const mapContainer = map.getContainer();
-    if (isDrawingArea) {
-      map.dragging.disable();
-      mapContainer.style.cursor = 'crosshair';
-    } else {
-      map.dragging.enable();
-      mapContainer.style.cursor = '';
-    }
-
-    const handleMouseDown = (e) => {
-      if (!isDrawingArea) return;
-      drawStartPos.current = e.latlng;
-      // Create a temporary circle for visual feedback
-      if (!tempCircle.current) {
-        tempCircle.current = L.circle(e.latlng, {
-          radius: 0,
-          color: '#0ea5e9',
-          weight: 2,
-          fillColor: '#0ea5e9',
-          fillOpacity: 0.2
-        }).addTo(map);
-      }
-    };
-
-    const handleMouseMove = (e) => {
-      if (!isDrawingArea || !drawStartPos.current) return;
-      const radius = e.latlng.distanceTo(drawStartPos.current);
-      if (tempCircle.current) {
-        tempCircle.current.setRadius(radius);
-      }
-    };
-
-    const handleMouseUp = (e) => {
-      if (!isDrawingArea || !drawStartPos.current) return;
-      const radius = e.latlng.distanceTo(drawStartPos.current);
-
-      onAreaDraw({ center: drawStartPos.current, radius });
-
-      // Clean up
-      if (tempCircle.current) {
-        map.removeLayer(tempCircle.current);
-        tempCircle.current = null;
-      }
-      drawStartPos.current = null;
-    };
-
-    map.on('mousedown', handleMouseDown);
-    map.on('mousemove', handleMouseMove);
-    map.on('mouseup', handleMouseUp);
-
-    return () => {
-      map.off('mousedown', handleMouseDown);
-      map.off('mousemove', handleMouseMove);
-      map.off('mouseup', handleMouseUp);
-    };
-  }, [isDrawingArea, map, onAreaDraw]);
 
   const mapHeight = isMobile
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
 
-  // Get the initial center position - only on initialization, not constantly updated
+  // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
-    if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco as fallback
+    if (!users || users.length === 0) return [37.7749, -122.4194]; // San Francisco como fallback
 
     const firstUser = users[0];
     return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
   };
 
-  // Validate that coordinates are valid
-  if (isNaN(map.getCenter().lat) || isNaN(map.getCenter().lng)) {
+  const centerPosition = getInitialCenterPosition();
+
+  // Validar que las coordenadas sean válidas
+  if (!centerPosition || isNaN(centerPosition[0]) || isNaN(centerPosition[1])) {
     return (
       <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
         <div className="flex items-center justify-center" style={{ height: `${mapHeight}px` }}>
@@ -1278,101 +1180,145 @@ const LocationMap = ({ users, userPaths, viewMode, selectedUserId, previousUsers
     );
   }
 
+  // Crear una key estable que no cambie con cada actualización
+  const mapKey = `map-${users.length > 0 ? users[0].id : 'default'}`;
+
   return (
-    <>
-      <TileLayer
-        url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
-        attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
-      />
-
-      {/* Render markers for live mode */}
-      {viewMode === 'live' && users.map((user) => {
-        const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
-        const deviceColor = getDeviceColor(user.id);
-        const isActive = isUserActive(user.lastUpdate);
-        const isSelected = selectedUserId === user.id;
-
-        // --- FIX: Add this line to hide inactive markers ---
-        // If the device is not active, don't render anything for it.
-        if (!isActive) return null;
-
-        if (isNaN(userPosition[0]) || isNaN(userPosition[1])) return null;
-
-        const circularIcon = createCircularIcon(deviceColor.hex, isActive);
-
-        return (
-          <Marker key={user.id} position={userPosition} icon={circularIcon} opacity={isSelected ? 1 : 0.7}>
-            <Popup>
-              <div className="text-center">
-                <strong style={{ color: deviceColor.hex }}>{user.name}</strong><br />
-                <small>Device: {user.deviceId}</small><br />
-                <small>Status: {isActive ? 'Active' : 'Inactive'}</small><br />
-                <small>Last Update: {formatTimestamp(user.lastUpdate)}</small>
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-
-      {/* Render history paths */}
-      {viewMode === 'history' && Object.entries(userPaths).map(([deviceId, path]) => {
-        const deviceColor = getDeviceColor(deviceId);
-        return <GradientPolyline key={deviceId} path={path} deviceColor={deviceColor} />;
-      })}
-
-      {/* NEW: Render area history paths */}
-      {viewMode === 'area' && Object.entries(areaUserPaths).map(([deviceId, path]) => {
-        const deviceColor = getDeviceColor(deviceId);
-        return <GradientPolyline key={`area-${deviceId}`} path={path} deviceColor={deviceColor} />;
-      })}
-
-      {/* NEW: Render the defined area circle */}
-      {viewMode === 'area' && area && (
-        <Circle
-          center={area.center}
-          radius={area.radius}
-          pathOptions={{ color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.1, weight: 2 }}
+    <div className='glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
+      <MapContainer
+        center={centerPosition}
+        zoom={isLiveMode ? 15 : 13}
+        style={{
+          height: `${mapHeight}px`,
+          width: '100%',
+          borderRadius: '1rem',
+          minHeight: '300px'
+        }}
+        key={mapKey} // Key estable para evitar recreación del mapa
+      >
+        <TileLayer
+          url={`https://{s}.tile.jawg.io/${config.JAWG_MAP_ID}/{z}/{x}/{y}{r}.png?access-token=${config.JAWG_ACCESS_TOKEN}`}
+          attribution='&copy; <a href="https://www.jawg.io" target="_blank">Jawg</a> - &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors'
         />
-      )}
 
-      <MapViewUpdater
-        userPaths={userPaths}
-        viewMode={viewMode}
-        users={users}
-        previousUsers={previousUsers}
-        area={area}
-        areaUserPaths={areaUserPaths}
-      />
-    </>
+        {/* Renderizar marcadores y rutas para cada usuario con colores persistentes */}
+        {users.map((user) => {
+          const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
+          const deviceColor = getDeviceColor(user.id); // Usar ID del usuario
+          const isActive = isUserActive(user.lastUpdate);
+          const userPath = userPaths[user.id] || [userPosition];
+          const isSelected = selectedUserId === user.id;
+
+          // Validar coordenadas del usuario
+          if (isNaN(userPosition[0]) || isNaN(userPosition[1])) {
+            return null;
+          }
+
+          // En modo live, mostrar usuarios activos; en histórico, solo el seleccionado
+          const shouldShow = isLiveMode ? isActive : isSelected;
+
+          if (!shouldShow) return null;
+
+          // Crear el ícono circular personalizado
+          const circularIcon = createCircularIcon(deviceColor.hex, isActive);
+
+          return (
+            <div key={user.id}>
+              {/* Marcador del dispositivo con ícono circular */}
+              <Marker
+                position={userPosition}
+                icon={circularIcon}
+                opacity={isSelected || isLiveMode ? 1 : 0.7}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <strong style={{ color: deviceColor.hex }}>
+                      {user.name}
+                    </strong><br />
+                    <small>Device: {user.deviceId}</small><br />
+                    <small>Status: {isActive ? 'Active' : 'Inactive'}</small><br />
+                    <small>Last Update: {formatTimestamp(user.lastUpdate)}</small><br />
+                    <small>Lat: {parseFloat(user.latitude).toFixed(6)}</small><br />
+                    <small>Lng: {parseFloat(user.longitude).toFixed(6)}</small>
+                  </div>
+                </Popup>
+              </Marker>
+
+              {/* Ruta del dispositivo */}
+              {userPath.length > 1 && (
+                <>
+                  {isLiveMode ? (
+                    <Polyline
+                      pathOptions={{
+                        color: deviceColor.hex,
+                        weight: 4,
+                        opacity: 0.8
+                      }}
+                      positions={userPath}
+                    />
+                  ) : (
+                    <GradientPolyline path={userPath} deviceColor={deviceColor} />
+                  )}
+                </>
+              )}
+
+              {/* Puntos históricos clickeables (solo en modo histórico) */}
+              {!isLiveMode && userPath.map((point, pointIndex) => (
+                <CircleMarker
+                  key={`${user.id}-${pointIndex}`}
+                  center={point}
+                  radius={6}
+                  pathOptions={{
+                    color: deviceColor.hex,
+                    fillColor: deviceColor.light,
+                    fillOpacity: 0.6,
+                    weight: 2
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <strong style={{ color: deviceColor.hex }}>
+                        {user.name} - Point #{pointIndex + 1}
+                      </strong><br />
+                      <small>Lat: {point[0].toFixed(6)}</small><br />
+                      <small>Lng: {point[1].toFixed(6)}</small>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </div>
+          );
+        })}
+
+        <MapViewUpdater
+          userPaths={userPaths}
+          isLiveMode={isLiveMode}
+          users={users}
+          previousUsers={previousUsers}
+        />
+      </MapContainer>
+    </div>
   );
 };
 
-
-// --- Main Component IMPROVED ---
+// --- Componente Principal MEJORADO ---
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
   const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
+  const [isLiveMode, setIsLiveMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // --- NEW: State for view mode and area selection ---
-  const [viewMode, setViewMode] = useState('live'); // 'live', 'history', 'area'
-  const [isDrawingArea, setIsDrawingArea] = useState(false);
-  const [area, setArea] = useState(null); // { center: {lat, lng}, radius: meters }
-  const [selectedAreaDevices, setSelectedAreaDevices] = useState([]);
-  const [areaUserPaths, setAreaUserPaths] = useState({});
-
-  // States for multi-device management
+  // Estados para el manejo de múltiples dispositivos
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const mapRef = useRef();
 
-  // Function to get data from multiple devices IMPROVED
+  // Función para obtener datos de múltiples dispositivos MEJORADA
   const fetchUsersData = async () => {
     try {
       setError(null);
@@ -1398,22 +1344,22 @@ function App() {
           lastUpdate: device.timestamp_value || device.created_at
         }));
 
-        // Clean up inactive devices from the color manager
+        // Limpiar dispositivos inactivos del gestor de colores
         const activeDeviceIds = usersArray.map(user => user.id);
         deviceColorManager.cleanupInactiveDevices(activeDeviceIds);
 
-        // Save previous state before updating
+        // Guardar estado anterior antes de actualizar
         setPreviousUsers(users);
         setUsers(usersArray);
 
-        // More efficient path updates in live mode
-        if (viewMode === 'live') {
+        // Actualizar paths en modo live de forma más eficiente
+        if (isLiveMode) {
           setUserPaths(prevPaths => {
             const newPaths = { ...prevPaths };
             let hasChanges = false;
 
             usersArray.forEach(user => {
-              // Validate coordinates before adding
+              // Validar coordenadas antes de agregar
               const lat = parseFloat(user.latitude);
               const lng = parseFloat(user.longitude);
 
@@ -1421,7 +1367,7 @@ function App() {
                 const userPosition = [lat, lng];
                 const currentPath = newPaths[user.id] || [];
 
-                // Only add if it's a significantly different position
+                // Solo agregar si es una posición significativamente diferente
                 const lastPoint = currentPath[currentPath.length - 1];
                 if (!lastPoint ||
                   Math.abs(lastPoint[0] - userPosition[0]) > 0.00001 ||
@@ -1429,7 +1375,7 @@ function App() {
                   newPaths[user.id] = [...currentPath, userPosition];
                   hasChanges = true;
 
-                  // Limit history to avoid very large arrays
+                  // Limitar el historial para evitar arrays muy grandes
                   if (newPaths[user.id].length > 50) {
                     newPaths[user.id] = newPaths[user.id].slice(-25);
                   }
@@ -1441,8 +1387,8 @@ function App() {
           });
         }
 
-        // If no user is selected, select the first active one
-        // IMPROVED: Keep the current selection if the user still exists
+        // Si no hay usuario seleccionado, seleccionar el primero activo
+        // MEJORADO: Mantener la selección actual si el usuario sigue existiendo
         if (selectedUserId) {
           const selectedUserStillExists = usersArray.find(user => user.id === selectedUserId);
           if (!selectedUserStillExists && usersArray.length > 0) {
@@ -1464,7 +1410,7 @@ function App() {
     }
   };
 
-  // IMPROVED fallback function
+  // Función de fallback MEJORADA
   const fetchLatestLocationFallback = async () => {
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/location/latest`);
@@ -1510,19 +1456,19 @@ function App() {
     }
   };
 
-  // IMPROVED: Handle user selection without causing unnecessary automatic scrolling
+  // MEJORADO: Manejar selección de usuario sin causar scroll automático innecesario
   const handleUserSelect = (userId) => {
     console.log('User selected:', userId);
-    // Only update if it's different from the current selection
+    // Solo actualizar si es diferente al seleccionado actual
     if (selectedUserId !== userId) {
       setSelectedUserId(userId);
     }
   };
 
-  // Date search
+  // Búsqueda por fecha
   const handleDateSearch = async (searchData) => {
     setLoading(true);
-    setViewMode('history');
+    setIsLiveMode(false);
     setError(null);
 
     try {
@@ -1575,111 +1521,32 @@ function App() {
     }
   };
 
-  // --- NEW: Area search handler ---
-  const fetchAreaHistory = async (deviceIdsToFetch) => {
-    if (!area || deviceIdsToFetch.length === 0) {
-      // If no devices are selected, clear the paths for those devices
-      const newPaths = { ...areaUserPaths };
-      const deselected = Object.keys(newPaths).filter(id => !deviceIdsToFetch.includes(id));
-      deselected.forEach(id => delete newPaths[id]);
-      setAreaUserPaths(newPaths);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${config.API_BASE_URL}/api/location/area`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          center: area.center,
-          radius: area.radius,
-          deviceIds: deviceIdsToFetch
-        })
-      });
-      if (!response.ok) throw new Error('Failed to fetch area history');
-      const data = await response.json();
-
-      // We update only the paths of the selected devices
-      setAreaUserPaths(prevPaths => ({ ...prevPaths, ...data }));
-
-    } catch (err) {
-      console.error("Error fetching area history:", err);
-      setError("Could not load area history.");
-      setErrorType('connection');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // This effect triggers the search when selected devices change in area mode
-  useEffect(() => {
-    if (viewMode === 'area' && area) {
-      fetchAreaHistory(selectedAreaDevices);
-    }
-  }, [selectedAreaDevices, area, viewMode]);
-
-
   const handleReturnToLive = () => {
-    setViewMode('live');
+    setIsLiveMode(true);
     setUserPaths({});
-    setArea(null);
-    setAreaUserPaths({});
-    setSelectedAreaDevices([]);
-    setIsDrawingArea(false);
     setError(null);
     setErrorType(null);
     setLoading(true);
     setIsMobileMenuOpen(false);
-    setPreviousUsers(null); // Reset previous state
+    setPreviousUsers(null); // Resetear estado anterior
   };
 
-  // --- NEW: Handlers for Area Mode ---
-  const handleAreaDraw = (drawnArea) => {
-    setArea(drawnArea);
-    setIsDrawingArea(false); // Finish drawing
-    setAreaUserPaths({}); // Clear previous paths
-    setSelectedAreaDevices([]); // Clear selected devices
-  };
-
-  const handleEnterAreaMode = () => {
-    setViewMode('area');
-    setIsMobileMenuOpen(false);
-    setIsDrawingArea(true); // Activate drawing mode immediately
-    setArea(null);
-    setAreaUserPaths({});
-    setSelectedAreaDevices([]);
-    setError(null);
-  };
-
-  // Main polling effect IMPROVED
+  // Effect principal para polling MEJORADO
   useEffect(() => {
-    if (viewMode === 'live' && !isDateSearchModalOpen) {
-      // Initial fetch
+    if (isLiveMode && !isDateSearchModalOpen) {
+      // Fetch inicial
       fetchUsersData();
 
-      // Polling for live updates with optimized interval
+      // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
-        if (viewMode === 'live' && !isDateSearchModalOpen && document.visibilityState === 'visible') {
+        if (isLiveMode && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
         }
       }, config.POLLING_INTERVAL);
 
       return () => clearInterval(interval);
     }
-  }, [viewMode, isDateSearchModalOpen]); // Added viewMode to dependencies
-
-  const viewportHeight = useViewportHeight();
-  const mapHeight = isMobile
-    ? Math.max(viewportHeight - 200, 300)
-    : Math.max(viewportHeight - 180, 400);
-
-  const getInitialCenterPosition = () => {
-    if (!users || users.length === 0) return [37.7749, -122.4194]; // Fallback
-    const firstUser = users[0];
-    return [parseFloat(firstUser.latitude), parseFloat(firstUser.longitude)];
-  };
-
+  }, [isLiveMode, isDateSearchModalOpen, selectedUserId]); // Agregado selectedUserId para evitar efectos no deseados
 
   return (
     <div className="min-h-screen transition-all duration-500 dark">
@@ -1718,21 +1585,21 @@ function App() {
             <div className="flex items-center gap-4 p-1">
               <button
                 onClick={handleReturnToLive}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'live' ? 'pb-[5px] text-cyan-500 border-cyan-500' : 'pb-2 text-white/70 border-transparent hover:text-white'}`}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white border-transparent hover:text-white/50'
+                  }`}
               >
                 Live Tracking
               </button>
               <button
-                onClick={() => { setViewMode('history'); setIsDateSearchModalOpen(true); }}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'history' ? 'pb-[5px] text-cyan-500 border-cyan-500' : 'pb-2 text-white/70 border-transparent hover:text-white'}`}
+                onClick={() => setIsDateSearchModalOpen(true)}
+                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${!isLiveMode
+                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                  }`}
               >
                 History
-              </button>
-              <button
-                onClick={handleEnterAreaMode}
-                className={`flex items-center text-center cursor-pointer justify-center gap-2 w-48 text-lg transition-all duration-300 border-b-2 pt-2 ${viewMode === 'area' ? 'pb-[5px] text-cyan-500 border-cyan-500' : 'pb-2 text-white/70 border-transparent hover:text-white'}`}
-              >
-                History by Area
               </button>
             </div>
           )}
@@ -1741,26 +1608,44 @@ function App() {
         {/* Mobile Menu Dropdown */}
         {isMobile && isMobileMenuOpen && (
           <div className="mt-4 glassmorphism rounded-2xl p-4 animate-fade-in">
-            <button onClick={handleReturnToLive} className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${viewMode === 'live' ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+            <button
+              onClick={handleReturnToLive}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${isLiveMode
+                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+                : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
               Live Tracking
             </button>
-            <button onClick={() => { setViewMode('history'); setIsDateSearchModalOpen(true); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${viewMode === 'history' ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+            <button
+              onClick={() => {
+                setIsDateSearchModalOpen(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${!isLiveMode
+                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+                : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               History
-            </button>
-            <button onClick={handleEnterAreaMode} className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${viewMode === 'area' ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600' : 'bg-white/10 text-white hover:bg-white/20'}`}>
-              History by Area
             </button>
           </div>
         )}
       </header>
 
-      {/* Sidebar logic based on viewMode */}
+      {/* Sidebar solo en desktop */}
       {!isMobile && users.length > 0 && (
-        <>
-          {viewMode === 'live' && <DesktopUsersSidebar users={users} onUserSelect={handleUserSelect} selectedUserId={selectedUserId} />}
-          {viewMode === 'history' && <DesktopUsersSidebar users={users} onUserSelect={handleUserSelect} selectedUserId={selectedUserId} />}
-          {viewMode === 'area' && <AreaHistorySidebar users={users} selectedDevices={selectedAreaDevices} onDeviceSelectionChange={setSelectedAreaDevices} onClearArea={() => { setArea(null); setIsDrawingArea(true); setAreaUserPaths({}); setSelectedAreaDevices([]); }} />}
-        </>
+        <DesktopUsersSidebar
+          users={users}
+          onUserSelect={handleUserSelect}
+          selectedUserId={selectedUserId}
+        />
       )}
 
       {/* Main container */}
@@ -1786,39 +1671,15 @@ function App() {
           </div>
         ) : users.length > 0 ? (
           <>
-            <div className='relative glassmorphism-strong w-full mt-6 rounded-4xl backdrop-blur-lg shadow-lg p-4'>
-              {viewMode === 'area' && (
-                <button
-                  onClick={() => setIsDrawingArea(prev => !prev)}
-                  className={`absolute top-6 right-6 z-[1000] p-3 rounded-full transition-all text-white ${isDrawingArea ? 'bg-cyan-500 animate-pulse' : 'bg-black/40 hover:bg-black/60'}`}
-                  title={isDrawingArea ? 'Cancel Drawing' : 'Draw Area'}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </button>
-              )}
-              <MapContainer
-                ref={mapRef}
-                center={getInitialCenterPosition()}
-                zoom={13}
-                style={{ height: `${mapHeight}px`, width: '100%', borderRadius: '1rem', minHeight: '300px' }}
-              >
-                <LocationMap
-                  users={users}
-                  userPaths={userPaths}
-                  viewMode={viewMode}
-                  selectedUserId={selectedUserId}
-                  previousUsers={previousUsers}
-                  area={area}
-                  areaUserPaths={areaUserPaths}
-                  isDrawingArea={isDrawingArea}
-                  onAreaDraw={handleAreaDraw}
-                />
-              </MapContainer>
-            </div>
-            {/* Device info only on mobile */}
-            {isMobile && viewMode !== 'area' && (
+            <LocationMap
+              users={users}
+              userPaths={userPaths}
+              isLiveMode={isLiveMode}
+              selectedUserId={selectedUserId}
+              previousUsers={previousUsers}
+            />
+            {/* Información de dispositivos solo en móvil */}
+            {isMobile && (
               <MobileUsersInfo
                 users={users}
                 selectedUserId={selectedUserId}
