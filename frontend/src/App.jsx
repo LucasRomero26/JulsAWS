@@ -968,14 +968,6 @@ const DateSearchModal = ({ isOpen, onClose, onSearch, users }) => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados para History by Area
-  const [isAreaMode, setIsAreaMode] = useState(false);
-  const [isDrawingMode, setIsDrawingMode] = useState(false);
-  const [drawnCircle, setDrawnCircle] = useState(null);
-  const [isDeviceSelectionModalOpen, setIsDeviceSelectionModalOpen] = useState(false);
-  const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
-  const [areaDevicePaths, setAreaDevicePaths] = useState({});
-
   const isMobile = useMediaQuery('(max-width: 768px)');
   const filteredUsers = useFilteredUsers(users, searchTerm);
 
@@ -1685,6 +1677,7 @@ const LocationMap = ({ users, userPaths, isLiveMode, selectedUserId, previousUse
 };
 
 // --- Componente Principal MEJORADO ---
+// --- Componente Principal MEJORADO ---
 function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1698,6 +1691,14 @@ function App() {
   const [users, setUsers] = useState([]);
   const [previousUsers, setPreviousUsers] = useState(null);
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // Estados para History by Area
+  const [isAreaMode, setIsAreaMode] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawnCircle, setDrawnCircle] = useState(null);
+  const [isDeviceSelectionModalOpen, setIsDeviceSelectionModalOpen] = useState(false);
+  const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
+  const [areaDevicePaths, setAreaDevicePaths] = useState({});
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
