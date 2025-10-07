@@ -4,7 +4,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Configuración de la base de datos
+// Database configuration
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 5432,
@@ -16,7 +16,7 @@ const pool = new Pool({
   }
 });
 
-// Crear tabla actualizada si no existe
+// Create/update table if it doesn't exist
 async function createTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS location_data (
@@ -34,7 +34,7 @@ async function createTable() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     
-    -- Crear índices para optimizar consultas
+    -- Create indexes to optimize queries
     CREATE INDEX IF NOT EXISTS idx_location_device_id ON location_data(device_id);
     CREATE INDEX IF NOT EXISTS idx_location_device_timestamp ON location_data(device_id, timestamp_value DESC);
     CREATE INDEX IF NOT EXISTS idx_location_timestamp ON location_data(timestamp_value DESC);
@@ -42,13 +42,13 @@ async function createTable() {
   
   try {
     await pool.query(query);
-    console.log('Tabla location_data verificada/creada con soporte para múltiples dispositivos');
+    console.log('Table location_data verified/created with support for multiple devices');
   } catch (error) {
-    console.error('Error creando tabla:', error);
+    console.error('Error creating table:', error);
   }
 }
 
-// Servidor UDP actualizado para manejar device_id
+// UDP Server updated to handle device_id
 const udpServer = dgram.createSocket('udp4');
 
 udpServer.on('error', (err) => {
@@ -57,14 +57,14 @@ udpServer.on('error', (err) => {
 });
 
 udpServer.on('message', async (msg, rinfo) => {
-  console.log(`UDP mensaje recibido de ${rinfo.address}:${rinfo.port}`);
+  console.log(`UDP message received from ${rinfo.address}:${rinfo.port}`);
   
   try {
-    // Parsear el mensaje JSON
+    // Parse the JSON message
     const data = JSON.parse(msg.toString());
-    console.log('Datos recibidos:', JSON.stringify(data, null, 2));
+    console.log('Received data:', JSON.stringify(data, null, 2));
     
-    // Insertar en la base de datos CON CAMPOS DE DISPOSITIVO
+    // Insert into the database WITH DEVICE FIELDS
     const query = `
       INSERT INTO location_data 
       (latitude, longitude, timestamp_value, accuracy, altitude, speed, provider, device_id, device_name, device_type)
@@ -86,24 +86,24 @@ udpServer.on('message', async (msg, rinfo) => {
     ];
     
     const result = await pool.query(query, values);
-    console.log(`Datos insertados para dispositivo ${data.device_id || 'unknown'}:`, result.rows[0].id);
+    console.log(`Data inserted for device ${data.device_id || 'unknown'}:`, result.rows[0].id);
     
   } catch (error) {
-    console.error('Error procesando mensaje UDP:', error);
+    console.error('Error processing UDP message:', error);
   }
 });
 
 udpServer.on('listening', () => {
   const address = udpServer.address();
-  console.log(`UDP Server escuchando en ${address.address}:${address.port}`);
+  console.log(`UDP Server listening on ${address.address}:${address.port}`);
 });
 
-// Servidor HTTP/API REST
+// HTTP/API REST Server
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Endpoint para obtener el último registro (actualizado para incluir device info)
+// Endpoint to get the last record (updated to include device info)
 app.get('/api/location/latest', async (req, res) => {
   try {
     const query = `
@@ -116,17 +116,17 @@ app.get('/api/location/latest', async (req, res) => {
     const result = await pool.query(query);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No hay datos disponibles' });
+      return res.status(404).json({ message: 'No data available' });
     }
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error obteniendo último registro:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting last record:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// NUEVO: Endpoint para obtener todos los dispositivos activos
+// NEW: Endpoint to get all active devices
 app.get('/api/devices/all', async (req, res) => {
   try {
     const query = `
@@ -146,12 +146,12 @@ app.get('/api/devices/all', async (req, res) => {
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo dispositivos:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting devices:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// NUEVO: Endpoint para obtener la última ubicación de cada dispositivo
+// NEW: Endpoint to get the last location of each device
 app.get('/api/devices/latest-locations', async (req, res) => {
   try {
     const query = `
@@ -184,12 +184,12 @@ app.get('/api/devices/latest-locations', async (req, res) => {
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo últimas ubicaciones:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting latest locations:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// NUEVO: Endpoint para obtener el último registro de un dispositivo específico
+// NEW: Endpoint to get the last record of a specific device
 app.get('/api/location/device/:deviceId/latest', async (req, res) => {
   try {
     const { deviceId } = req.params;
@@ -204,17 +204,17 @@ app.get('/api/location/device/:deviceId/latest', async (req, res) => {
     const result = await pool.query(query, [deviceId]);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'No hay datos disponibles para este dispositivo' });
+      return res.status(404).json({ message: 'No data available for this device' });
     }
     
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error obteniendo último registro del dispositivo:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting last record of the device:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// NUEVO: Endpoint para obtener el historial de un dispositivo específico
+// NEW: Endpoint to get the history of a specific device
 app.get('/api/location/device/:deviceId/history', async (req, res) => {
   try {
     const { deviceId } = req.params;
@@ -228,7 +228,7 @@ app.get('/api/location/device/:deviceId/history', async (req, res) => {
     `;
     const values = [deviceId];
     
-    // Agregar filtros de fecha si se proporcionan
+    // Add date filters if provided
     if (startDate) {
       query += ` AND timestamp_value >= $${values.length + 1}`;
       values.push(new Date(startDate).getTime());
@@ -245,12 +245,12 @@ app.get('/api/location/device/:deviceId/history', async (req, res) => {
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo historial de dispositivo:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting device history:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Endpoint para obtener todos los registros (actualizado)
+// Endpoint to get all records (updated)
 app.get('/api/location/all', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 100;
@@ -272,21 +272,21 @@ app.get('/api/location/all', async (req, res) => {
     const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo registros:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting records:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Endpoint para obtener registros por rango de fechas (actualizado)
+// Endpoint to get records by date range (updated)
 app.get('/api/location/range', async (req, res) => {
   const { startDate, endDate, deviceId } = req.query;
 
   if (!startDate || !endDate) {
-    return res.status(400).json({ message: 'Los parámetros startDate y endDate son requeridos' });
+    return res.status(400).json({ message: 'The startDate and endDate parameters are required' });
   }
 
   try {
-    // Los timestamps vienen en formato ISO 8601, los convertimos a milisegundos
+    // Timestamps come in ISO 8601 format, we convert them to milliseconds
     const startTime = new Date(startDate).getTime();
     const endTime = new Date(endDate).getTime();
 
@@ -308,44 +308,102 @@ app.get('/api/location/range', async (req, res) => {
     
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo registros por rango:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error getting records by range:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// --- NEW ENDPOINT FOR AREA SEARCH ---
+app.post('/api/location/area', async (req, res) => {
+    const { center, radius, deviceIds } = req.body;
+
+    if (!center || !radius || !deviceIds || !Array.isArray(deviceIds)) {
+        return res.status(400).json({ message: 'Parameters center, radius, and deviceIds (array) are required' });
+    }
+    if (deviceIds.length === 0) {
+        return res.json({}); // Return empty object if no devices are selected
+    }
+
+    try {
+        // SQL query that calculates the distance on a plane. It's a good approximation for small distances.
+        // Earth radius in kilometers = 6371
+        const query = `
+            SELECT 
+                device_id, latitude, longitude, timestamp_value 
+            FROM 
+                location_data
+            WHERE
+                device_id = ANY($1) AND
+                (
+                    6371 * 2 * ASIN(
+                        SQRT(
+                            POWER(SIN(RADIANS(latitude - $2) / 2), 2) +
+                            COS(RADIANS($2)) * COS(RADIANS(latitude)) *
+                            POWER(SIN(RADIANS(longitude - $3) / 2), 2)
+                        )
+                    )
+                ) <= $4
+            ORDER BY 
+                device_id, timestamp_value ASC;
+        `;
+
+        const values = [deviceIds, center.lat, center.lng, radius / 1000]; // Radius is converted from meters to km
+
+        const result = await pool.query(query, values);
+        
+        // Group results by device_id
+        const pathsByDevice = result.rows.reduce((acc, row) => {
+            const { device_id, latitude, longitude } = row;
+            if (!acc[device_id]) {
+                acc[device_id] = [];
+            }
+            acc[device_id].push([parseFloat(latitude), parseFloat(longitude)]);
+            return acc;
+        }, {});
+
+        res.json(pathsByDevice);
+
+    } catch (error) {
+        console.error('Error getting records by area:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Inicializar servidores
+// Initialize servers
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 const UDP_PORT = process.env.UDP_PORT || 6001;
 
 async function start() {
   try {
-    // Verificar conexión a BD
+    // Verify DB connection
     await pool.query('SELECT NOW()');
-    console.log('Conectado a PostgreSQL');
+    console.log('Connected to PostgreSQL');
     
-    // Crear tabla
+    // Create table
     await createTable();
     
-    // Iniciar servidor UDP
+    // Start UDP server
     udpServer.bind(UDP_PORT);
     
-    // Iniciar servidor HTTP
+    // Start HTTP server
     app.listen(HTTP_PORT, '0.0.0.0', () => {
-      console.log(`HTTP API escuchando en puerto ${HTTP_PORT}`);
-      console.log('Nuevos endpoints disponibles:');
-      console.log('  GET /api/devices/all - Lista todos los dispositivos');
-      console.log('  GET /api/devices/latest-locations - Últimas ubicaciones de cada dispositivo');
-      console.log('  GET /api/location/device/:deviceId/latest - Última ubicación de un dispositivo');
-      console.log('  GET /api/location/device/:deviceId/history - Historial de un dispositivo');
+      console.log(`HTTP API listening on port ${HTTP_PORT}`);
+      console.log('New endpoints available:');
+      console.log('  GET /api/devices/all - List all devices');
+      console.log('  GET /api/devices/latest-locations - Latest locations of each device');
+      console.log('  GET /api/location/device/:deviceId/latest - Last location of a device');
+      console.log('  GET /api/location/device/:deviceId/history - History of a device');
+      console.log('  POST /api/location/area - History of devices within a geographic area');
     });
     
   } catch (error) {
-    console.error('Error iniciando servidor:', error);
+    console.error('Error starting server:', error);
     process.exit(1);
   }
 }
