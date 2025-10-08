@@ -295,14 +295,28 @@ function App() {
       console.log('Fetching area data:', url);
       const response = await fetch(url);
 
+      console.log('Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        let errorData;
+        const contentType = response.headers.get('content-type');
+        console.log('Error response content-type:', contentType);
+        
+        try {
+          const responseText = await response.text();
+          console.log('Error response text:', responseText);
+          errorData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        
         console.error('Backend error response:', errorData);
-        throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: Error fetching area history.`);
+        throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${errorData.error || 'Error fetching area history'}`);
       }
 
       const areaData = await response.json();
-      console.log('Area data received:', areaData);
+      console.log('Area data received:', areaData.length, 'points');
 
       if (areaData.length > 0) {
         const newPath = areaData
@@ -360,14 +374,28 @@ function App() {
         console.log('Fetching area data for toggle:', url);
         const response = await fetch(url);
 
+        console.log('Response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          let errorData;
+          const contentType = response.headers.get('content-type');
+          console.log('Error response content-type:', contentType);
+          
+          try {
+            const responseText = await response.text();
+            console.log('Error response text:', responseText);
+            errorData = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+          }
+          
           console.error('Backend error response:', errorData);
-          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: Error fetching area history.`);
+          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${errorData.error || 'Error fetching area history'}`);
         }
 
         const areaData = await response.json();
-        console.log('Area data received for toggle:', areaData);
+        console.log('Area data received for toggle:', areaData.length, 'points');
 
         if (areaData.length > 0) {
           const newPath = areaData
