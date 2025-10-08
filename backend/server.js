@@ -332,6 +332,8 @@ app.get('/api/location/area', async (req, res) => {
       return res.status(400).json({ message: 'Parámetros inválidos' });
     }
 
+    console.log(`Area query request - Center: (${centerLat}, ${centerLng}), Radius: ${radiusMeters}m, Device: ${deviceId || 'all'}`);
+
     // Usar la fórmula de Haversine para calcular distancias
     // Esta query usa una aproximación simple basada en grados para filtrar primero,
     // luego calcula la distancia exacta usando una subquery
@@ -340,16 +342,16 @@ app.get('/api/location/area', async (req, res) => {
     const latDelta = (radiusMeters / 111000); // ~111km per degree latitude
     const lngDelta = (radiusMeters / (111000 * Math.cos(centerLat * Math.PI / 180)));
     
-    let whereClause = `
-      WHERE latitude BETWEEN $3 AND $4
-      AND longitude BETWEEN $5 AND $6
-    `;
     const values = [centerLat, centerLng, centerLat - latDelta, centerLat + latDelta, centerLng - lngDelta, centerLng + lngDelta];
     
+    let deviceFilter = '';
     if (deviceId) {
-      whereClause += ` AND device_id = $${values.length + 1}`;
       values.push(deviceId);
+      deviceFilter = ` AND device_id = $${values.length}`;
     }
+    
+    values.push(radiusMeters);
+    const radiusParamIndex = values.length;
     
     const query = `
       SELECT 
@@ -378,13 +380,15 @@ app.get('/api/location/area', async (req, res) => {
             )
           ) AS distance
         FROM location_data
-        ${whereClause}
+        WHERE latitude BETWEEN $3 AND $4
+        AND longitude BETWEEN $5 AND $6
+        ${deviceFilter}
       ) AS subquery
-      WHERE distance <= $${values.length + 1}
+      WHERE distance <= $${radiusParamIndex}
       ORDER BY timestamp_value ASC;
     `;
-    values.push(radiusMeters);
     
+    console.log('Executing query with values:', values);
     const result = await pool.query(query, values);
     
     console.log(`Found ${result.rows.length} locations within ${radiusMeters}m radius for device ${deviceId || 'all'}`);
@@ -392,7 +396,12 @@ app.get('/api/location/area', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error obteniendo ubicaciones por área:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

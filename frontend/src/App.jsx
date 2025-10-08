@@ -292,13 +292,17 @@ function App() {
     try {
       const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
       
+      console.log('Fetching area data:', url);
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error('Error fetching area history.');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Backend error response:', errorData);
+        throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: Error fetching area history.`);
       }
 
       const areaData = await response.json();
+      console.log('Area data received:', areaData);
 
       if (areaData.length > 0) {
         const newPath = areaData
@@ -353,13 +357,17 @@ function App() {
       try {
         const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
         
+        console.log('Fetching area data for toggle:', url);
         const response = await fetch(url);
 
         if (!response.ok) {
-          throw new Error('Error fetching area history.');
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('Backend error response:', errorData);
+          throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: Error fetching area history.`);
         }
 
         const areaData = await response.json();
+        console.log('Area data received for toggle:', areaData);
 
         if (areaData.length > 0) {
           const newPath = areaData
