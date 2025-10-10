@@ -94,6 +94,7 @@ const CircleDrawer = ({ isDrawingMode, onCircleComplete, drawnCircle }) => {
         center={drawnCircle.center}
         radius={drawnCircle.radius}
         pathOptions={{ color: '#0092b8', fillColor: '#0092b8', fillOpacity: 0.15, weight: 3 }}
+        interactive={false}
       />
     );
   }
