@@ -265,9 +265,10 @@ const LocationMap = ({
                           >
                             <Popup>
                               <div className="text-center">
-                                <strong style={{ color: routeColor }}>
-                                  {user.name} - Route {routeIndex + 1} Start
+                                <strong style={{ color: '#00ff00' }}>
+                                  ▶ START - {user.name}
                                 </strong><br />
+                                <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
                                 <small>{route.startTimestamp}</small><br />
                                 <small>Lat: {route.coordinates[0][0].toFixed(6)}</small><br />
                                 <small>Lng: {route.coordinates[0][1].toFixed(6)}</small>
@@ -290,9 +291,10 @@ const LocationMap = ({
                           >
                             <Popup>
                               <div className="text-center">
-                                <strong style={{ color: routeColor }}>
-                                  {user.name} - Route {routeIndex + 1} End
+                                <strong style={{ color: '#ff0000' }}>
+                                  ■ END - {user.name}
                                 </strong><br />
+                                <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
                                 <small>{route.endTimestamp}</small><br />
                                 <small>Lat: {route.coordinates[route.coordinates.length - 1][0].toFixed(6)}</small><br />
                                 <small>Lng: {route.coordinates[route.coordinates.length - 1][1].toFixed(6)}</small>
@@ -302,30 +304,42 @@ const LocationMap = ({
                         )}
                         
                         {/* Intermediate points */}
-                        {route.coordinates.slice(1, -1).map((point, pointIndex) => (
-                          <CircleMarker
-                            key={`${route.id}-${pointIndex}`}
-                            center={point}
-                            radius={6}
-                            pathOptions={{
-                              color: routeColor,
-                              fillColor: routeColor,
-                              fillOpacity: 0.6,
-                              weight: 2
-                            }}
-                          >
-                            <Popup>
-                              <div className="text-center">
-                                <strong style={{ color: routeColor }}>
-                                  {user.name} - Route {routeIndex + 1}<br/>
-                                  Point #{pointIndex + 2}
-                                </strong><br />
-                                <small>Lat: {point[0].toFixed(6)}</small><br />
-                                <small>Lng: {point[1].toFixed(6)}</small>
-                              </div>
-                            </Popup>
-                          </CircleMarker>
-                        ))}
+                        {route.coordinates.slice(1, -1).map((point, pointIndex) => {
+                          // Calculate the actual point number in the complete route
+                          const actualPointNumber = pointIndex + 2;
+                          // Get timestamp for this point if available
+                          const pointData = route.points[pointIndex + 1];
+                          
+                          return (
+                            <CircleMarker
+                              key={`${route.id}-${pointIndex}`}
+                              center={point}
+                              radius={6}
+                              pathOptions={{
+                                color: routeColor,
+                                fillColor: routeColor,
+                                fillOpacity: 0.6,
+                                weight: 2
+                              }}
+                            >
+                              <Popup>
+                                <div className="text-center">
+                                  <strong style={{ color: routeColor }}>
+                                    {user.name} - Point #{actualPointNumber}
+                                  </strong><br />
+                                  <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
+                                  {pointData && pointData.timestamp_value && (
+                                    <>
+                                      <small>{formatTimestamp(pointData.timestamp_value)}</small><br />
+                                    </>
+                                  )}
+                                  <small>Lat: {point[0].toFixed(6)}</small><br />
+                                  <small>Lng: {point[1].toFixed(6)}</small>
+                                </div>
+                              </Popup>
+                            </CircleMarker>
+                          );
+                        })}
                       </div>
                     );
                   })}
