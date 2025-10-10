@@ -22,6 +22,10 @@ import MobileUsersInfo from './components/MobileUsersInfo';
 import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
+import RouteSelectionModal from './components/RouteSelectionModal';
+
+// --- Importaciones de utilidades de rutas ---
+import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
 function App() {
@@ -43,6 +47,9 @@ function App() {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawnCircle, setDrawnCircle] = useState(null);
   const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
+  const [deviceRoutes, setDeviceRoutes] = useState({}); // Store all routes for each device
+  const [selectedRoutes, setSelectedRoutes] = useState({}); // Store selected route IDs for each device
+  const [isRouteSelectionModalOpen, setIsRouteSelectionModalOpen] = useState(false);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -261,6 +268,9 @@ function App() {
     setDrawnCircle(null);
     setIsDrawingMode(false);
     setSelectedDevicesForArea([]);
+    setDeviceRoutes({});
+    setSelectedRoutes({});
+    setIsRouteSelectionModalOpen(false);
   };
 
   // Handle area history mode
@@ -273,6 +283,9 @@ function App() {
     setIsDrawingMode(false);
     setDrawnCircle(null);
     setSelectedDevicesForArea([]);
+    setDeviceRoutes({});
+    setSelectedRoutes({});
+    setIsRouteSelectionModalOpen(false);
   };
 
   // Handle circle complete - open device selection modal
@@ -319,23 +332,30 @@ function App() {
       console.log('Area data received:', areaData.length, 'points');
 
       if (areaData.length > 0) {
-        const newPath = areaData
-          .map(point => {
-            const lat = parseFloat(point.latitude);
-            const lng = parseFloat(point.longitude);
+        // Split into routes based on 10-minute gaps
+        const routes = splitIntoRoutes(areaData, 10);
+        console.log(`Found ${routes.length} route(s) for device ${deviceId}`);
 
-            if (!isNaN(lat) && !isNaN(lng)) {
-              return [lat, lng];
-            }
-            return null;
-          })
-          .filter(point => point !== null);
+        // Calculate distance for each route
+        routes.forEach(route => {
+          route.distance = calculateRouteDistance(route.coordinates);
+        });
 
-        if (newPath.length > 0) {
-          setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
+        if (routes.length > 0) {
+          // Store routes for this device
+          setDeviceRoutes(prev => ({ ...prev, [deviceId]: routes }));
+          
+          // Auto-select all routes for this device
+          const allRouteIds = routes.map(r => r.id);
+          setSelectedRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
+          
+          // Add device to selected devices
           setSelectedDevicesForArea(prev => [...prev, deviceId]);
+          
+          // Store the first route's path for backward compatibility
+          setUserPaths(prev => ({ ...prev, [deviceId]: routes[0].coordinates }));
         } else {
-          setError(`No locations found for this device in the selected area.`);
+          setError(`No valid routes found for this device in the selected area.`);
           setErrorType('no-data');
         }
       } else {
@@ -360,6 +380,16 @@ function App() {
         const newPaths = { ...prev };
         delete newPaths[deviceId];
         return newPaths;
+      });
+      setDeviceRoutes(prev => {
+        const newRoutes = { ...prev };
+        delete newRoutes[deviceId];
+        return newRoutes;
+      });
+      setSelectedRoutes(prev => {
+        const newSelected = { ...prev };
+        delete newSelected[deviceId];
+        return newSelected;
       });
     } else {
       // Add device - fetch its data
@@ -398,21 +428,28 @@ function App() {
         console.log('Area data received for toggle:', areaData.length, 'points');
 
         if (areaData.length > 0) {
-          const newPath = areaData
-            .map(point => {
-              const lat = parseFloat(point.latitude);
-              const lng = parseFloat(point.longitude);
+          // Split into routes based on 10-minute gaps
+          const routes = splitIntoRoutes(areaData, 10);
+          console.log(`Found ${routes.length} route(s) for device ${deviceId}`);
 
-              if (!isNaN(lat) && !isNaN(lng)) {
-                return [lat, lng];
-              }
-              return null;
-            })
-            .filter(point => point !== null);
+          // Calculate distance for each route
+          routes.forEach(route => {
+            route.distance = calculateRouteDistance(route.coordinates);
+          });
 
-          if (newPath.length > 0) {
-            setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
+          if (routes.length > 0) {
+            // Store routes for this device
+            setDeviceRoutes(prev => ({ ...prev, [deviceId]: routes }));
+            
+            // Auto-select all routes for this device
+            const allRouteIds = routes.map(r => r.id);
+            setSelectedRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
+            
+            // Add device to selected devices
             setSelectedDevicesForArea(prev => [...prev, deviceId]);
+            
+            // Store the first route's path for backward compatibility
+            setUserPaths(prev => ({ ...prev, [deviceId]: routes[0].coordinates }));
           }
         }
       } catch (err) {
@@ -421,6 +458,18 @@ function App() {
         setLoading(false);
       }
     }
+  };
+
+  // Handle route toggle (select/deselect individual routes)
+  const handleRouteToggle = (deviceId, routeId) => {
+    setSelectedRoutes(prev => {
+      const deviceRoutes = prev[deviceId] || [];
+      const newDeviceRoutes = deviceRoutes.includes(routeId)
+        ? deviceRoutes.filter(id => id !== routeId)
+        : [...deviceRoutes, routeId];
+      
+      return { ...prev, [deviceId]: newDeviceRoutes };
+    });
   };
 
   // Effect principal para polling MEJORADO
@@ -534,20 +583,40 @@ function App() {
 
             {/* Button to redraw circle if one exists */}
             {mode === 'areaHistory' && drawnCircle && (
-              <button
-                onClick={() => {
-                  setDrawnCircle(null);
-                  setSelectedDevicesForArea([]);
-                  setUserPaths({});
-                  setIsDrawingMode(true);
-                }}
-                className="fixed top-32 right-8 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-2xl transition-all duration-300"
-                title="Redraw area"
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    setDrawnCircle(null);
+                    setSelectedDevicesForArea([]);
+                    setUserPaths({});
+                    setDeviceRoutes({});
+                    setSelectedRoutes({});
+                    setIsDrawingMode(true);
+                  }}
+                  className="fixed top-32 right-8 z-50 p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-2xl transition-all duration-300"
+                  title="Redraw area"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+
+                {/* Button to open route selection modal */}
+                {Object.keys(deviceRoutes).length > 0 && (
+                  <button
+                    onClick={() => setIsRouteSelectionModalOpen(true)}
+                    className="fixed top-48 right-8 z-50 p-4 rounded-full bg-cyan-600 hover:bg-cyan-700 backdrop-blur-lg shadow-2xl transition-all duration-300"
+                    title="Select routes to display"
+                  >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span className="absolute -bottom-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {Object.values(selectedRoutes).reduce((total, routes) => total + routes.length, 0)}
+                    </span>
+                  </button>
+                )}
+              </>
             )}
 
             <LocationMap
@@ -561,6 +630,8 @@ function App() {
               onCircleComplete={handleCircleComplete}
               drawnCircle={drawnCircle}
               selectedDevicesForArea={selectedDevicesForArea}
+              deviceRoutes={deviceRoutes}
+              selectedRoutes={selectedRoutes}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && mode !== 'areaHistory' && (
@@ -602,6 +673,14 @@ function App() {
         onDeviceSelect={handleDeviceSelectForArea}
         users={users}
         areaInfo={drawnCircle}
+      />
+
+      <RouteSelectionModal
+        isOpen={isRouteSelectionModalOpen}
+        onClose={() => setIsRouteSelectionModalOpen(false)}
+        deviceRoutes={deviceRoutes}
+        selectedRoutes={selectedRoutes}
+        onRouteToggle={handleRouteToggle}
       />
     </div>
   );

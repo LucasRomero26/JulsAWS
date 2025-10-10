@@ -355,21 +355,25 @@ app.get('/api/location/area', async (req, res) => {
     
     const query = `
       SELECT 
+        id,
         latitude, 
         longitude, 
         timestamp_value, 
         device_id, 
         device_name, 
         device_type,
-        distance
+        distance,
+        created_at
       FROM (
         SELECT 
+          id,
           latitude, 
           longitude, 
           timestamp_value, 
           device_id, 
           device_name, 
           device_type,
+          created_at,
           (
             6371000 * acos(
               LEAST(1.0, GREATEST(-1.0,
