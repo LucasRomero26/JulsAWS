@@ -211,8 +211,17 @@ const LocationMap = ({
                       {user.name}
                     </strong><br />
                     <small>Device: {user.deviceId}</small><br />
-                    <small>Status: {isActive ? 'Active' : 'Inactive'}</small><br />
-                    <small>Last Update: {formatTimestamp(user.lastUpdate)}</small><br />
+                    {mode === 'areaHistory' && deviceRoutes[user.id] ? (
+                      <>
+                        <small>Routes in area: {deviceRoutes[user.id].length}</small><br />
+                        <small>Selected: {selectedRoutes[user.id]?.length || 0}</small><br />
+                      </>
+                    ) : (
+                      <>
+                        <small>Status: {isActive ? 'Active' : 'Inactive'}</small><br />
+                        <small>Last Update: {formatTimestamp(user.lastUpdate)}</small><br />
+                      </>
+                    )}
                     <small>Lat: {parseFloat(user.latitude).toFixed(6)}</small><br />
                     <small>Lng: {parseFloat(user.longitude).toFixed(6)}</small>
                   </div>
