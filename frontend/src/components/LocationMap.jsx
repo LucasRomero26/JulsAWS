@@ -171,6 +171,7 @@ const LocationMap = ({
           const userPosition = [parseFloat(user.latitude), parseFloat(user.longitude)];
           const deviceColor = getDeviceColor(user.id);
           const isActive = isUserActive(user.lastUpdate);
+          const userPath = userPaths[user.id] || [userPosition];
           const isSelected = selectedUserId === user.id;
 
           // Validar coordenadas del usuario
@@ -192,110 +193,6 @@ const LocationMap = ({
 
           // Crear el ícono circular personalizado
           const circularIcon = createCircularIcon(deviceColor.hex, isActive);
-
-          // For areaHistory mode with multiple routes, handle differently
-          if (mode === 'areaHistory') {
-            // Get all route paths for this device
-            const deviceRoutePaths = Object.keys(userPaths)
-              .filter(key => key.startsWith(`${user.id}_route_`))
-              .map(key => ({
-                key,
-                ...userPaths[key]
-              }));
-
-            if (deviceRoutePaths.length === 0) return null;
-
-            return (
-              <div key={user.id}>
-                {/* Marcador del dispositivo con ícono circular */}
-                <Marker
-                  position={userPosition}
-                  icon={circularIcon}
-                  opacity={0.7}
-                >
-                  <Popup>
-                    <div className="text-center">
-                      <strong style={{ color: deviceColor.hex }}>
-                        {user.name}
-                      </strong><br />
-                      <small>Device: {user.deviceId}</small><br />
-                      <small>Routes: {deviceRoutePaths.length}</small><br />
-                      <small>Lat: {parseFloat(user.latitude).toFixed(6)}</small><br />
-                      <small>Lng: {parseFloat(user.longitude).toFixed(6)}</small>
-                    </div>
-                  </Popup>
-                </Marker>
-
-                {/* Render each route with its specific color */}
-                {deviceRoutePaths.map((routeData, routeIndex) => {
-                  const routePath = routeData.path;
-                  const routeColor = routeData.color || deviceColor.hex;
-
-                  if (!routePath || routePath.length < 2) return null;
-
-                  return (
-                    <div key={routeData.key}>
-                      {/* Route polyline with specific color */}
-                      <Polyline
-                        pathOptions={{
-                          color: routeColor,
-                          weight: 4,
-                          opacity: 0.8
-                        }}
-                        positions={routePath}
-                      />
-
-                      {/* Start and end markers for each route */}
-                      <CircleMarker
-                        center={routePath[0]}
-                        radius={8}
-                        pathOptions={{
-                          color: '#00ff00',
-                          fillColor: '#00ff00',
-                          fillOpacity: 0.8,
-                          weight: 2
-                        }}
-                      >
-                        <Popup>
-                          <div className="text-center">
-                            <strong style={{ color: routeColor }}>
-                              {user.name} - Route {routeIndex + 1} Start
-                            </strong><br />
-                            <small>Lat: {routePath[0][0].toFixed(6)}</small><br />
-                            <small>Lng: {routePath[0][1].toFixed(6)}</small>
-                          </div>
-                        </Popup>
-                      </CircleMarker>
-
-                      <CircleMarker
-                        center={routePath[routePath.length - 1]}
-                        radius={8}
-                        pathOptions={{
-                          color: '#ff0000',
-                          fillColor: '#ff0000',
-                          fillOpacity: 0.8,
-                          weight: 2
-                        }}
-                      >
-                        <Popup>
-                          <div className="text-center">
-                            <strong style={{ color: routeColor }}>
-                              {user.name} - Route {routeIndex + 1} End
-                            </strong><br />
-                            <small>Lat: {routePath[routePath.length - 1][0].toFixed(6)}</small><br />
-                            <small>Lng: {routePath[routePath.length - 1][1].toFixed(6)}</small>
-                          </div>
-                        </Popup>
-                      </CircleMarker>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          }
-
-          // For live and history modes (existing behavior)
-          const userPath = userPaths[user.id] || [userPosition];
 
           return (
             <div key={user.id}>
@@ -337,8 +234,8 @@ const LocationMap = ({
                 </>
               )}
 
-              {/* Puntos históricos clickeables (solo en modo histórico) */}
-              {mode === 'history' && userPath.map((point, pointIndex) => (
+              {/* Puntos históricos clickeables (solo en modo histórico y area history) */}
+              {(mode === 'history' || mode === 'areaHistory') && userPath.map((point, pointIndex) => (
                 <CircleMarker
                   key={`${user.id}-${pointIndex}`}
                   center={point}

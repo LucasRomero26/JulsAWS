@@ -11,5 +11,4 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LocationMap } from './LocationMap';
 export { default as MapViewUpdater } from './MapViewUpdater';
 export { default as MobileUsersInfo } from './MobileUsersInfo';
-export { default as RoutePanel } from './RoutePanel';
 export { default as SearchBar } from './SearchBar';

@@ -2,4 +2,3 @@
 export { deviceColorManager, getDeviceColor } from './colorManager';
 export { formatTimestamp, isUserActive } from './dateUtils';
 export { createCircularIcon, interpolateColor } from './mapUtils';
-export { groupPointsIntoRoutes, generateRouteColor, formatDuration, formatRouteDateTime } from './routeGrouping';

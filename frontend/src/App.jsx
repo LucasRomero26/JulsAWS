@@ -5,9 +5,8 @@ import './App.css';
 import { config } from './config/appConfig';
 
 // --- Importaciones de utilidades ---
-import { deviceColorManager, getDeviceColor } from './utils/colorManager';
+import { deviceColorManager } from './utils/colorManager';
 import { isUserActive } from './utils/dateUtils';
-import { groupPointsIntoRoutes, generateRouteColor } from './utils/routeGrouping';
 
 // --- Importaciones de hooks ---
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -23,7 +22,6 @@ import MobileUsersInfo from './components/MobileUsersInfo';
 import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
-import RoutePanel from './components/RoutePanel';
 
 // --- Componente Principal ---
 function App() {
@@ -45,11 +43,6 @@ function App() {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawnCircle, setDrawnCircle] = useState(null);
   const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
-  
-  // Nuevos estados para rutas agrupadas
-  const [deviceRoutes, setDeviceRoutes] = useState({}); // { deviceId: [routes] }
-  const [visibleRoutes, setVisibleRoutes] = useState({}); // { deviceId: [routeIds] }
-  const [activeRoutePanelDevice, setActiveRoutePanelDevice] = useState(null); // deviceId showing panel
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -289,7 +282,7 @@ function App() {
     setIsAreaSearchModalOpen(true);
   };
 
-  // Handle device selection for area - Updated to group routes
+  // Handle device selection for area
   const handleDeviceSelectForArea = async (deviceId) => {
     if (!drawnCircle) return;
 
@@ -326,53 +319,23 @@ function App() {
       console.log('Area data received:', areaData.length, 'points');
 
       if (areaData.length > 0) {
-        // Group points into separate routes based on time gaps
-        const routes = groupPointsIntoRoutes(areaData, 30); // 30 minutes gap
-        console.log(`Grouped into ${routes.length} routes for device ${deviceId}`);
-        
-        if (routes.length > 0) {
-          // Get device base color
-          const baseColor = getDeviceColor(deviceId).hex;
-          
-          // Assign colors to each route
-          const routesWithColors = routes.map((route, index) => ({
-            ...route,
-            color: generateRouteColor(baseColor, index, routes.length),
-          }));
-          
-          // Store routes for this device
-          setDeviceRoutes(prev => ({ ...prev, [deviceId]: routesWithColors }));
-          
-          // By default, show all routes
-          const allRouteIds = routesWithColors.map(r => r.id);
-          setVisibleRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
-          
-          // Build paths for all routes
-          const combinedPaths = {};
-          routesWithColors.forEach(route => {
-            const routePath = route.points
-              .map(point => {
-                const lat = parseFloat(point.latitude);
-                const lng = parseFloat(point.longitude);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                  return [lat, lng];
-                }
-                return null;
-              })
-              .filter(point => point !== null);
-            
-            if (routePath.length > 0) {
-              combinedPaths[`${deviceId}_${route.id}`] = { path: routePath, color: route.color };
+        const newPath = areaData
+          .map(point => {
+            const lat = parseFloat(point.latitude);
+            const lng = parseFloat(point.longitude);
+
+            if (!isNaN(lat) && !isNaN(lng)) {
+              return [lat, lng];
             }
-          });
-          
-          setUserPaths(prev => ({ ...prev, ...combinedPaths }));
+            return null;
+          })
+          .filter(point => point !== null);
+
+        if (newPath.length > 0) {
+          setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
           setSelectedDevicesForArea(prev => [...prev, deviceId]);
-          
-          // Show route panel for this device
-          setActiveRoutePanelDevice(deviceId);
         } else {
-          setError(`No valid routes found for this device in the selected area.`);
+          setError(`No locations found for this device in the selected area.`);
           setErrorType('no-data');
         }
       } else {
@@ -388,35 +351,16 @@ function App() {
     }
   };
 
-  // Handle device toggle in area sidebar - Updated to group routes
+  // Handle device toggle in area sidebar
   const handleDeviceToggleForArea = async (deviceId) => {
     if (selectedDevicesForArea.includes(deviceId)) {
-      // Remove device and all its routes
+      // Remove device
       setSelectedDevicesForArea(prev => prev.filter(id => id !== deviceId));
       setUserPaths(prev => {
         const newPaths = { ...prev };
-        // Remove all paths for this device (including route-specific ones)
-        Object.keys(newPaths).forEach(key => {
-          if (key.startsWith(`${deviceId}_`)) {
-            delete newPaths[key];
-          }
-        });
+        delete newPaths[deviceId];
         return newPaths;
       });
-      setDeviceRoutes(prev => {
-        const newRoutes = { ...prev };
-        delete newRoutes[deviceId];
-        return newRoutes;
-      });
-      setVisibleRoutes(prev => {
-        const newVisible = { ...prev };
-        delete newVisible[deviceId];
-        return newVisible;
-      });
-      // Close panel if this device's panel is open
-      if (activeRoutePanelDevice === deviceId) {
-        setActiveRoutePanelDevice(null);
-      }
     } else {
       // Add device - fetch its data
       if (!drawnCircle) return;
@@ -454,51 +398,21 @@ function App() {
         console.log('Area data received for toggle:', areaData.length, 'points');
 
         if (areaData.length > 0) {
-          // Group points into separate routes
-          const routes = groupPointsIntoRoutes(areaData, 30);
-          console.log(`Grouped into ${routes.length} routes for device ${deviceId}`);
-          
-          if (routes.length > 0) {
-            // Get device base color
-            const baseColor = getDeviceColor(deviceId).hex;
-            
-            // Assign colors to each route
-            const routesWithColors = routes.map((route, index) => ({
-              ...route,
-              color: generateRouteColor(baseColor, index, routes.length),
-            }));
-            
-            // Store routes for this device
-            setDeviceRoutes(prev => ({ ...prev, [deviceId]: routesWithColors }));
-            
-            // By default, show all routes
-            const allRouteIds = routesWithColors.map(r => r.id);
-            setVisibleRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
-            
-            // Build paths for all routes
-            const combinedPaths = {};
-            routesWithColors.forEach(route => {
-              const routePath = route.points
-                .map(point => {
-                  const lat = parseFloat(point.latitude);
-                  const lng = parseFloat(point.longitude);
-                  if (!isNaN(lat) && !isNaN(lng)) {
-                    return [lat, lng];
-                  }
-                  return null;
-                })
-                .filter(point => point !== null);
-              
-              if (routePath.length > 0) {
-                combinedPaths[`${deviceId}_${route.id}`] = { path: routePath, color: route.color };
+          const newPath = areaData
+            .map(point => {
+              const lat = parseFloat(point.latitude);
+              const lng = parseFloat(point.longitude);
+
+              if (!isNaN(lat) && !isNaN(lng)) {
+                return [lat, lng];
               }
-            });
-            
-            setUserPaths(prev => ({ ...prev, ...combinedPaths }));
+              return null;
+            })
+            .filter(point => point !== null);
+
+          if (newPath.length > 0) {
+            setUserPaths(prev => ({ ...prev, [deviceId]: newPath }));
             setSelectedDevicesForArea(prev => [...prev, deviceId]);
-            
-            // Show route panel for this device
-            setActiveRoutePanelDevice(deviceId);
           }
         }
       } catch (err) {
@@ -507,51 +421,6 @@ function App() {
         setLoading(false);
       }
     }
-  };
-
-  // Handle individual route visibility toggle
-  const handleRouteToggle = (deviceId, routeId) => {
-    setVisibleRoutes(prev => {
-      const deviceVisibleRoutes = prev[deviceId] || [];
-      const isVisible = deviceVisibleRoutes.includes(routeId);
-      
-      const newVisibleRoutes = isVisible
-        ? deviceVisibleRoutes.filter(id => id !== routeId)
-        : [...deviceVisibleRoutes, routeId];
-      
-      return { ...prev, [deviceId]: newVisibleRoutes };
-    });
-
-    // Toggle path visibility
-    const pathKey = `${deviceId}_${routeId}`;
-    setUserPaths(prev => {
-      const newPaths = { ...prev };
-      if (newPaths[pathKey]) {
-        // Route is currently visible, hide it by removing
-        delete newPaths[pathKey];
-      } else {
-        // Route is hidden, show it by adding back
-        const routes = deviceRoutes[deviceId] || [];
-        const route = routes.find(r => r.id === routeId);
-        if (route) {
-          const routePath = route.points
-            .map(point => {
-              const lat = parseFloat(point.latitude);
-              const lng = parseFloat(point.longitude);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                return [lat, lng];
-              }
-              return null;
-            })
-            .filter(point => point !== null);
-          
-          if (routePath.length > 0) {
-            newPaths[pathKey] = { path: routePath, color: route.color };
-          }
-        }
-      }
-      return newPaths;
-    });
   };
 
   // Effect principal para polling MEJORADO
@@ -603,19 +472,6 @@ function App() {
           selectedDevices={selectedDevicesForArea}
           onDeviceToggle={handleDeviceToggleForArea}
           areaInfo={drawnCircle}
-          onShowRoutes={setActiveRoutePanelDevice}
-        />
-      )}
-
-      {/* Route Panel for showing/hiding individual routes */}
-      {mode === 'areaHistory' && activeRoutePanelDevice && deviceRoutes[activeRoutePanelDevice] && (
-        <RoutePanel
-          deviceId={activeRoutePanelDevice}
-          deviceName={users.find(u => u.id === activeRoutePanelDevice)?.name || activeRoutePanelDevice}
-          routes={deviceRoutes[activeRoutePanelDevice]}
-          visibleRoutes={visibleRoutes[activeRoutePanelDevice] || []}
-          onRouteToggle={handleRouteToggle}
-          onClose={() => setActiveRoutePanelDevice(null)}
         />
       )}
 
