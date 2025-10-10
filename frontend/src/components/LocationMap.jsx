@@ -297,11 +297,11 @@ const LocationMap = ({
                           <CircleMarker
                             key={`${route.id}-${pointIndex}`}
                             center={point}
-                            radius={4}
+                            radius={6}
                             pathOptions={{
                               color: routeColor,
                               fillColor: routeColor,
-                              fillOpacity: 0.5,
+                              fillOpacity: 0.6,
                               weight: 2
                             }}
                           >
