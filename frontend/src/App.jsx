@@ -302,17 +302,17 @@ function App() {
 
     try {
       const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
-      
+
       console.log('Fetching area data:', url);
       const response = await fetch(url);
 
       console.log('Response status:', response.status, response.statusText);
-      
+
       if (!response.ok) {
         let errorData;
         const contentType = response.headers.get('content-type');
         console.log('Error response content-type:', contentType);
-        
+
         try {
           const responseText = await response.text();
           console.log('Error response text:', responseText);
@@ -321,7 +321,7 @@ function App() {
           console.error('Failed to parse error response:', parseError);
           errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
         }
-        
+
         console.error('Backend error response:', errorData);
         throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${errorData.error || 'Error fetching area history'}`);
       }
@@ -342,14 +342,14 @@ function App() {
         if (routes.length > 0) {
           // Store routes for this device
           setDeviceRoutes(prev => ({ ...prev, [deviceId]: routes }));
-          
+
           // Auto-select all routes for this device
           const allRouteIds = routes.map(r => r.id);
           setSelectedRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
-          
+
           // Add device to selected devices
           setSelectedDevicesForArea(prev => [...prev, deviceId]);
-          
+
           // Store the first route's path for backward compatibility
           setUserPaths(prev => ({ ...prev, [deviceId]: routes[0].coordinates }));
         } else {
@@ -398,17 +398,17 @@ function App() {
 
       try {
         const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
-        
+
         console.log('Fetching area data for toggle:', url);
         const response = await fetch(url);
 
         console.log('Response status:', response.status, response.statusText);
-        
+
         if (!response.ok) {
           let errorData;
           const contentType = response.headers.get('content-type');
           console.log('Error response content-type:', contentType);
-          
+
           try {
             const responseText = await response.text();
             console.log('Error response text:', responseText);
@@ -417,7 +417,7 @@ function App() {
             console.error('Failed to parse error response:', parseError);
             errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
           }
-          
+
           console.error('Backend error response:', errorData);
           throw new Error(errorData.error || errorData.message || `HTTP ${response.status}: ${errorData.error || 'Error fetching area history'}`);
         }
@@ -438,14 +438,14 @@ function App() {
           if (routes.length > 0) {
             // Store routes for this device
             setDeviceRoutes(prev => ({ ...prev, [deviceId]: routes }));
-            
+
             // Auto-select all routes for this device
             const allRouteIds = routes.map(r => r.id);
             setSelectedRoutes(prev => ({ ...prev, [deviceId]: allRouteIds }));
-            
+
             // Add device to selected devices
             setSelectedDevicesForArea(prev => [...prev, deviceId]);
-            
+
             // Store the first route's path for backward compatibility
             setUserPaths(prev => ({ ...prev, [deviceId]: routes[0].coordinates }));
           }
@@ -465,7 +465,7 @@ function App() {
       const newDeviceRoutes = deviceRoutes.includes(routeId)
         ? deviceRoutes.filter(id => id !== routeId)
         : [...deviceRoutes, routeId];
-      
+
       return { ...prev, [deviceId]: newDeviceRoutes };
     });
   };
@@ -523,9 +523,8 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${
-        !isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
-      }`}>
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
+        }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <LoadingSpinner />
@@ -551,18 +550,28 @@ function App() {
               <>
                 <button
                   onClick={() => setIsDrawingMode(!isDrawingMode)}
-                  className={`fixed top-32 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 ${
-                    isDrawingMode 
-                      ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse' 
+                  className={`fixed top-32 right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 ${isDrawingMode
+                      ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
                       : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
-                  }`}
+                    }`}
                   title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="currentColor"
+                    stroke="none"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 0 0-3.471 2.987 10.04 10.04 0 0 1 4.815 4.815 18.748 18.748 0 0 0 2.987-3.472l3.386-5.079A1.902 1.902 0 0 0 20.599 1.5Zm-8.3 14.025a18.76 18.76 0 0 0 1.896-1.207 8.026 8.026 0 0 0-4.513-4.513A18.75 18.75 0 0 0 8.475 11.7l-.278.5a5.26 5.26 0 0 1 3.601 3.602l.502-.278ZM6.75 13.5A3.75 3.75 0 0 0 3 17.25a1.5 1.5 0 0 1-1.601 1.497.75.75 0 0 0-.7 1.123 5.25 5.25 0 0 0 9.8-2.62 3.75 3.75 0 0 0-3.75-3.75Z"
+                    />
                   </svg>
+
                 </button>
-                
+
                 {/* Indicator when drawing mode is active */}
                 {isDrawingMode && (
                   <div className="fixed top-48 right-8 z-50 glassmorphism-strong rounded-2xl p-4 shadow-2xl animate-fade-in">
