@@ -23,8 +23,6 @@ import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
 import RouteSelectionModal from './components/RouteSelectionModal';
-
-// --- Importaciones de utilidades de rutas ---
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
