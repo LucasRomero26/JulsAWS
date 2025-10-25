@@ -52,7 +52,7 @@ jobs:
           cd backend
           echo '$ENV_BACKEND' > .env
           npm install
-          pm2 restart location-backend || pm2 start server.js --name location-backend
+          sudo pm2 restart location-backend || sudo pm2 start server.js --name location-backend
           
           # 3. Configurar y construir el Frontend
           echo '🖥️  Configurando Frontend...'
