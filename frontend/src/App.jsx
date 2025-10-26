@@ -549,32 +549,21 @@ function App() {
             {mode === 'areaHistory' && (
               <div className="glassmorphism-strong rounded-3xl p-3 mb-3 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  
+
                   {/* Left side - Action buttons */}
                   <div className="flex flex-wrap items-center gap-3">
                     {/* Draw Area Button - shown when no circle is drawn */}
                     {!drawnCircle && (
                       <button
                         onClick={() => setIsDrawingMode(!isDrawingMode)}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-lg transition-all duration-300 ${
-                          isDrawingMode
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl w-full shadow-lg transition-all duration-300 ${isDrawingMode
                             ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
                             : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
-                        }`}
+                          }`}
                         title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
                       >
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="currentColor"
-                          stroke="none"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 0 0-3.471 2.987 10.04 10.04 0 0 1 4.815 4.815 18.748 18.748 0 0 0 2.987-3.472l3.386-5.079A1.902 1.902 0 0 0 23 2.25c0-.414-.336-.75-.75-.75h-.651ZM3.617 20.383A1.75 1.75 0 0 1 3 19.024V18a1 1 0 0 1 1-1h.024a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617H7.88a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617h.082a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617h1.078a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617H18a1 1 0 0 1 1 1v1.024c0 .468-.185.917-.617 1.359L17.025 21.75a1.75 1.75 0 0 1-1.359.617h-1.82a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617h-.082a1.75 1.75 0 0 0-1.359.617l-.06.073a1.75 1.75 0 0 1-1.359.617H6.976a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617H4a1 1 0 0 1-1-1v-.293c0-.468.185-.917.617-1.359Z"
-                          />
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
+                          <path fill-rule="evenodd" d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 0 0-3.471 2.987 10.04 10.04 0 0 1 4.815 4.815 18.748 18.748 0 0 0 2.987-3.472l3.386-5.079A1.902 1.902 0 0 0 20.599 1.5Zm-8.3 14.025a18.76 18.76 0 0 0 1.896-1.207 8.026 8.026 0 0 0-4.513-4.513A18.75 18.75 0 0 0 8.475 11.7l-.278.5a5.26 5.26 0 0 1 3.601 3.602l.502-.278ZM6.75 13.5A3.75 3.75 0 0 0 3 17.25a1.5 1.5 0 0 1-1.601 1.497.75.75 0 0 0-.7 1.123 5.25 5.25 0 0 0 9.8-2.62 3.75 3.75 0 0 0-3.75-3.75Z" clip-rule="evenodd" />
                         </svg>
                         <span className="text-white font-medium text-sm">Draw Area</span>
                       </button>
