@@ -551,14 +551,14 @@ function App() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
 
                   {/* Left side - Action buttons */}
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 flex-1">
                     {/* Draw Area Button - shown when no circle is drawn */}
                     {!drawnCircle && (
                       <button
                         onClick={() => setIsDrawingMode(!isDrawingMode)}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl w-full shadow-lg transition-all duration-300 ${isDrawingMode
-                            ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
-                            : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
+                        className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl flex-1 shadow-lg transition-all duration-300 ${isDrawingMode
+                          ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
+                          : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
                           }`}
                         title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
                       >
