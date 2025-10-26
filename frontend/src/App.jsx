@@ -545,87 +545,89 @@ function App() {
           </div>
         ) : users.length > 0 ? (
           <>
-            {/* Floating button to enable drawing mode in area history */}
-            {mode === 'areaHistory' && !drawnCircle && (
-              <>
-                <button
-                  onClick={() => setIsDrawingMode(!isDrawingMode)}
-                  className={`fixed top-32 right-8 z-50 flex items-center gap-3 px-5 py-4 rounded-full shadow-2xl transition-all duration-300 ${isDrawingMode
-                      ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
-                      : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
-                    }`}
-                  title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
-                >
-                  <svg
-                    className="w-6 h-6 text-white"
-                    fill="currentColor"
-                    stroke="none"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 0 0-3.471 2.987 10.04 10.04 0 0 1 4.815 4.815 18.748 18.748 0 0 0 2.987-3.472l3.386-5.079A1.902 1.902 0 0 0 23 2.25c0-.414-.336-.75-.75-.75h-.651ZM3.617 20.383A1.75 1.75 0 0 1 3 19.024V18a1 1 0 0 1 1-1h.024a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617H7.88a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617h.082a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617h1.078a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617H18a1 1 0 0 1 1 1v1.024c0 .468-.185.917-.617 1.359L17.025 21.75a1.75 1.75 0 0 1-1.359.617h-1.82a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617h-.082a1.75 1.75 0 0 0-1.359.617l-.06.073a1.75 1.75 0 0 1-1.359.617H6.976a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617H4a1 1 0 0 1-1-1v-.293c0-.468.185-.917.617-1.359Z"
-                    />
-                  </svg>
-                  <span className="text-white font-medium text-sm">Draw Area</span>
-                </button>
+            {/* Action Buttons Bar for Area History Mode */}
+            {mode === 'areaHistory' && (
+              <div className="glassmorphism-strong rounded-3xl p-4 mb-4 shadow-lg">
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  
+                  {/* Draw Area Button - shown when no circle is drawn */}
+                  {!drawnCircle && (
+                    <button
+                      onClick={() => setIsDrawingMode(!isDrawingMode)}
+                      className={`flex items-center gap-3 px-6 py-3 rounded-xl shadow-lg transition-all duration-300 ${
+                        isDrawingMode
+                          ? 'bg-cyan-600 hover:bg-cyan-700 animate-pulse'
+                          : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
+                      }`}
+                      title={isDrawingMode ? 'Drawing mode active - Click and drag to draw circle' : 'Click to enable drawing mode'}
+                    >
+                      <svg
+                        className="w-5 h-5 text-white"
+                        fill="currentColor"
+                        stroke="none"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          clipRule="evenodd"
+                          d="M20.599 1.5c-.376 0-.743.111-1.055.32l-5.08 3.385a18.747 18.747 0 0 0-3.471 2.987 10.04 10.04 0 0 1 4.815 4.815 18.748 18.748 0 0 0 2.987-3.472l3.386-5.079A1.902 1.902 0 0 0 23 2.25c0-.414-.336-.75-.75-.75h-.651ZM3.617 20.383A1.75 1.75 0 0 1 3 19.024V18a1 1 0 0 1 1-1h.024a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617H7.88a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617h.082a1.75 1.75 0 0 1 1.359.617l.06.073a1.75 1.75 0 0 0 1.359.617h1.078a1.75 1.75 0 0 0 1.359-.617l.06-.073a1.75 1.75 0 0 1 1.359-.617H18a1 1 0 0 1 1 1v1.024c0 .468-.185.917-.617 1.359L17.025 21.75a1.75 1.75 0 0 1-1.359.617h-1.82a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617h-.082a1.75 1.75 0 0 0-1.359.617l-.06.073a1.75 1.75 0 0 1-1.359.617H6.976a1.75 1.75 0 0 1-1.359-.617l-.06-.073a1.75 1.75 0 0 0-1.359-.617H4a1 1 0 0 1-1-1v-.293c0-.468.185-.917.617-1.359Z"
+                        />
+                      </svg>
+                      <span className="text-white font-medium text-sm">Draw Area</span>
+                    </button>
+                  )}
 
-                {/* Indicator when drawing mode is active */}
-                {isDrawingMode && (
-                  <div className="fixed top-48 right-8 z-50 glassmorphism-strong rounded-2xl p-4 shadow-2xl animate-fade-in">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-cyan-500 rounded-full animate-pulse"></div>
+                  {/* Redraw Area Button - shown when circle exists */}
+                  {drawnCircle && (
+                    <button
+                      onClick={() => {
+                        setDrawnCircle(null);
+                        setSelectedDevicesForArea([]);
+                        setUserPaths({});
+                        setDeviceRoutes({});
+                        setSelectedRoutes({});
+                        setIsDrawingMode(true);
+                      }}
+                      className="flex items-center gap-3 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-lg transition-all duration-300"
+                      title="Redraw area"
+                    >
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span className="text-white font-medium text-sm">Redraw Area</span>
+                    </button>
+                  )}
+
+                  {/* Routes Button - shown when there are routes */}
+                  {Object.keys(deviceRoutes).length > 0 && (
+                    <button
+                      onClick={() => setIsRouteSelectionModalOpen(true)}
+                      className="flex items-center gap-3 px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 backdrop-blur-lg shadow-lg transition-all duration-300 relative"
+                      title="Select routes to display"
+                    >
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      <span className="text-white font-medium text-sm">Routes</span>
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
+                        {Object.values(selectedRoutes).reduce((total, routes) => total + routes.length, 0)}
+                      </span>
+                    </button>
+                  )}
+
+                  {/* Drawing Mode Indicator */}
+                  {isDrawingMode && !drawnCircle && (
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/50 animate-fade-in">
+                      <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
                       <div className="text-white">
-                        <p className="text-sm font-semibold">Drawing Mode Active</p>
-                        <p className="text-xs text-white/70">Click and drag to draw circle</p>
-                        <p className="text-xs text-white/50 mt-1">Map panning disabled</p>
+                        <p className="text-xs font-semibold">Drawing Mode Active</p>
+                        <p className="text-xs text-white/70">Click and drag on map to draw circle</p>
                       </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Button to redraw circle if one exists */}
-            {mode === 'areaHistory' && drawnCircle && (
-              <>
-                <button
-                  onClick={() => {
-                    setDrawnCircle(null);
-                    setSelectedDevicesForArea([]);
-                    setUserPaths({});
-                    setDeviceRoutes({});
-                    setSelectedRoutes({});
-                    setIsDrawingMode(true);
-                  }}
-                  className="fixed top-32 right-8 z-50 flex items-center gap-3 px-5 py-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-2xl transition-all duration-300"
-                  title="Redraw area"
-                >
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span className="text-white font-medium text-sm">Redraw Area</span>
-                </button>
-
-                {/* Button to open route selection modal */}
-                {Object.keys(deviceRoutes).length > 0 && (
-                  <button
-                    onClick={() => setIsRouteSelectionModalOpen(true)}
-                    className="fixed top-48 right-8 z-50 flex items-center gap-3 px-5 py-4 rounded-full bg-cyan-600 hover:bg-cyan-700 backdrop-blur-lg shadow-2xl transition-all duration-300 relative"
-                    title="Select routes to display"
-                  >
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                    <span className="text-white font-medium text-sm">Routes</span>
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
-                      {Object.values(selectedRoutes).reduce((total, routes) => total + routes.length, 0)}
-                    </span>
-                  </button>
-                )}
-              </>
+                  )}
+                </div>
+              </div>
             )}
 
             <LocationMap
