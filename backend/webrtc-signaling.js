@@ -7,7 +7,7 @@ const socketIO = require('socket.io');
 function setupWebRTCSignaling(server) {
   const io = socketIO(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      origin: "*",
       methods: ["GET", "POST"]
     },
     // Configuración para minimizar overhead
