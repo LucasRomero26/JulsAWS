@@ -4,10 +4,11 @@ const Header = ({
   isMobile,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
-  mode, // 'live', 'history', or 'areaHistory'
+  mode, // 'live', 'history', 'areaHistory', 'stream'
   handleReturnToLive,
   setIsDateSearchModalOpen,
-  setIsAreaHistoryMode
+  setIsAreaHistoryMode,
+  setStreamMode // ✨ NUEVA PROP
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
@@ -57,24 +58,18 @@ const Header = ({
             >
               History by Area
             </button>
-            {/* ✨ NUEVO: Live Stream Button */}
+            {/* ✨ Live Stream Button */}
             <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                if (typeof setStreamMode === 'function') {
-                  setStreamMode(); // Nueva función del prop
-                }
-              }}
-              className={`w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl shadow-lg transition-all duration-300 ${mode === 'stream'
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-white/10 hover:bg-white/20 backdrop-blur-lg'
+              onClick={setStreamMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'stream'
+                  ? 'pb-[5px] text-red-600 border-red-600'
+                  : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
-              title="Live Video Stream"
             >
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
               </svg>
-              <span className="text-white font-medium text-sm">Live Stream</span>
+              Live Stream
             </button>
           </div>
         )}
@@ -115,7 +110,7 @@ const Header = ({
               setIsAreaHistoryMode();
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'areaHistory'
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
                 ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
                 : 'bg-white/10 text-white hover:bg-white/20'
               }`}
@@ -124,6 +119,21 @@ const Header = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
             History by Area
+          </button>
+          <button
+            onClick={() => {
+              setStreamMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'stream'
+                ? 'bg-red-600/20 text-red-600 border-2 border-red-600'
+                : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+            </svg>
+            Live Stream
           </button>
         </div>
       )}

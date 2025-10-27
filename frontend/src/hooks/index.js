@@ -1,4 +1,16 @@
-// Exportar todos los hooks desde un solo lugar
-export { useFilteredUsers } from './useFilteredUsers';
-export { useMediaQuery } from './useMediaQuery';
-export { useViewportHeight } from './useViewportHeight';
+// Export all components
+export { default as AnimatedBackground } from './AnimatedBackground';
+export { default as AreaSearchModal } from './AreaSearchModal';
+export { default as AreaSidebar } from './AreaSidebar';
+export { default as DateSearchModal } from './DateSearchModal';
+export { default as DesktopUsersSidebar } from './DesktopUsersSidebar';
+export { default as ErrorMessage } from './ErrorMessage';
+export { default as GradientPolyline } from './GradientPolyline';
+export { default as Header } from './Header';
+export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as LocationMap } from './LocationMap';
+export { default as MapViewUpdater } from './MapViewUpdater';
+export { default as MobileUsersInfo } from './MobileUsersInfo';
+export { default as RouteSelectionModal } from './RouteSelectionModal';
+export { default as SearchBar } from './SearchBar';
+export { default as StreamViewer } from './StreamViewer'; // ✨ NUEVO
