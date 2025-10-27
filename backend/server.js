@@ -4,6 +4,9 @@ const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// ✨ NUEVO: Importar módulo de señalización WebRTC
+const { setupWebRTCSignaling } = require('./webrtc-signaling');
+
 // Configuración de la base de datos
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -418,6 +421,12 @@ app.get('/api/health', (req, res) => {
 const HTTP_PORT = process.env.HTTP_PORT || 3001;
 const UDP_PORT = process.env.UDP_PORT || 6001;
 
+// ✨ MODIFICADO: Crear servidor HTTP para Socket.IO
+const server = require('http').createServer(app);
+
+// ✨ NUEVO: Inicializar servidor de señalización WebRTC
+const io = setupWebRTCSignaling(server);
+
 async function start() {
   try {
     // Verificar conexión a BD
@@ -430,18 +439,33 @@ async function start() {
     // Iniciar servidor UDP
     udpServer.bind(UDP_PORT);
     
-    // Iniciar servidor HTTP
-    app.listen(HTTP_PORT, '0.0.0.0', () => {
-      console.log(`HTTP API escuchando en puerto ${HTTP_PORT}`);
-      console.log('Nuevos endpoints disponibles:');
-      console.log('  GET /api/devices/all - Lista todos los dispositivos');
-      console.log('  GET /api/devices/latest-locations - Últimas ubicaciones de cada dispositivo');
-      console.log('  GET /api/location/device/:deviceId/latest - Última ubicación de un dispositivo');
-      console.log('  GET /api/location/device/:deviceId/history - Historial de un dispositivo');
+    // ✨ MODIFICADO: Iniciar servidor HTTP con Socket.IO
+    server.listen(HTTP_PORT, '0.0.0.0', () => {
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`🚀 JULS TRACKING SYSTEM - SERVER RUNNING`);
+      console.log(`${'='.repeat(60)}`);
+      console.log(`📍 GPS UDP Server: 0.0.0.0:${UDP_PORT}`);
+      console.log(`🌐 HTTP API Server: 0.0.0.0:${HTTP_PORT}`);
+      console.log(`✨ WebRTC Signaling: Active on port ${HTTP_PORT}`);
+      console.log(`${'='.repeat(60)}`);
+      console.log(`\n📋 Available Endpoints:`);
+      console.log(`  REST API:`);
+      console.log(`    GET  /api/health`);
+      console.log(`    GET  /api/devices/all`);
+      console.log(`    GET  /api/devices/latest-locations`);
+      console.log(`    GET  /api/location/device/:deviceId/latest`);
+      console.log(`    GET  /api/location/device/:deviceId/history`);
+      console.log(`    GET  /api/location/latest`);
+      console.log(`    GET  /api/location/all`);
+      console.log(`    GET  /api/location/range`);
+      console.log(`    GET  /api/location/area`);
+      console.log(`\n  WebSocket (Socket.IO):`);
+      console.log(`    WS   /socket.io - WebRTC Signaling`);
+      console.log(`${'='.repeat(60)}\n`);
     });
     
   } catch (error) {
-    console.error('Error iniciando servidor:', error);
+    console.error('❌ Error iniciando servidor:', error);
     process.exit(1);
   }
 }
