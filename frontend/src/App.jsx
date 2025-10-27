@@ -23,6 +23,7 @@ import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
 import RouteSelectionModal from './components/RouteSelectionModal';
+import StreamViewer from './components/StreamViewer'; // ✨ NUEVO IMPORT
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -32,7 +33,7 @@ function App() {
   const [errorType, setErrorType] = useState(null);
   const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
-  const [mode, setMode] = useState('live'); // 'live', 'history', or 'areaHistory'
+  const [mode, setMode] = useState('live'); // ✨ ACTUALIZADO: 'live', 'history', 'areaHistory', 'stream'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para el manejo de múltiples dispositivos
@@ -271,6 +272,15 @@ function App() {
     setIsRouteSelectionModalOpen(false);
   };
 
+  // ✨ NUEVA FUNCIÓN: Handle stream mode
+  const handleSetStreamMode = () => {
+    setMode('stream');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+  };
+
   // Handle area history mode
   const handleSetAreaHistoryMode = () => {
     setMode('areaHistory');
@@ -501,6 +511,7 @@ function App() {
         handleReturnToLive={handleReturnToLive}
         setIsDateSearchModalOpen={setIsDateSearchModalOpen}
         setIsAreaHistoryMode={handleSetAreaHistoryMode}
+        setStreamMode={handleSetStreamMode} // ✨ NUEVA PROP
       />
 
       {/* Sidebar solo en desktop */}
@@ -543,6 +554,9 @@ function App() {
               isNoDataError={errorType === 'no-data'}
             />
           </div>
+        ) : mode === 'stream' ? (
+          // ✨ NUEVO: Vista de streaming
+          <StreamViewer />
         ) : users.length > 0 ? (
           <>
             {/* Action Buttons Bar for Area History Mode */}
@@ -598,7 +612,7 @@ function App() {
                         title="Select routes to display"
                       >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
                         <span className="text-white font-medium text-sm">Routes</span>
                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
