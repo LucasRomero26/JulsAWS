@@ -515,7 +515,7 @@ function App() {
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && mode !== 'areaHistory' && (
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -524,7 +524,7 @@ function App() {
       )}
 
       {/* Area Sidebar for area history mode */}
-      {!isMobile && users.length > 0 && mode === 'areaHistory' && (
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && (
         <AreaSidebar
           users={users}
           selectedDevices={selectedDevicesForArea}
@@ -534,7 +534,7 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 ? 'md:ml-96 md:mr-8' : ''
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' ? 'md:ml-96 md:mr-8' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
