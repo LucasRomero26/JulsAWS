@@ -22,6 +22,17 @@ const StreamViewer = () => {
   const [layout, setLayout] = useState('grid'); // 'grid', 'list'
   const videoRefs = useRef({});
 
+  // Auto-conectar a nuevos dispositivos cuando aparecen
+  useEffect(() => {
+    devices.forEach(deviceId => {
+      // Si el dispositivo no está activo y no se está conectando, conectarlo automáticamente
+      if (!selectedDevices.has(deviceId) && !connectingDevices.has(deviceId)) {
+        console.log('🔄 Auto-connecting to device:', deviceId);
+        toggleDevice(deviceId);
+      }
+    });
+  }, [devices, selectedDevices, connectingDevices, toggleDevice]);
+
   // Efecto para actualizar los videos cuando se reciben streams
   useEffect(() => {
     console.log('📺 Updating video elements with streams:', Object.keys(streams));
@@ -85,11 +96,6 @@ const StreamViewer = () => {
     };
   }, []);
 
-  const handleDeviceClick = (deviceId) => {
-    console.log('🖱️ Device clicked:', deviceId);
-    toggleDevice(deviceId);
-  };
-
   const getConnectionStateColor = (state) => {
     switch (state) {
       case 'connected':
@@ -140,7 +146,7 @@ const StreamViewer = () => {
   };
 
   return (
-    <div className="w-full h-full min-h-[calc(100vh-12rem)] space-y-4">
+    <div className="w-full h-full min-h-[calc(100vh-12rem)] space-y-4 px-4 md:px-6">
       {/* Header Section */}
       <div className="glassmorphism-strong rounded-3xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -151,7 +157,7 @@ const StreamViewer = () => {
             <p className="text-white/70">
               {devices.length === 0 
                 ? 'Waiting for available devices...' 
-                : `${devices.length} device${devices.length !== 1 ? 's' : ''} available${selectedDevices.size > 0 ? ` • ${selectedDevices.size} viewing` : ''}`}
+                : `${devices.length} device${devices.length !== 1 ? 's' : ''} streaming live`}
             </p>
           </div>
 
@@ -247,39 +253,24 @@ const StreamViewer = () => {
               >
                 {/* Device Header */}
                 <div className="p-4 border-b border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        isActive && deviceStream 
-                          ? getConnectionStateColor('streaming')
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      isActive && deviceStream 
+                        ? getConnectionStateColor('streaming')
+                        : isConnecting
+                        ? getConnectionStateColor('connecting')
+                        : getConnectionStateColor('disconnected')
+                    }`}></div>
+                    <div>
+                      <h3 className="text-white font-semibold text-lg">{deviceId}</h3>
+                      <p className="text-white/50 text-sm">
+                        {isActive && deviceStream 
+                          ? getConnectionStateText('streaming')
                           : isConnecting
-                          ? getConnectionStateColor('connecting')
-                          : getConnectionStateColor('disconnected')
-                      }`}></div>
-                      <div>
-                        <h3 className="text-white font-semibold text-lg">{deviceId}</h3>
-                        <p className="text-white/50 text-sm">
-                          {isActive && deviceStream 
-                            ? getConnectionStateText('streaming')
-                            : isConnecting
-                            ? getConnectionStateText('connecting')
-                            : getConnectionStateText(connectionState)}
-                        </p>
-                      </div>
+                          ? getConnectionStateText('connecting')
+                          : getConnectionStateText(connectionState)}
+                      </p>
                     </div>
-
-                    {/* Control Button */}
-                    <button
-                      onClick={() => handleDeviceClick(deviceId)}
-                      disabled={isConnecting && !isActive}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                        isActive
-                          ? 'bg-red-500 hover:bg-red-600 text-white'
-                          : 'bg-cyan-600 hover:bg-cyan-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
-                      }`}
-                    >
-                      {isActive ? 'Stop' : 'View'}
-                    </button>
                   </div>
                 </div>
 
@@ -310,7 +301,7 @@ const StreamViewer = () => {
                           <svg className="w-16 h-16 text-white/30" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                           </svg>
-                          <p className="text-white/50">Click "View" to start streaming</p>
+                          <p className="text-white/50">Waiting for stream...</p>
                         </div>
                       )}
                     </div>
@@ -370,10 +361,10 @@ const StreamViewer = () => {
           <div className="flex-1">
             <h4 className="text-white font-semibold mb-2">How it works</h4>
             <ul className="text-white/70 text-sm space-y-1">
-              <li>• Broadcasting devices must have their camera enabled and be streaming</li>
-              <li>• Click "View" on any device to start receiving the live video stream</li>
+              <li>• Broadcasting devices are automatically displayed when they start streaming</li>
+              <li>• Video streams are connected automatically - no need to click "View"</li>
               <li>• Video streaming uses WebRTC for low-latency peer-to-peer connections</li>
-              <li>• <span className="text-cyan-400 font-semibold">Multiple devices can be viewed simultaneously</span></li>
+              <li>• <span className="text-cyan-400 font-semibold">Multiple devices stream simultaneously</span></li>
               <li>• The device list updates automatically when devices connect or disconnect</li>
             </ul>
           </div>
