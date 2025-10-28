@@ -4,45 +4,78 @@ import { useWebRTC } from '../hooks/useWebRTC';
 const StreamViewer = () => {
   const {
     devices,
-    selectedDevice,
-    stream,
-    connectionState,
+    selectedDevices,
+    streams,
+    connectionStates,
     error,
-    isConnecting,
+    connectingDevices,
+    globalConnectionState,
     connectToDevice,
-    disconnectStream
+    disconnectStream,
+    toggleDevice,
+    isDeviceActive,
+    isDeviceConnecting,
+    getDeviceConnectionState
   } = useWebRTC();
 
   const [streamingDevices, setStreamingDevices] = useState({});
-  const [layout, setLayout] = useState('grid'); // 'grid', 'single', 'list'
+  const [layout, setLayout] = useState('grid'); // 'grid', 'list'
   const videoRefs = useRef({});
 
-  // Efecto para actualizar el video cuando se recibe un stream
+  // Efecto para actualizar los videos cuando se reciben streams
   useEffect(() => {
-    if (stream && selectedDevice) {
-      const videoElement = videoRefs.current[selectedDevice];
-      if (videoElement && videoElement.srcObject !== stream) {
-        videoElement.srcObject = stream;
-        videoElement.play().catch(err => {
-          console.error('Error playing video:', err);
-        });
+    console.log('📺 Updating video elements with streams:', Object.keys(streams));
+    
+    Object.entries(streams).forEach(([deviceId, stream]) => {
+      const videoElement = videoRefs.current[deviceId];
+      
+      if (videoElement && stream) {
+        // Solo actualizar si el stream ha cambiado
+        if (videoElement.srcObject !== stream) {
+          console.log('🎥 Setting stream for video element:', deviceId);
+          videoElement.srcObject = stream;
+          
+          // Intentar reproducir el video
+          videoElement.play().catch(err => {
+            console.error('❌ Error playing video for device:', deviceId, err);
+          });
 
-        // Actualizar el estado de dispositivos transmitiendo
-        setStreamingDevices(prev => ({
-          ...prev,
-          [selectedDevice]: {
-            stream,
-            state: 'streaming',
-            startTime: Date.now()
-          }
-        }));
+          // Actualizar el estado de dispositivos transmitiendo
+          setStreamingDevices(prev => ({
+            ...prev,
+            [deviceId]: {
+              stream,
+              state: 'streaming',
+              startTime: Date.now()
+            }
+          }));
+        }
       }
-    }
-  }, [stream, selectedDevice]);
+    });
+
+    // Limpiar videos de dispositivos que ya no tienen stream
+    Object.keys(streamingDevices).forEach(deviceId => {
+      if (!streams[deviceId]) {
+        console.log('🧹 Cleaning up video for device:', deviceId);
+        const videoElement = videoRefs.current[deviceId];
+        if (videoElement && videoElement.srcObject) {
+          videoElement.srcObject.getTracks().forEach(track => track.stop());
+          videoElement.srcObject = null;
+        }
+        
+        setStreamingDevices(prev => {
+          const newState = { ...prev };
+          delete newState[deviceId];
+          return newState;
+        });
+      }
+    });
+  }, [streams]);
 
   // Limpiar streams cuando se desmonta el componente
   useEffect(() => {
     return () => {
+      console.log('🧹 Cleaning up all video streams on unmount');
       Object.values(videoRefs.current).forEach(video => {
         if (video && video.srcObject) {
           video.srcObject.getTracks().forEach(track => track.stop());
@@ -53,18 +86,8 @@ const StreamViewer = () => {
   }, []);
 
   const handleDeviceClick = (deviceId) => {
-    if (selectedDevice === deviceId) {
-      // Si ya está conectado, desconectar
-      disconnectStream();
-      setStreamingDevices(prev => {
-        const newState = { ...prev };
-        delete newState[deviceId];
-        return newState;
-      });
-    } else {
-      // Conectar al nuevo dispositivo
-      connectToDevice(deviceId);
-    }
+    console.log('🖱️ Device clicked:', deviceId);
+    toggleDevice(deviceId);
   };
 
   const getConnectionStateColor = (state) => {
@@ -79,6 +102,7 @@ const StreamViewer = () => {
       case 'disconnected':
         return 'bg-gray-500';
       case 'failed':
+      case 'closed':
         return 'bg-red-600';
       default:
         return 'bg-gray-400';
@@ -98,6 +122,8 @@ const StreamViewer = () => {
         return 'Disconnected';
       case 'failed':
         return 'Failed';
+      case 'closed':
+        return 'Closed';
       default:
         return 'Unknown';
     }
@@ -105,6 +131,7 @@ const StreamViewer = () => {
 
   const getGridColumns = () => {
     const deviceCount = devices.length;
+    if (deviceCount === 0) return 'grid-cols-1';
     if (deviceCount === 1) return 'grid-cols-1';
     if (deviceCount === 2) return 'grid-cols-1 md:grid-cols-2';
     if (deviceCount <= 4) return 'grid-cols-1 md:grid-cols-2';
@@ -124,7 +151,7 @@ const StreamViewer = () => {
             <p className="text-white/70">
               {devices.length === 0 
                 ? 'Waiting for available devices...' 
-                : `${devices.length} device${devices.length !== 1 ? 's' : ''} available`}
+                : `${devices.length} device${devices.length !== 1 ? 's' : ''} available${selectedDevices.size > 0 ? ` • ${selectedDevices.size} viewing` : ''}`}
             </p>
           </div>
 
@@ -159,11 +186,25 @@ const StreamViewer = () => {
           </div>
         </div>
 
+        {/* Global Connection Status */}
+        {globalConnectionState !== 'connected' && (
+          <div className="mt-4 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+              <p className="text-yellow-300">
+                {globalConnectionState === 'connecting' 
+                  ? 'Connecting to signaling server...' 
+                  : 'Disconnected from signaling server. Reconnecting...'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
               <p className="text-red-300">{error}</p>
@@ -186,13 +227,18 @@ const StreamViewer = () => {
             </div>
             <h3 className="text-xl text-white/70 font-semibold">Waiting for Broadcasting Devices</h3>
             <p className="text-white/50">No devices are currently streaming video</p>
+            {globalConnectionState === 'connected' && (
+              <p className="text-white/40 text-sm">Connected to signaling server. Waiting for devices to join...</p>
+            )}
           </div>
         </div>
       ) : (
         <div className={`grid ${layout === 'grid' ? getGridColumns() : 'grid-cols-1'} gap-6`}>
           {devices.map((deviceId) => {
-            const isActive = selectedDevice === deviceId;
+            const isActive = selectedDevices.has(deviceId);
             const deviceStream = streamingDevices[deviceId];
+            const isConnecting = isDeviceConnecting(deviceId);
+            const connectionState = getDeviceConnectionState(deviceId);
 
             return (
               <div
@@ -206,7 +252,7 @@ const StreamViewer = () => {
                       <div className={`w-3 h-3 rounded-full ${
                         isActive && deviceStream 
                           ? getConnectionStateColor('streaming')
-                          : isActive && isConnecting
+                          : isConnecting
                           ? getConnectionStateColor('connecting')
                           : getConnectionStateColor('disconnected')
                       }`}></div>
@@ -215,9 +261,9 @@ const StreamViewer = () => {
                         <p className="text-white/50 text-sm">
                           {isActive && deviceStream 
                             ? getConnectionStateText('streaming')
-                            : isActive && isConnecting
+                            : isConnecting
                             ? getConnectionStateText('connecting')
-                            : getConnectionStateText('disconnected')}
+                            : getConnectionStateText(connectionState)}
                         </p>
                       </div>
                     </div>
@@ -225,7 +271,7 @@ const StreamViewer = () => {
                     {/* Control Button */}
                     <button
                       onClick={() => handleDeviceClick(deviceId)}
-                      disabled={isConnecting && selectedDevice !== deviceId}
+                      disabled={isConnecting && !isActive}
                       className={`px-4 py-2 rounded-lg font-medium transition-all ${
                         isActive
                           ? 'bg-red-500 hover:bg-red-600 text-white'
@@ -240,7 +286,11 @@ const StreamViewer = () => {
                 {/* Video Container */}
                 <div className="relative bg-black/50 aspect-video">
                   <video
-                    ref={(el) => (videoRefs.current[deviceId] = el)}
+                    ref={(el) => {
+                      if (el) {
+                        videoRefs.current[deviceId] = el;
+                      }
+                    }}
                     autoPlay
                     playsInline
                     muted
@@ -249,8 +299,8 @@ const StreamViewer = () => {
 
                   {/* Placeholder when not streaming */}
                   {(!isActive || !deviceStream) && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {isActive && isConnecting ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900/50 to-black/50">
+                      {isConnecting ? (
                         <div className="flex flex-col items-center gap-4">
                           <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
                           <p className="text-white/70">Connecting...</p>
@@ -268,15 +318,15 @@ const StreamViewer = () => {
 
                   {/* Live Indicator */}
                   {isActive && deviceStream && (
-                    <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-lg">
+                    <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-lg shadow-lg">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       <span className="text-white text-sm font-semibold">LIVE</span>
                     </div>
                   )}
 
                   {/* Connection State Indicator */}
-                  {isActive && (
-                    <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                  {isActive && connectionState && (
+                    <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
                       <span className="text-white text-xs font-medium">
                         {connectionState.toUpperCase()}
                       </span>
@@ -323,11 +373,33 @@ const StreamViewer = () => {
               <li>• Broadcasting devices must have their camera enabled and be streaming</li>
               <li>• Click "View" on any device to start receiving the live video stream</li>
               <li>• Video streaming uses WebRTC for low-latency peer-to-peer connections</li>
-              <li>• Only one device can be viewed at a time</li>
+              <li>• <span className="text-cyan-400 font-semibold">Multiple devices can be viewed simultaneously</span></li>
+              <li>• The device list updates automatically when devices connect or disconnect</li>
             </ul>
           </div>
         </div>
       </div>
+
+      {/* Debug Info (Optional - Remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="glassmorphism-strong rounded-3xl p-6 shadow-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-6 h-6 text-purple-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="text-white font-semibold mb-2">Debug Info</h4>
+              <div className="text-white/70 text-xs space-y-1 font-mono">
+                <div>Available Devices: {devices.length}</div>
+                <div>Selected Devices: {selectedDevices.size}</div>
+                <div>Active Streams: {Object.keys(streams).length}</div>
+                <div>Connecting: {connectingDevices.size}</div>
+                <div>Global State: {globalConnectionState}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
