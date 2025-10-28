@@ -18,17 +18,28 @@ const StreamViewer = () => {
     getDeviceConnectionState
   } = useWebRTC();
 
-  const [streamingDevices, setStreamingDevices] = useState({});
   const [layout, setLayout] = useState('grid'); // 'grid', 'list'
   const videoRefs = useRef({});
+  const autoConnectedDevices = useRef(new Set());
 
   // Auto-conectar a nuevos dispositivos cuando aparecen
   useEffect(() => {
     devices.forEach(deviceId => {
-      // Si el dispositivo no está activo y no se está conectando, conectarlo automáticamente
-      if (!selectedDevices.has(deviceId) && !connectingDevices.has(deviceId)) {
+      // Si el dispositivo no está activo, no se está conectando, y no se ha intentado conectar antes
+      if (!selectedDevices.has(deviceId) && 
+          !connectingDevices.has(deviceId) && 
+          !autoConnectedDevices.current.has(deviceId)) {
         console.log('🔄 Auto-connecting to device:', deviceId);
+        autoConnectedDevices.current.add(deviceId);
         toggleDevice(deviceId);
+      }
+    });
+
+    // Limpiar dispositivos que ya no están disponibles
+    autoConnectedDevices.current.forEach(deviceId => {
+      if (!devices.includes(deviceId)) {
+        console.log('🧹 Removing unavailable device from auto-connect:', deviceId);
+        autoConnectedDevices.current.delete(deviceId);
       }
     });
   }, [devices, selectedDevices, connectingDevices, toggleDevice]);
@@ -50,35 +61,17 @@ const StreamViewer = () => {
           videoElement.play().catch(err => {
             console.error('❌ Error playing video for device:', deviceId, err);
           });
-
-          // Actualizar el estado de dispositivos transmitiendo
-          setStreamingDevices(prev => ({
-            ...prev,
-            [deviceId]: {
-              stream,
-              state: 'streaming',
-              startTime: Date.now()
-            }
-          }));
         }
       }
     });
 
     // Limpiar videos de dispositivos que ya no tienen stream
-    Object.keys(streamingDevices).forEach(deviceId => {
-      if (!streams[deviceId]) {
+    Object.keys(videoRefs.current).forEach(deviceId => {
+      const videoElement = videoRefs.current[deviceId];
+      if (!streams[deviceId] && videoElement && videoElement.srcObject) {
         console.log('🧹 Cleaning up video for device:', deviceId);
-        const videoElement = videoRefs.current[deviceId];
-        if (videoElement && videoElement.srcObject) {
-          videoElement.srcObject.getTracks().forEach(track => track.stop());
-          videoElement.srcObject = null;
-        }
-        
-        setStreamingDevices(prev => {
-          const newState = { ...prev };
-          delete newState[deviceId];
-          return newState;
-        });
+        videoElement.srcObject.getTracks().forEach(track => track.stop());
+        videoElement.srcObject = null;
       }
     });
   }, [streams]);
@@ -241,8 +234,8 @@ const StreamViewer = () => {
       ) : (
         <div className={`grid ${layout === 'grid' ? getGridColumns() : 'grid-cols-1'} gap-6`}>
           {devices.map((deviceId) => {
-            const isActive = selectedDevices.has(deviceId);
-            const deviceStream = streamingDevices[deviceId];
+            const isActive = isDeviceActive(deviceId);
+            const hasStream = streams[deviceId] != null;
             const isConnecting = isDeviceConnecting(deviceId);
             const connectionState = getDeviceConnectionState(deviceId);
 
@@ -255,7 +248,7 @@ const StreamViewer = () => {
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${
-                      isActive && deviceStream 
+                      hasStream 
                         ? getConnectionStateColor('streaming')
                         : isConnecting
                         ? getConnectionStateColor('connecting')
@@ -264,7 +257,7 @@ const StreamViewer = () => {
                     <div>
                       <h3 className="text-white font-semibold text-lg">{deviceId}</h3>
                       <p className="text-white/50 text-sm">
-                        {isActive && deviceStream 
+                        {hasStream 
                           ? getConnectionStateText('streaming')
                           : isConnecting
                           ? getConnectionStateText('connecting')
@@ -289,7 +282,7 @@ const StreamViewer = () => {
                   />
 
                   {/* Placeholder when not streaming */}
-                  {(!isActive || !deviceStream) && (
+                  {!hasStream && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900/50 to-black/50">
                       {isConnecting ? (
                         <div className="flex flex-col items-center gap-4">
@@ -308,7 +301,7 @@ const StreamViewer = () => {
                   )}
 
                   {/* Live Indicator */}
-                  {isActive && deviceStream && (
+                  {hasStream && (
                     <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600 px-3 py-1.5 rounded-lg shadow-lg">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       <span className="text-white text-sm font-semibold">LIVE</span>
@@ -316,7 +309,7 @@ const StreamViewer = () => {
                   )}
 
                   {/* Connection State Indicator */}
-                  {isActive && connectionState && (
+                  {connectionState && (
                     <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
                       <span className="text-white text-xs font-medium">
                         {connectionState.toUpperCase()}
@@ -333,8 +326,10 @@ const StreamViewer = () => {
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                       </svg>
                       <span>
-                        {deviceStream 
-                          ? `Streaming for ${Math.floor((Date.now() - deviceStream.startTime) / 1000)}s`
+                        {hasStream 
+                          ? 'Streaming'
+                          : isConnecting
+                          ? 'Connecting...'
                           : 'Not streaming'}
                       </span>
                     </div>

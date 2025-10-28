@@ -24,7 +24,7 @@ class WebRTCService {
   }
 
   connect(serverUrl = 'https://julstracker.app') {
-    console.log('Connecting to signaling server:', serverUrl);
+    console.log('🔌 Connecting to signaling server:', serverUrl);
 
     this.socket = io(serverUrl, {
       transports: ['websocket', 'polling'],
@@ -61,7 +61,7 @@ class WebRTCService {
     });
 
     this.socket.on('available-broadcasters', (devices) => {
-      console.log('📡 Available broadcasters:', devices);
+      console.log('📡 Available broadcasters received:', devices);
       this.availableDevices = devices;
       if (this.onDeviceListUpdated) {
         this.onDeviceListUpdated(devices);
@@ -72,6 +72,7 @@ class WebRTCService {
       console.log('🟢 New broadcaster available:', data.deviceId);
       if (!this.availableDevices.includes(data.deviceId)) {
         this.availableDevices.push(data.deviceId);
+        console.log('📡 Updated device list:', this.availableDevices);
         if (this.onDeviceListUpdated) {
           this.onDeviceListUpdated(this.availableDevices);
         }
@@ -80,16 +81,22 @@ class WebRTCService {
 
     this.socket.on('broadcaster-disconnected', (data) => {
       console.log('🔴 Broadcaster disconnected:', data.deviceId);
+      
+      // Remover de la lista de dispositivos disponibles
       this.availableDevices = this.availableDevices.filter(
         id => id !== data.deviceId
       );
-      if (this.onDeviceListUpdated) {
-        this.onDeviceListUpdated(this.availableDevices);
-      }
+      console.log('📡 Updated device list after disconnect:', this.availableDevices);
       
       // Limpiar la conexión si existe
       if (this.peerConnections.has(data.deviceId)) {
+        console.log('🧹 Cleaning up connection for disconnected device:', data.deviceId);
         this.stopStream(data.deviceId);
+      }
+      
+      // Notificar después de limpiar todo
+      if (this.onDeviceListUpdated) {
+        this.onDeviceListUpdated(this.availableDevices);
       }
     });
 
@@ -370,7 +377,7 @@ class WebRTCService {
       this.onConnectionStateChanged('disconnected', deviceId);
     }
 
-    console.log('✅ Stream stopped for device:', deviceId);
+    console.log('✅ Stream stopped and cleaned up for device:', deviceId);
   }
 
   disconnect() {
