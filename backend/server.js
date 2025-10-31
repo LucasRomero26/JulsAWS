@@ -439,7 +439,7 @@ async function start() {
     // Iniciar servidor UDP
     udpServer.bind(UDP_PORT);
     
-    // ✨ MODIFICADO: Iniciar servidor HTTP con Socket.IO
+    // MODIFICADO: Iniciar servidor HTTP con Socket.IO
     server.listen(HTTP_PORT, '0.0.0.0', () => {
       console.log(`\n${'='.repeat(60)}`);
       console.log(`🚀 JULS TRACKING SYSTEM - SERVER RUNNING`);
