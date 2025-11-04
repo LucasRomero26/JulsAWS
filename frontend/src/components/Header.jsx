@@ -4,11 +4,12 @@ const Header = ({
   isMobile,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
-  mode, // 'live', 'history', 'areaHistory', 'stream'
+  mode, // 'live', 'history', 'areaHistory', 'stream', 'containers'
   handleReturnToLive,
   setIsDateSearchModalOpen,
   setIsAreaHistoryMode,
-  setStreamMode // ✨ NUEVA PROP
+  setStreamMode,
+  setContainersMode
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
@@ -34,8 +35,8 @@ const Header = ({
             <button
               onClick={handleReturnToLive}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'live'
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white border-transparent hover:text-white/50'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white border-transparent hover:text-white/50'
                 }`}
             >
               Live Tracking
@@ -43,8 +44,8 @@ const Header = ({
             <button
               onClick={() => setIsDateSearchModalOpen(true)}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'history'
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
               History
@@ -52,8 +53,8 @@ const Header = ({
             <button
               onClick={setIsAreaHistoryMode}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'areaHistory'
-                  ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
               History by Area
@@ -62,14 +63,27 @@ const Header = ({
             <button
               onClick={setStreamMode}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'stream'
-                  ? 'pb-[5px] text-red-600 border-red-600'
-                  : 'pb-2 text-white/50 border-transparent hover:text-white'
+                ? 'pb-[5px] text-red-600 border-red-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
               </svg>
               Live Stream
+            </button>
+            {/* ✨ Containers Button */}
+            <button
+              onClick={setContainersMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'containers'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Containers
             </button>
           </div>
         )}
@@ -81,8 +95,8 @@ const Header = ({
           <button
             onClick={handleReturnToLive}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'live'
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -96,8 +110,8 @@ const Header = ({
               setIsMobileMenuOpen(false);
             }}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'history'
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,8 +125,8 @@ const Header = ({
               setIsMobileMenuOpen(false);
             }}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
-                ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,15 +139,31 @@ const Header = ({
               setStreamMode();
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'stream'
-                ? 'bg-red-600/20 text-red-600 border-2 border-red-600'
-                : 'bg-white/10 text-white hover:bg-white/20'
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'stream'
+              ? 'bg-red-600/20 text-red-600 border-2 border-red-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
             </svg>
             Live Stream
+          </button>
+          {/* ✨ Containers Button - Mobile */}
+          <button
+            onClick={() => {
+              setContainersMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'containers'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            Containers
           </button>
         </div>
       )}

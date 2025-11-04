@@ -23,7 +23,8 @@ import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
 import RouteSelectionModal from './components/RouteSelectionModal';
-import StreamViewer from './components/StreamViewer'; // ✨ NUEVO IMPORT
+import StreamViewer from './components/StreamViewer';
+import ContainersView from './components/ContainersView'; // ✨ NUEVO IMPORT
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -33,7 +34,7 @@ function App() {
   const [errorType, setErrorType] = useState(null);
   const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
-  const [mode, setMode] = useState('live'); // ✨ ACTUALIZADO: 'live', 'history', 'areaHistory', 'stream'
+  const [mode, setMode] = useState('live'); // ✨ ACTUALIZADO: 'live', 'history', 'areaHistory', 'stream', 'containers'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para el manejo de múltiples dispositivos
@@ -281,6 +282,15 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // ✨ NUEVA FUNCIÓN: Handle containers mode
+  const handleSetContainersMode = () => {
+    setMode('containers');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+  };
+
   // Handle area history mode
   const handleSetAreaHistoryMode = () => {
     setMode('areaHistory');
@@ -511,11 +521,12 @@ function App() {
         handleReturnToLive={handleReturnToLive}
         setIsDateSearchModalOpen={setIsDateSearchModalOpen}
         setIsAreaHistoryMode={handleSetAreaHistoryMode}
-        setStreamMode={handleSetStreamMode} // ✨ NUEVA PROP
+        setStreamMode={handleSetStreamMode}
+        setContainersMode={handleSetContainersMode} // ✨ NUEVA PROP
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && (
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -524,7 +535,7 @@ function App() {
       )}
 
       {/* Area Sidebar for area history mode */}
-      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && (
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && (
         <AreaSidebar
           users={users}
           selectedDevices={selectedDevicesForArea}
@@ -534,7 +545,7 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' ? 'md:ml-96 md:mr-8' : ''
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' ? 'md:ml-96 md:mr-8' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -555,8 +566,11 @@ function App() {
             />
           </div>
         ) : mode === 'stream' ? (
-          // ✨ NUEVO: Vista de streaming
+          // Vista de streaming
           <StreamViewer />
+        ) : mode === 'containers' ? (
+          // ✨ NUEVA VISTA: Containers
+          <ContainersView />
         ) : users.length > 0 ? (
           <>
             {/* Action Buttons Bar for Area History Mode */}
