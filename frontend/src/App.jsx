@@ -23,8 +23,9 @@ import LocationMap from './components/LocationMap';
 import DateSearchModal from './components/DateSearchModal';
 import AreaSearchModal from './components/AreaSearchModal';
 import RouteSelectionModal from './components/RouteSelectionModal';
+import TimelineSlider from './components/TimelineSlider';
 import StreamViewer from './components/StreamViewer';
-import ContainersView from './components/ContainersView'; // ✨ NUEVO IMPORT
+import ContainersView from './components/ContainersView';
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -34,7 +35,7 @@ function App() {
   const [errorType, setErrorType] = useState(null);
   const [userPaths, setUserPaths] = useState({});
   const [isDateSearchModalOpen, setIsDateSearchModalOpen] = useState(false);
-  const [mode, setMode] = useState('live'); // ✨ ACTUALIZADO: 'live', 'history', 'areaHistory', 'stream', 'containers'
+  const [mode, setMode] = useState('live');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Estados para el manejo de múltiples dispositivos
@@ -47,9 +48,13 @@ function App() {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawnCircle, setDrawnCircle] = useState(null);
   const [selectedDevicesForArea, setSelectedDevicesForArea] = useState([]);
-  const [deviceRoutes, setDeviceRoutes] = useState({}); // Store all routes for each device
-  const [selectedRoutes, setSelectedRoutes] = useState({}); // Store selected route IDs for each device
+  const [deviceRoutes, setDeviceRoutes] = useState({});
+  const [selectedRoutes, setSelectedRoutes] = useState({});
   const [isRouteSelectionModalOpen, setIsRouteSelectionModalOpen] = useState(false);
+  
+  // ✨ NUEVO: Estados para Timeline control
+  const [timelinePosition, setTimelinePosition] = useState(100);
+  const [areaDateRange, setAreaDateRange] = useState(null);
 
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -123,7 +128,6 @@ function App() {
         }
 
         // Si no hay usuario seleccionado, seleccionar el primero activo
-        // MEJORADO: Mantener la selección actual si el usuario sigue existiendo
         if (selectedUserId) {
           const selectedUserStillExists = usersArray.find(user => user.id === selectedUserId);
           if (!selectedUserStillExists && usersArray.length > 0) {
@@ -191,10 +195,8 @@ function App() {
     }
   };
 
-  // MEJORADO: Manejar selección de usuario sin causar scroll automático innecesario
   const handleUserSelect = (userId) => {
     console.log('User selected:', userId);
-    // Solo actualizar si es diferente al seleccionado actual
     if (selectedUserId !== userId) {
       setSelectedUserId(userId);
     }
@@ -271,9 +273,10 @@ function App() {
     setDeviceRoutes({});
     setSelectedRoutes({});
     setIsRouteSelectionModalOpen(false);
+    setTimelinePosition(100);
+    setAreaDateRange(null);
   };
 
-  // ✨ NUEVA FUNCIÓN: Handle stream mode
   const handleSetStreamMode = () => {
     setMode('stream');
     setUserPaths({});
@@ -282,7 +285,6 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
-  // ✨ NUEVA FUNCIÓN: Handle containers mode
   const handleSetContainersMode = () => {
     setMode('containers');
     setUserPaths({});
@@ -304,6 +306,8 @@ function App() {
     setDeviceRoutes({});
     setSelectedRoutes({});
     setIsRouteSelectionModalOpen(false);
+    setTimelinePosition(100);
+    setAreaDateRange(null);
   };
 
   // Handle circle complete - open device selection modal
@@ -313,15 +317,16 @@ function App() {
     setIsAreaSearchModalOpen(true);
   };
 
-  // Handle device selection for area
-  const handleDeviceSelectForArea = async (deviceId) => {
+  // ✨ ACTUALIZADO: Handle device selection for area - ahora incluye fechas
+  const handleDeviceSelectForArea = async (deviceId, startDate, endDate) => {
     if (!drawnCircle) return;
 
     setLoading(true);
     setError(null);
+    setAreaDateRange({ startDate, endDate });
 
     try {
-      const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
+      const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}&startDate=${startDate}&endDate=${endDate}`;
 
       console.log('Fetching area data:', url);
       const response = await fetch(url);
@@ -372,12 +377,15 @@ function App() {
 
           // Store the first route's path for backward compatibility
           setUserPaths(prev => ({ ...prev, [deviceId]: routes[0].coordinates }));
+          
+          // Reset timeline to show full route
+          setTimelinePosition(100);
         } else {
-          setError(`No valid routes found for this device in the selected area.`);
+          setError(`No valid routes found for this device in the selected area and date range.`);
           setErrorType('no-data');
         }
       } else {
-        setError(`No locations found for this device in the selected area.`);
+        setError(`No locations found for this device in the selected area and date range.`);
         setErrorType('no-data');
       }
     } catch (err) {
@@ -389,7 +397,7 @@ function App() {
     }
   };
 
-  // Handle device toggle in area sidebar
+  // ✨ ACTUALIZADO: Handle device toggle in area sidebar - ahora incluye fechas
   const handleDeviceToggleForArea = async (deviceId) => {
     if (selectedDevicesForArea.includes(deviceId)) {
       // Remove device
@@ -411,13 +419,14 @@ function App() {
       });
     } else {
       // Add device - fetch its data
-      if (!drawnCircle) return;
+      if (!drawnCircle || !areaDateRange) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}`;
+        const { startDate, endDate } = areaDateRange;
+        const url = `${config.API_BASE_URL}/api/location/area?lat=${drawnCircle.center[0]}&lng=${drawnCircle.center[1]}&radius=${drawnCircle.radius}&deviceId=${deviceId}&startDate=${startDate}&endDate=${endDate}`;
 
         console.log('Fetching area data for toggle:', url);
         const response = await fetch(url);
@@ -490,13 +499,16 @@ function App() {
     });
   };
 
-  // Effect principal para polling MEJORADO
+  // ✨ NUEVO: Handle timeline change
+  const handleTimelineChange = (position) => {
+    setTimelinePosition(position);
+  };
+
+  // Effect principal para polling
   useEffect(() => {
     if (mode === 'live' && !isDateSearchModalOpen) {
-      // Fetch inicial
       fetchUsersData();
 
-      // Polling para actualizaciones en vivo con intervalo optimizado
       const interval = setInterval(() => {
         if (mode === 'live' && !isDateSearchModalOpen && document.visibilityState === 'visible') {
           fetchUsersData();
@@ -522,7 +534,7 @@ function App() {
         setIsDateSearchModalOpen={setIsDateSearchModalOpen}
         setIsAreaHistoryMode={handleSetAreaHistoryMode}
         setStreamMode={handleSetStreamMode}
-        setContainersMode={handleSetContainersMode} // ✨ NUEVA PROP
+        setContainersMode={handleSetContainersMode}
       />
 
       {/* Sidebar solo en desktop */}
@@ -566,10 +578,8 @@ function App() {
             />
           </div>
         ) : mode === 'stream' ? (
-          // Vista de streaming
           <StreamViewer />
         ) : mode === 'containers' ? (
-          // ✨ NUEVA VISTA: Containers
           <ContainersView />
         ) : users.length > 0 ? (
           <>
@@ -607,6 +617,8 @@ function App() {
                           setDeviceRoutes({});
                           setSelectedRoutes({});
                           setIsDrawingMode(true);
+                          setTimelinePosition(100);
+                          setAreaDateRange(null);
                         }}
                         className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-lg shadow-lg transition-all duration-300"
                         title="Redraw area"
@@ -626,7 +638,7 @@ function App() {
                         title="Select routes to display"
                       >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <span className="text-white font-medium text-sm">Routes</span>
                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
@@ -661,6 +673,16 @@ function App() {
               </div>
             )}
 
+            {/* ✨ NUEVO: Timeline Slider - shown when there are routes in area history mode */}
+            {mode === 'areaHistory' && Object.keys(deviceRoutes).length > 0 && (
+              <TimelineSlider
+                deviceRoutes={deviceRoutes}
+                selectedRoutes={selectedRoutes}
+                onTimelineChange={handleTimelineChange}
+                className="mb-3"
+              />
+            )}
+
             <LocationMap
               users={users}
               userPaths={userPaths}
@@ -674,6 +696,7 @@ function App() {
               selectedDevicesForArea={selectedDevicesForArea}
               deviceRoutes={deviceRoutes}
               selectedRoutes={selectedRoutes}
+              timelinePosition={timelinePosition}
             />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && mode !== 'areaHistory' && (

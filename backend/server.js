@@ -346,8 +346,9 @@ app.get('/api/location/range', async (req, res) => {
 });
 
 // Endpoint para obtener ubicaciones dentro de un área circular
+// ✨ ACTUALIZADO: Ahora soporta filtrado por rango de fechas
 app.get('/api/location/area', async (req, res) => {
-  const { lat, lng, radius, deviceId } = req.query;
+  const { lat, lng, radius, deviceId, startDate, endDate } = req.query;
 
   if (!lat || !lng || !radius) {
     return res.status(400).json({ 
@@ -365,6 +366,9 @@ app.get('/api/location/area', async (req, res) => {
     }
 
     console.log(`Area query request - Center: (${centerLat}, ${centerLng}), Radius: ${radiusMeters}m, Device: ${deviceId || 'all'}`);
+    if (startDate && endDate) {
+      console.log(`Date range - From: ${startDate} to: ${endDate}`);
+    }
 
     // Usar la fórmula de Haversine para calcular distancias
     const latDelta = (radiusMeters / 111000); // ~111km per degree latitude
@@ -376,6 +380,21 @@ app.get('/api/location/area', async (req, res) => {
     if (deviceId) {
       values.push(deviceId);
       deviceFilter = ` AND device_id = $${values.length}`;
+    }
+
+    // ✨ NUEVO: Agregar filtro de rango de fechas
+    let dateFilter = '';
+    if (startDate && endDate) {
+      const startTime = new Date(startDate).getTime();
+      const endTime = new Date(endDate).getTime();
+      
+      values.push(startTime);
+      const startDateParamIndex = values.length;
+      
+      values.push(endTime);
+      const endDateParamIndex = values.length;
+      
+      dateFilter = ` AND timestamp_value >= $${startDateParamIndex} AND timestamp_value <= $${endDateParamIndex}`;
     }
     
     values.push(radiusMeters);
@@ -415,6 +434,7 @@ app.get('/api/location/area', async (req, res) => {
         WHERE latitude BETWEEN $3 AND $4
         AND longitude BETWEEN $5 AND $6
         ${deviceFilter}
+        ${dateFilter}
       ) AS subquery
       WHERE distance <= $${radiusParamIndex}
       ORDER BY timestamp_value ASC;
@@ -424,6 +444,18 @@ app.get('/api/location/area', async (req, res) => {
     const result = await pool.query(query, values);
     
     console.log(`Found ${result.rows.length} locations within ${radiusMeters}m radius for device ${deviceId || 'all'}`);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'No se encontraron ubicaciones en el área especificada',
+        details: {
+          center: { lat: centerLat, lng: centerLng },
+          radius: radiusMeters,
+          deviceId: deviceId || 'all devices',
+          dateRange: startDate && endDate ? { startDate, endDate } : 'all time'
+        }
+      });
+    }
     
     res.json(result.rows);
   } catch (error) {
@@ -597,7 +629,7 @@ async function start() {
       console.log(`    GET  /api/location/latest`);
       console.log(`    GET  /api/location/all`);
       console.log(`    GET  /api/location/range`);
-      console.log(`    GET  /api/location/area`);
+      console.log(`    GET  /api/location/area (✨ with date range support)`);
       console.log(`\n  📦 Containers API:`);
       console.log(`    POST /api/containers`);
       console.log(`    GET  /api/containers/all`);
