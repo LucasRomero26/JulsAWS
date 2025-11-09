@@ -51,46 +51,18 @@ const TimelineSlider = ({
           if (currentIndex + routeLength > targetIndex) {
             const pointIndexInRoute = targetIndex - currentIndex;
             
-            // Intentar obtener el timestamp de múltiples fuentes
+            // ✅ CORREGIDO: Buscar timestamp en route.points (no route.data)
             let timestamp = null;
             
-            // Opción 1: route.data
-            if (route.data && route.data[pointIndexInRoute]) {
-              const point = route.data[pointIndexInRoute];
-              timestamp = point.timestamp_value || point.created_at || point.timestamp;
-            }
-            
-            // Opción 2: route.points
-            if (!timestamp && route.points && route.points[pointIndexInRoute]) {
+            if (route.points && route.points[pointIndexInRoute]) {
               const point = route.points[pointIndexInRoute];
-              timestamp = point.timestamp_value || point.created_at || point.timestamp;
+              timestamp = point.timestamp_value || point.created_at;
             }
-            
-            // Opción 3: route.timestamps array
-            if (!timestamp && route.timestamps && route.timestamps[pointIndexInRoute]) {
-              timestamp = route.timestamps[pointIndexInRoute];
-            }
-
-            // Opción 4: Interpolar entre startTime y endTime
-            if (!timestamp && route.startTime && route.endTime) {
-              const progress = pointIndexInRoute / (routeLength - 1);
-              timestamp = route.startTime + (route.endTime - route.startTime) * progress;
-            }
-
-            console.log('Timeline point info:', {
-              deviceId,
-              routeId: route.id,
-              pointIndex: pointIndexInRoute,
-              timestamp,
-              hasData: !!route.data,
-              hasPoints: !!route.points,
-              hasTimestamps: !!route.timestamps
-            });
             
             return {
               deviceId,
               routeId: route.id,
-              timestamp,
+              timestamp: timestamp,
               pointIndex: pointIndexInRoute,
               totalPointsInRoute: routeLength
             };
@@ -141,35 +113,39 @@ const TimelineSlider = ({
     setCurrentPointInfo(pointInfo);
   }, [timelinePosition, deviceRoutes, selectedRoutes]);
 
-  // Format timestamp
+  // ✅ CORREGIDO: Mejorar formato de timestamp
   const formatTimestamp = (timestamp) => {
-    if (!timestamp) {
-      console.log('No timestamp provided to formatTimestamp');
-      return 'N/A';
-    }
+    if (!timestamp) return 'N/A';
     
     try {
-      // Si el timestamp es un número, asumimos que está en milisegundos
-      const date = new Date(typeof timestamp === 'number' ? timestamp : parseInt(timestamp));
+      let date;
+      const timestampStr = String(timestamp);
       
-      // Verificar si la fecha es válida
+      // Detectar si es timestamp de 13 dígitos (milisegundos) o 10 dígitos (segundos)
+      if (/^\d{13}$/.test(timestampStr)) {
+        date = new Date(parseInt(timestampStr));
+      } else if (/^\d{10}$/.test(timestampStr)) {
+        date = new Date(parseInt(timestampStr) * 1000);
+      } else {
+        date = new Date(timestamp);
+      }
+      
       if (isNaN(date.getTime())) {
-        console.log('Invalid date from timestamp:', timestamp);
         return 'Invalid Date';
       }
       
       return date.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         hour12: true
       });
     } catch (error) {
-      console.error('Error formatting timestamp:', error, 'timestamp:', timestamp);
-      return 'Error';
+      console.error('Error formatting timestamp:', error);
+      return 'Invalid Date';
     }
   };
 
@@ -275,7 +251,11 @@ const TimelineSlider = ({
         </div>
       ) : (
         <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-          <div className="text-white/60 text-sm">Loading timeline data...</div>
+          <div className="text-white/60 text-sm mb-2">Current Time</div>
+          <div className="text-white font-bold text-lg">Loading...</div>
+          <div className="text-white/40 text-xs mt-2">
+            Point 0 of {totalPoints}
+          </div>
         </div>
       )}
 
