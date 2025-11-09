@@ -115,7 +115,8 @@ const LocationMap = ({
   drawnCircle,
   selectedDevicesForArea = [],
   deviceRoutes = {},
-  selectedRoutes = {}
+  selectedRoutes = {},
+  timelinePosition = 100  // ✨ NUEVO parámetro
 }) => {
   const viewportHeight = useViewportHeight();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -123,6 +124,53 @@ const LocationMap = ({
   const mapHeight = isMobile
     ? Math.max(viewportHeight - 200, 300)
     : Math.max(viewportHeight - 180, 400);
+
+  // ✨ NUEVA FUNCIÓN: Calcular cuántos puntos mostrar según timeline
+  const getVisibleCoordinates = (coordinates, deviceId, routeId) => {
+    if (mode !== 'areaHistory' || timelinePosition >= 100) {
+      return coordinates;
+    }
+
+    // Calcular el total de puntos en todas las rutas seleccionadas
+    let totalPoints = 0;
+    let pointsBeforeCurrentRoute = 0;
+    let currentRoutePoints = 0;
+    let foundCurrentRoute = false;
+
+    Object.keys(deviceRoutes).forEach(devId => {
+      const routes = deviceRoutes[devId];
+      const selectedRouteIds = selectedRoutes[devId] || [];
+      
+      routes.forEach(route => {
+        if (selectedRouteIds.includes(route.id)) {
+          if (devId === deviceId && route.id === routeId) {
+            currentRoutePoints = route.coordinates.length;
+            foundCurrentRoute = true;
+          } else if (!foundCurrentRoute) {
+            pointsBeforeCurrentRoute += route.coordinates.length;
+          }
+          totalPoints += route.coordinates.length;
+        }
+      });
+    });
+
+    // Calcular cuántos puntos mostrar en total según el timeline
+    const targetTotalPoints = Math.floor((timelinePosition / 100) * totalPoints);
+    
+    // Calcular cuántos puntos mostrar de esta ruta específica
+    const pointsToShowFromThisRoute = Math.max(0, targetTotalPoints - pointsBeforeCurrentRoute);
+    
+    if (pointsToShowFromThisRoute <= 0) {
+      return []; // No mostrar nada de esta ruta aún
+    }
+    
+    if (pointsToShowFromThisRoute >= currentRoutePoints) {
+      return coordinates; // Mostrar toda la ruta
+    }
+    
+    // Mostrar solo una parte de la ruta
+    return coordinates.slice(0, pointsToShowFromThisRoute);
+  };
 
   // Obtener la posición central - solo al inicializar, no actualizar constantemente
   const getInitialCenterPosition = () => {
@@ -232,6 +280,11 @@ const LocationMap = ({
 
                     const totalRoutes = deviceRoutes[user.id].length;
                     const routeColor = getRouteColor(deviceColor.hex, routeIndex, totalRoutes);
+                    
+                    // ✨ NUEVO: Obtener coordenadas visibles según timeline
+                    const visibleCoordinates = getVisibleCoordinates(route.coordinates, user.id, route.id);
+                    
+                    if (visibleCoordinates.length === 0) return null;
 
                     return (
                       <div key={route.id}>
@@ -242,13 +295,13 @@ const LocationMap = ({
                             weight: 4,
                             opacity: 0.8
                           }}
-                          positions={route.coordinates}
+                          positions={visibleCoordinates}
                         />
                         
                         {/* Start marker */}
-                        {route.coordinates.length > 0 && (
+                        {visibleCoordinates.length > 0 && (
                           <CircleMarker
-                            center={route.coordinates[0]}
+                            center={visibleCoordinates[0]}
                             radius={8}
                             pathOptions={{
                               color: routeColor,
@@ -263,18 +316,16 @@ const LocationMap = ({
                                   ▶ START - {user.name}
                                 </strong><br />
                                 <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
-                                <small>{route.startTimestamp}</small><br />
-                                <small>Lat: {route.coordinates[0][0].toFixed(6)}</small><br />
-                                <small>Lng: {route.coordinates[0][1].toFixed(6)}</small>
+                                <small>{route.startTimestamp}</small>
                               </div>
                             </Popup>
                           </CircleMarker>
                         )}
                         
-                        {/* End marker */}
-                        {route.coordinates.length > 1 && (
+                        {/* End marker - solo mostrar si el timeline muestra toda la ruta */}
+                        {visibleCoordinates.length > 1 && visibleCoordinates.length === route.coordinates.length && (
                           <CircleMarker
-                            center={route.coordinates[route.coordinates.length - 1]}
+                            center={visibleCoordinates[visibleCoordinates.length - 1]}
                             radius={8}
                             pathOptions={{
                               color: routeColor,
@@ -289,51 +340,35 @@ const LocationMap = ({
                                   ■ END - {user.name}
                                 </strong><br />
                                 <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
-                                <small>{route.endTimestamp}</small><br />
-                                <small>Lat: {route.coordinates[route.coordinates.length - 1][0].toFixed(6)}</small><br />
-                                <small>Lng: {route.coordinates[route.coordinates.length - 1][1].toFixed(6)}</small>
+                                <small>{route.endTimestamp}</small>
                               </div>
                             </Popup>
                           </CircleMarker>
                         )}
                         
-                        {/* Intermediate points */}
-                        {route.coordinates.slice(1, -1).map((point, pointIndex) => {
-                          // Calculate the actual point number in the complete route
-                          const actualPointNumber = pointIndex + 2;
-                          // Get timestamp for this point if available
-                          const pointData = route.points[pointIndex + 1];
-                          
-                          return (
-                            <CircleMarker
-                              key={`${route.id}-${pointIndex}`}
-                              center={point}
-                              radius={6}
-                              pathOptions={{
-                                color: routeColor,
-                                fillColor: routeColor,
-                                fillOpacity: 0.6,
-                                weight: 2
-                              }}
-                            >
-                              <Popup>
-                                <div className="text-center">
-                                  <strong style={{ color: routeColor }}>
-                                    {user.name} - Point #{actualPointNumber}
-                                  </strong><br />
-                                  <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
-                                  {pointData && pointData.timestamp_value && (
-                                    <>
-                                      <small>{formatTimestamp(pointData.timestamp_value)}</small><br />
-                                    </>
-                                  )}
-                                  <small>Lat: {point[0].toFixed(6)}</small><br />
-                                  <small>Lng: {point[1].toFixed(6)}</small>
-                                </div>
-                              </Popup>
-                            </CircleMarker>
-                          );
-                        })}
+                        {/* Current position marker - mostrar al final de las coordenadas visibles si no está completo */}
+                        {visibleCoordinates.length > 0 && visibleCoordinates.length < route.coordinates.length && (
+                          <CircleMarker
+                            center={visibleCoordinates[visibleCoordinates.length - 1]}
+                            radius={10}
+                            pathOptions={{
+                              color: routeColor,
+                              fillColor: '#ffff00',
+                              fillOpacity: 1,
+                              weight: 3
+                            }}
+                          >
+                            <Popup>
+                              <div className="text-center">
+                                <strong style={{ color: '#ffff00' }}>
+                                  📍 CURRENT - {user.name}
+                                </strong><br />
+                                <small>Route {routeIndex + 1} of {deviceRoutes[user.id].length}</small><br />
+                                <small>Point {visibleCoordinates.length} of {route.coordinates.length}</small>
+                              </div>
+                            </Popup>
+                          </CircleMarker>
+                        )}
                       </div>
                     );
                   })}

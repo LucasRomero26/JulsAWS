@@ -51,7 +51,7 @@ const TimelineSlider = ({
           if (currentIndex + routeLength > targetIndex) {
             const pointIndexInRoute = targetIndex - currentIndex;
             
-            // ✅ CORREGIDO: Verificar que route.data existe y tiene el índice
+            // Verificar que route.data existe y tiene el índice
             if (route.data && route.data[pointIndexInRoute]) {
               const point = route.data[pointIndexInRoute];
               
@@ -59,22 +59,16 @@ const TimelineSlider = ({
                 deviceId,
                 routeId: route.id,
                 timestamp: point.timestamp_value || point.created_at,
-                latitude: point.latitude,
-                longitude: point.longitude,
-                speed: point.speed,
                 pointIndex: pointIndexInRoute,
                 totalPointsInRoute: routeLength
               };
-            } else {
-              // Si no hay data, usar las coordenadas directamente
-              const coord = route.coordinates[pointIndexInRoute];
+            } else if (route.points && route.points[pointIndexInRoute]) {
+              // Intentar con route.points si data no está disponible
+              const point = route.points[pointIndexInRoute];
               return {
                 deviceId,
                 routeId: route.id,
-                timestamp: null,
-                latitude: coord[0],
-                longitude: coord[1],
-                speed: null,
+                timestamp: point.timestamp_value || point.created_at,
                 pointIndex: pointIndexInRoute,
                 totalPointsInRoute: routeLength
               };
@@ -173,6 +167,7 @@ const TimelineSlider = ({
             onClick={() => {
               if (timelinePosition >= 100) {
                 setTimelinePosition(0);
+                onTimelineChange(0);
               }
               setIsPlaying(!isPlaying);
             }}
@@ -228,37 +223,15 @@ const TimelineSlider = ({
         </div>
       </div>
 
-      {/* Current Point Information */}
+      {/* Current Point Information - Solo timestamp */}
       {currentPointInfo && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-          <div>
-            <div className="text-white/60 text-xs mb-1">Current Time</div>
-            <div className="text-white font-semibold text-sm">
-              {formatTimestamp(currentPointInfo.timestamp)}
-            </div>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+          <div className="text-white/60 text-sm mb-2">Current Time</div>
+          <div className="text-white font-bold text-lg">
+            {formatTimestamp(currentPointInfo.timestamp)}
           </div>
-          
-          <div>
-            <div className="text-white/60 text-xs mb-1">Position</div>
-            <div className="text-white font-semibold text-sm">
-              {currentPointInfo.latitude?.toFixed(6)}, {currentPointInfo.longitude?.toFixed(6)}
-            </div>
-          </div>
-
-          {currentPointInfo.speed !== undefined && currentPointInfo.speed !== null && (
-            <div>
-              <div className="text-white/60 text-xs mb-1">Speed</div>
-              <div className="text-white font-semibold text-sm">
-                {currentPointInfo.speed} km/h
-              </div>
-            </div>
-          )}
-
-          <div>
-            <div className="text-white/60 text-xs mb-1">Progress</div>
-            <div className="text-white font-semibold text-sm">
-              Point {Math.floor((timelinePosition / 100) * totalPoints)} of {totalPoints}
-            </div>
+          <div className="text-white/40 text-xs mt-2">
+            Point {Math.floor((timelinePosition / 100) * totalPoints)} of {totalPoints}
           </div>
         </div>
       )}
