@@ -36,7 +36,7 @@ const TimelineSlider = ({
     const totalPoints = getTotalPoints();
     if (totalPoints === 0) return null;
 
-    const targetIndex = Math.floor((position / 100) * totalPoints);
+    const targetIndex = Math.floor((position / 100) * (totalPoints - 1));
     let currentIndex = 0;
 
     // Find the point at the target index
@@ -46,11 +46,15 @@ const TimelineSlider = ({
 
       for (const route of routes) {
         if (selectedRouteIds.includes(route.id)) {
-          if (currentIndex + route.coordinates.length > targetIndex) {
+          const routeLength = route.coordinates.length;
+          
+          if (currentIndex + routeLength > targetIndex) {
             const pointIndexInRoute = targetIndex - currentIndex;
-            const point = route.data[pointIndexInRoute];
             
-            if (point) {
+            // ✅ CORREGIDO: Verificar que route.data existe y tiene el índice
+            if (route.data && route.data[pointIndexInRoute]) {
+              const point = route.data[pointIndexInRoute];
+              
               return {
                 deviceId,
                 routeId: route.id,
@@ -59,11 +63,24 @@ const TimelineSlider = ({
                 longitude: point.longitude,
                 speed: point.speed,
                 pointIndex: pointIndexInRoute,
-                totalPointsInRoute: route.coordinates.length
+                totalPointsInRoute: routeLength
+              };
+            } else {
+              // Si no hay data, usar las coordenadas directamente
+              const coord = route.coordinates[pointIndexInRoute];
+              return {
+                deviceId,
+                routeId: route.id,
+                timestamp: null,
+                latitude: coord[0],
+                longitude: coord[1],
+                speed: null,
+                pointIndex: pointIndexInRoute,
+                totalPointsInRoute: routeLength
               };
             }
           }
-          currentIndex += route.coordinates.length;
+          currentIndex += routeLength;
         }
       }
     }
@@ -101,7 +118,7 @@ const TimelineSlider = ({
       setIsPlaying(false);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, timelinePosition, playbackSpeed]);
+  }, [isPlaying, timelinePosition, playbackSpeed, onTimelineChange]);
 
   // Update current point info when timeline position changes
   useEffect(() => {
@@ -228,7 +245,7 @@ const TimelineSlider = ({
             </div>
           </div>
 
-          {currentPointInfo.speed !== undefined && (
+          {currentPointInfo.speed !== undefined && currentPointInfo.speed !== null && (
             <div>
               <div className="text-white/60 text-xs mb-1">Speed</div>
               <div className="text-white font-semibold text-sm">
