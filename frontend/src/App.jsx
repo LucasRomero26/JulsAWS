@@ -52,7 +52,7 @@ function App() {
   const [selectedRoutes, setSelectedRoutes] = useState({});
   const [isRouteSelectionModalOpen, setIsRouteSelectionModalOpen] = useState(false);
   
-  // ✨ NUEVO: Estados para Timeline control
+  // Estados para Timeline control
   const [timelinePosition, setTimelinePosition] = useState(100);
   const [areaDateRange, setAreaDateRange] = useState(null);
 
@@ -317,7 +317,7 @@ function App() {
     setIsAreaSearchModalOpen(true);
   };
 
-  // ✨ ACTUALIZADO: Handle device selection for area - ahora incluye fechas
+  // Handle device selection for area
   const handleDeviceSelectForArea = async (deviceId, startDate, endDate) => {
     if (!drawnCircle) return;
 
@@ -397,7 +397,7 @@ function App() {
     }
   };
 
-  // ✨ ACTUALIZADO: Handle device toggle in area sidebar - ahora incluye fechas
+  // Handle device toggle in area sidebar
   const handleDeviceToggleForArea = async (deviceId) => {
     if (selectedDevicesForArea.includes(deviceId)) {
       // Remove device
@@ -499,7 +499,7 @@ function App() {
     });
   };
 
-  // ✨ NUEVO: Handle timeline change
+  // Handle timeline change
   const handleTimelineChange = (position) => {
     setTimelinePosition(position);
   };
@@ -673,31 +673,57 @@ function App() {
               </div>
             )}
 
-            {/* ✨ NUEVO: Timeline Slider - shown when there are routes in area history mode */}
-            {mode === 'areaHistory' && Object.keys(deviceRoutes).length > 0 && (
-              <TimelineSlider
+            {/* ✨ NUEVO LAYOUT: Map y Timeline lado a lado */}
+            {mode === 'areaHistory' && Object.keys(deviceRoutes).length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                {/* Mapa ocupa 2 columnas */}
+                <div className="lg:col-span-2">
+                  <LocationMap
+                    users={users}
+                    userPaths={userPaths}
+                    isLiveMode={mode === 'live'}
+                    selectedUserId={selectedUserId}
+                    previousUsers={previousUsers}
+                    mode={mode}
+                    isDrawingMode={isDrawingMode}
+                    onCircleComplete={handleCircleComplete}
+                    drawnCircle={drawnCircle}
+                    selectedDevicesForArea={selectedDevicesForArea}
+                    deviceRoutes={deviceRoutes}
+                    selectedRoutes={selectedRoutes}
+                    timelinePosition={timelinePosition}
+                  />
+                </div>
+
+                {/* Timeline ocupa 1 columna */}
+                <div className="lg:col-span-1">
+                  <TimelineSlider
+                    deviceRoutes={deviceRoutes}
+                    selectedRoutes={selectedRoutes}
+                    onTimelineChange={handleTimelineChange}
+                    className="h-full"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Mapa normal sin timeline */
+              <LocationMap
+                users={users}
+                userPaths={userPaths}
+                isLiveMode={mode === 'live'}
+                selectedUserId={selectedUserId}
+                previousUsers={previousUsers}
+                mode={mode}
+                isDrawingMode={isDrawingMode}
+                onCircleComplete={handleCircleComplete}
+                drawnCircle={drawnCircle}
+                selectedDevicesForArea={selectedDevicesForArea}
                 deviceRoutes={deviceRoutes}
                 selectedRoutes={selectedRoutes}
-                onTimelineChange={handleTimelineChange}
-                className="mb-3"
+                timelinePosition={timelinePosition}
               />
             )}
 
-            <LocationMap
-              users={users}
-              userPaths={userPaths}
-              isLiveMode={mode === 'live'}
-              selectedUserId={selectedUserId}
-              previousUsers={previousUsers}
-              mode={mode}
-              isDrawingMode={isDrawingMode}
-              onCircleComplete={handleCircleComplete}
-              drawnCircle={drawnCircle}
-              selectedDevicesForArea={selectedDevicesForArea}
-              deviceRoutes={deviceRoutes}
-              selectedRoutes={selectedRoutes}
-              timelinePosition={timelinePosition}
-            />
             {/* Información de dispositivos solo en móvil */}
             {isMobile && mode !== 'areaHistory' && (
               <MobileUsersInfo
