@@ -42,22 +42,13 @@ const Header = ({
               Live Tracking
             </button>
             <button
-              onClick={() => setIsDateSearchModalOpen(true)}
-              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'history'
-                ? 'pb-[5px] text-cyan-600 border-cyan-600'
-                : 'pb-2 text-white/50 border-transparent hover:text-white'
-                }`}
-            >
-              History
-            </button>
-            <button
               onClick={setIsAreaHistoryMode}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'areaHistory'
                 ? 'pb-[5px] text-cyan-600 border-cyan-600'
                 : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
-              History by Area
+              History
             </button>
             {/* ✨ Live Stream Button */}
             <button
