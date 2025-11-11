@@ -37,7 +37,7 @@ function ContainersView() {
     return () => clearInterval(interval);
   }, []);
 
-  // Format timestamp
+  // Format timestamp to readable date
   const formatDate = (timestamp) => {
     const date = new Date(parseInt(timestamp));
     return date.toLocaleString('en-US', {
@@ -48,21 +48,6 @@ function ContainersView() {
       minute: '2-digit',
       second: '2-digit'
     });
-  };
-
-  // Format confidence
-  const formatConfidence = (confidence) => {
-    const conf = parseFloat(confidence);
-    return `${conf.toFixed(1)}%`;
-  };
-
-  // Get confidence color
-  const getConfidenceColor = (confidence) => {
-    const conf = parseFloat(confidence);
-    if (conf >= 90) return 'text-green-400';
-    if (conf >= 75) return 'text-cyan-400';
-    if (conf >= 60) return 'text-yellow-400';
-    return 'text-orange-400';
   };
 
   if (loading) {
@@ -134,22 +119,13 @@ function ContainersView() {
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
                     ISO Code
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
-                    Confidence
+                    Device ID
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
-                    Track ID
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
-                    Image
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-white/80 uppercase tracking-wider">
-                    Detected At
+                    Detection Date
                   </th>
                 </tr>
               </thead>
@@ -162,49 +138,58 @@ function ContainersView() {
                       animation: `fadeIn 0.3s ease-in-out ${index * 0.05}s both`
                     }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-white/90 font-mono text-sm">#{container.id}</span>
-                    </td>
+                    {/* ISO Code */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
-                          <span className="text-white font-mono font-bold tracking-wider">
+                        <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
+                          <span className="text-white font-mono font-bold tracking-wider text-lg">
                             {container.iso_code}
                           </span>
                         </span>
                       </div>
                     </td>
+
+                    {/* Device ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <div className="w-full bg-white/10 rounded-full h-2 max-w-[100px]">
-                          <div 
-                            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${container.confidence}%` }}
-                          ></div>
+                        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <div>
+                          <span className="text-white font-medium text-sm block">
+                            {container.device_id || 'Unknown'}
+                          </span>
+                          {container.device_name && (
+                            <span className="text-white/50 text-xs">
+                              {container.device_name}
+                            </span>
+                          )}
                         </div>
-                        <span className={`font-semibold text-sm ${getConfidenceColor(container.confidence)}`}>
-                          {formatConfidence(container.confidence)}
-                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-white/70 font-mono text-sm">
-                        {container.track_id || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-white/50 text-xs font-mono truncate max-w-[150px] inline-block" title={container.image_filename}>
-                        {container.image_filename || 'N/A'}
-                      </span>
-                    </td>
+
+                    {/* Detection Date */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span className="text-white/70 text-sm">
-                          {formatDate(container.timestamp_value)}
-                        </span>
+                        <div>
+                          <span className="text-white text-sm font-medium block">
+                            {formatDate(container.timestamp_value)}
+                          </span>
+                          <span className="text-white/40 text-xs">
+                            Created: {new Date(container.created_at).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </td>
                   </tr>

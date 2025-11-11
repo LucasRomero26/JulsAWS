@@ -51,7 +51,7 @@ async function createTable() {
   }
 }
 
-// ✨ NUEVO: Crear tabla de contenedores si no existe
+// ✨ ACTUALIZADO: Crear tabla de contenedores con información del dispositivo
 async function createContainersTable() {
   const query = `
     CREATE TABLE IF NOT EXISTS containers (
@@ -61,6 +61,9 @@ async function createContainersTable() {
       track_id INTEGER,
       image_filename VARCHAR(255),
       timestamp_value BIGINT NOT NULL,
+      device_id VARCHAR(100),
+      device_name VARCHAR(255),
+      device_type VARCHAR(50) DEFAULT 'jetson',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     
@@ -68,11 +71,13 @@ async function createContainersTable() {
     CREATE INDEX IF NOT EXISTS idx_containers_iso_code ON containers(iso_code);
     CREATE INDEX IF NOT EXISTS idx_containers_timestamp ON containers(timestamp_value DESC);
     CREATE INDEX IF NOT EXISTS idx_containers_created_at ON containers(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_containers_device_id ON containers(device_id);
+    CREATE INDEX IF NOT EXISTS idx_containers_device_timestamp ON containers(device_id, timestamp_value DESC);
   `;
   
   try {
     await pool.query(query);
-    console.log('✅ Tabla containers verificada/creada');
+    console.log('✅ Tabla containers verificada/creada con soporte para device tracking');
   } catch (error) {
     console.error('❌ Error creando tabla containers:', error);
   }
@@ -471,10 +476,10 @@ app.get('/api/location/area', async (req, res) => {
 
 // ==================== ENDPOINTS DE CONTAINERS ====================
 
-// ✨ Endpoint para recibir datos de contenedores desde Jetson
+// ✨ ACTUALIZADO: Endpoint para recibir datos de contenedores con device info
 app.post('/api/containers', async (req, res) => {
   try {
-    const { iso_code, timestamp, confidence, track_id, image_filename } = req.body;
+    const { iso_code, timestamp, confidence, track_id, image_filename, device_id, device_name, device_type } = req.body;
     
     // Validar campos requeridos
     if (!iso_code || !timestamp) {
@@ -483,13 +488,13 @@ app.post('/api/containers', async (req, res) => {
       });
     }
     
-    console.log(`📦 Nuevo contenedor detectado: ${iso_code} | Confidence: ${confidence}% | Track ID: ${track_id}`);
+    console.log(`📦 Nuevo contenedor detectado: ${iso_code} | Device: ${device_id || 'unknown'} | Confidence: ${confidence}%`);
     
-    // Insertar en la base de datos
+    // Insertar en la base de datos CON INFO DEL DISPOSITIVO
     const query = `
       INSERT INTO containers 
-      (iso_code, timestamp_value, confidence, track_id, image_filename)
-      VALUES ($1, $2, $3, $4, $5)
+      (iso_code, timestamp_value, confidence, track_id, image_filename, device_id, device_name, device_type)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *;
     `;
     
@@ -498,11 +503,14 @@ app.post('/api/containers', async (req, res) => {
       timestamp,
       confidence || null,
       track_id || null,
-      image_filename || null
+      image_filename || null,
+      device_id || null,
+      device_name || null,
+      device_type || 'jetson'
     ];
     
     const result = await pool.query(query, values);
-    console.log(`✅ Contenedor guardado con ID: ${result.rows[0].id}`);
+    console.log(`✅ Contenedor guardado con ID: ${result.rows[0].id} | Device: ${device_id || 'N/A'}`);
     
     res.status(201).json({
       success: true,
@@ -578,6 +586,53 @@ app.get('/api/containers/iso/:isoCode', async (req, res) => {
   }
 });
 
+// ✨ NUEVO: Endpoint para obtener contenedores por device_id
+app.get('/api/containers/device/:deviceId', async (req, res) => {
+  try {
+    const { deviceId } = req.params;
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const query = `
+      SELECT * FROM containers
+      WHERE device_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2;
+    `;
+    
+    const result = await pool.query(query, [deviceId, limit]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo contenedores por device:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ✨ NUEVO: Endpoint para obtener estadísticas de contenedores por dispositivo
+app.get('/api/containers/stats/by-device', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        device_id,
+        device_name,
+        device_type,
+        COUNT(*) as total_containers,
+        COUNT(DISTINCT iso_code) as unique_containers,
+        MAX(timestamp_value) as last_detection,
+        AVG(confidence) as avg_confidence
+      FROM containers
+      WHERE device_id IS NOT NULL
+      GROUP BY device_id, device_name, device_type
+      ORDER BY total_containers DESC;
+    `;
+    
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // ==================== HEALTH CHECK ====================
 
 // Health check
@@ -635,6 +690,8 @@ async function start() {
       console.log(`    GET  /api/containers/all`);
       console.log(`    GET  /api/containers/latest`);
       console.log(`    GET  /api/containers/iso/:isoCode`);
+      console.log(`    GET  /api/containers/device/:deviceId (✨ NEW)`);
+      console.log(`    GET  /api/containers/stats/by-device (✨ NEW)`);
       console.log(`\n  🔌 WebSocket:`);
       console.log(`    WS   /socket.io - WebRTC Signaling`);
       console.log(`${'='.repeat(70)}\n`);
