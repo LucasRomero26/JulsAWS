@@ -4,12 +4,13 @@ const Header = ({
   isMobile,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
-  mode, // 'live', 'history', 'areaHistory', 'stream', 'containers'
+  mode, // 'live', 'history', 'areaHistory', 'stream', 'containers', 'containersWL'
   handleReturnToLive,
   setIsDateSearchModalOpen,
   setIsAreaHistoryMode,
   setStreamMode,
-  setContainersMode
+  setContainersMode,
+  setContainersWLMode
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
@@ -76,6 +77,19 @@ const Header = ({
               </svg>
               Containers
             </button>
+            {/* ✨ NUEVO: Containers WL Button */}
+            <button
+              onClick={setContainersWLMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'containersWL'
+                ? 'pb-[5px] text-green-600 border-green-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Containers WL
+            </button>
           </div>
         )}
       </div>
@@ -121,7 +135,7 @@ const Header = ({
               }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 11V9" />
             </svg>
             History by Area
           </button>
@@ -146,7 +160,7 @@ const Header = ({
               setContainersMode();
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'containers'
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containers'
               ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
               : 'bg-white/10 text-white hover:bg-white/20'
               }`}
@@ -155,6 +169,22 @@ const Header = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
             Containers
+          </button>
+          {/* ✨ NUEVO: Containers WL Button - Mobile */}
+          <button
+            onClick={() => {
+              setContainersWLMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'containersWL'
+              ? 'bg-green-600/20 text-green-600 border-2 border-green-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Containers WL
           </button>
         </div>
       )}

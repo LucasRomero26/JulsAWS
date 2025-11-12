@@ -26,6 +26,7 @@ import RouteSelectionModal from './components/RouteSelectionModal';
 import TimelineSlider from './components/TimelineSlider';
 import StreamViewer from './components/StreamViewer';
 import ContainersView from './components/ContainersView';
+import ContainersWLView from './components/ContainersWLView';
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -293,6 +294,15 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // ✨ NUEVO: Handler para Containers WL
+  const handleSetContainersWLMode = () => {
+    setMode('containersWL');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+  };
+
   // Handle area history mode
   const handleSetAreaHistoryMode = () => {
     setMode('areaHistory');
@@ -535,10 +545,11 @@ function App() {
         setIsAreaHistoryMode={handleSetAreaHistoryMode}
         setStreamMode={handleSetStreamMode}
         setContainersMode={handleSetContainersMode}
+        setContainersWLMode={handleSetContainersWLMode}
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && (
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -547,7 +558,7 @@ function App() {
       )}
 
       {/* Area Sidebar for area history mode */}
-      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && (
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
         <AreaSidebar
           users={users}
           selectedDevices={selectedDevicesForArea}
@@ -557,7 +568,7 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' ? 'md:ml-96 md:mr-8' : ''
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' ? 'md:ml-80' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -581,6 +592,8 @@ function App() {
           <StreamViewer />
         ) : mode === 'containers' ? (
           <ContainersView />
+        ) : mode === 'containersWL' ? (
+          <ContainersWLView />
         ) : users.length > 0 ? (
           <>
             {/* Action Buttons Bar for Area History Mode */}
@@ -638,7 +651,7 @@ function App() {
                         title="Select routes to display"
                       >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
                         <span className="text-white font-medium text-sm">Routes</span>
                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg">
