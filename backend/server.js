@@ -83,6 +83,32 @@ async function createContainersTable() {
   }
 }
 
+// ✨ NUEVO: Crear tabla de containers_white_list
+async function createContainersWhiteListTable() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS containers_white_list (
+      id SERIAL PRIMARY KEY,
+      iso_code VARCHAR(20) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      device_id VARCHAR(100),
+      device_name VARCHAR(255),
+      device_type VARCHAR(50) DEFAULT 'jetson'
+    );
+    
+    -- Crear índices para optimizar consultas
+    CREATE INDEX IF NOT EXISTS idx_containers_wl_iso_code ON containers_white_list(iso_code);
+    CREATE INDEX IF NOT EXISTS idx_containers_wl_device_id ON containers_white_list(device_id);
+    CREATE INDEX IF NOT EXISTS idx_containers_wl_created_at ON containers_white_list(created_at DESC);
+  `;
+  
+  try {
+    await pool.query(query);
+    console.log('✅ Tabla containers_white_list verificada/creada');
+  } catch (error) {
+    console.error('❌ Error creando tabla containers_white_list:', error);
+  }
+}
+
 // Servidor UDP actualizado para manejar device_id
 const udpServer = dgram.createSocket('udp4');
 
@@ -633,6 +659,211 @@ app.get('/api/containers/stats/by-device', async (req, res) => {
   }
 });
 
+// ==================== ENDPOINTS DE CONTAINERS WHITE LIST ====================
+
+// ✨ NUEVO: Obtener todos los registros de la white list
+app.get('/api/containers-wl/all', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const query = `
+      SELECT * FROM containers_white_list
+      ORDER BY created_at DESC
+      LIMIT $1;
+    `;
+    
+    const result = await pool.query(query, [limit]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo containers white list:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ✨ NUEVO: Obtener un registro específico por ID
+app.get('/api/containers-wl/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const query = `
+      SELECT * FROM containers_white_list
+      WHERE id = $1;
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Registro no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error obteniendo registro:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ✨ NUEVO: Filtrar por device_name
+app.get('/api/containers-wl/filter/device-name', async (req, res) => {
+  try {
+    const { device_name } = req.query;
+    
+    if (!device_name) {
+      return res.status(400).json({ error: 'El parámetro device_name es requerido' });
+    }
+    
+    const query = `
+      SELECT * FROM containers_white_list
+      WHERE device_name ILIKE $1
+      ORDER BY created_at DESC;
+    `;
+    
+    const result = await pool.query(query, [`%${device_name}%`]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error filtrando por device_name:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ✨ NUEVO: Crear un nuevo registro en la white list
+app.post('/api/containers-wl', async (req, res) => {
+  try {
+    const { iso_code, device_id, device_name, device_type } = req.body;
+    
+    // Validar campo requerido
+    if (!iso_code) {
+      return res.status(400).json({ 
+        error: 'El campo iso_code es requerido' 
+      });
+    }
+    
+    console.log(`📝 Nuevo registro en white list: ${iso_code} | Device: ${device_name || 'N/A'}`);
+    
+    const query = `
+      INSERT INTO containers_white_list 
+      (iso_code, device_id, device_name, device_type)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *;
+    `;
+    
+    const values = [
+      iso_code,
+      device_id || null,
+      device_name || null,
+      device_type || 'jetson'
+    ];
+    
+    const result = await pool.query(query, values);
+    console.log(`✅ Registro guardado con ID: ${result.rows[0].id}`);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Registro creado exitosamente',
+      data: result.rows[0]
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creando registro:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: error.message 
+    });
+  }
+});
+
+// ✨ NUEVO: Actualizar un registro existente
+app.put('/api/containers-wl/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { iso_code, device_id, device_name, device_type } = req.body;
+    
+    // Validar campo requerido
+    if (!iso_code) {
+      return res.status(400).json({ 
+        error: 'El campo iso_code es requerido' 
+      });
+    }
+    
+    console.log(`✏️ Actualizando registro ${id}: ${iso_code}`);
+    
+    const query = `
+      UPDATE containers_white_list 
+      SET iso_code = $1, 
+          device_id = $2, 
+          device_name = $3, 
+          device_type = $4
+      WHERE id = $5
+      RETURNING *;
+    `;
+    
+    const values = [
+      iso_code,
+      device_id || null,
+      device_name || null,
+      device_type || 'jetson',
+      id
+    ];
+    
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Registro no encontrado' });
+    }
+    
+    console.log(`✅ Registro ${id} actualizado exitosamente`);
+    
+    res.json({
+      success: true,
+      message: 'Registro actualizado exitosamente',
+      data: result.rows[0]
+    });
+    
+  } catch (error) {
+    console.error('❌ Error actualizando registro:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: error.message 
+    });
+  }
+});
+
+// ✨ NUEVO: Eliminar un registro
+app.delete('/api/containers-wl/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`🗑️ Eliminando registro ${id}`);
+    
+    const query = `
+      DELETE FROM containers_white_list
+      WHERE id = $1
+      RETURNING *;
+    `;
+    
+    const result = await pool.query(query, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Registro no encontrado' });
+    }
+    
+    console.log(`✅ Registro ${id} eliminado exitosamente`);
+    
+    res.json({
+      success: true,
+      message: 'Registro eliminado exitosamente',
+      data: result.rows[0]
+    });
+    
+  } catch (error) {
+    console.error('❌ Error eliminando registro:', error);
+    res.status(500).json({ 
+      error: 'Error interno del servidor',
+      message: error.message 
+    });
+  }
+});
+
 // ==================== HEALTH CHECK ====================
 
 // Health check
@@ -661,6 +892,7 @@ async function start() {
     // Crear tablas
     await createTable();
     await createContainersTable();
+    await createContainersWhiteListTable(); // ✨ NUEVA TABLA
     
     // Iniciar servidor UDP
     udpServer.bind(UDP_PORT);
@@ -690,8 +922,15 @@ async function start() {
       console.log(`    GET  /api/containers/all`);
       console.log(`    GET  /api/containers/latest`);
       console.log(`    GET  /api/containers/iso/:isoCode`);
-      console.log(`    GET  /api/containers/device/:deviceId (✨ NEW)`);
-      console.log(`    GET  /api/containers/stats/by-device (✨ NEW)`);
+      console.log(`    GET  /api/containers/device/:deviceId`);
+      console.log(`    GET  /api/containers/stats/by-device`);
+      console.log(`\n  ✅ Containers White List API (✨ NEW):`);
+      console.log(`    GET    /api/containers-wl/all`);
+      console.log(`    GET    /api/containers-wl/:id`);
+      console.log(`    GET    /api/containers-wl/filter/device-name?device_name=xxx`);
+      console.log(`    POST   /api/containers-wl`);
+      console.log(`    PUT    /api/containers-wl/:id`);
+      console.log(`    DELETE /api/containers-wl/:id`);
       console.log(`\n  🔌 WebSocket:`);
       console.log(`    WS   /socket.io - WebRTC Signaling`);
       console.log(`${'='.repeat(70)}\n`);
