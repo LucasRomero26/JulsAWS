@@ -7,7 +7,7 @@ require('dotenv').config();
 // ✨ NUEVO: Importar módulo de señalización WebRTC
 const { setupWebRTCSignaling } = require('./webrtc-signaling');
 
-// Configuración de la base de datos
+// Configuración de la base de  datos
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT || 5432,
