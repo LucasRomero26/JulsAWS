@@ -144,7 +144,7 @@ function ReportsView() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-              <span>📄 Daily Reports</span>
+              <span>Daily Reports</span>
             </h2>
             <p className="text-white/60 mt-1">
               View, generate and download the daily container detection reports.
