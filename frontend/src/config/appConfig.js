@@ -1,4 +1,4 @@
-// --- Configuración Básica ---
+// --- ConfiguraciónF Básica ---
 export const config = {
   API_BASE_URL: import.meta.env.VITE_API_URL || '',
   APP_NAME: 'Juls Tracker',
