@@ -37,7 +37,7 @@ const DesktopUsersSidebar = ({ users, onUserSelect, selectedUserId }) => {
   }, [selectedUserId, searchTerm]);
 
   return (
-    <div className="fixed top-24 left-0 h-[calc(100vh-6rem)] w-80 glassmorphism-strong border-r border-white/10 z-40">
+    <div className="fixed top-20 left-0 h-full mr-2 w-80 glassmorphism-strong border-r border-white/10 z-40">
       <div className="p-6 h-full flex flex-col">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-white">Devices</h2>
