@@ -4,7 +4,7 @@ const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// ✨ NUEVO: Importar módulo de señalización WebRTC
+// NUEVO: Importar módulo de señalización WebRTC
 const { setupWebRTCSignaling } = require('./webrtc-signaling');
 
 // Configuración de la base de  datos
