@@ -83,11 +83,6 @@ function ContainersView() {
       <div className="glassmorphism-strong rounded-3xl p-6 mb-6 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-2xl">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Container Detection</h2>
               <p className="text-white/60 text-sm">Real-time container tracking with ISO 6346 codes</p>

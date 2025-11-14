@@ -202,11 +202,6 @@ function ContainersWLView() {
       <div className="glassmorphism-strong rounded-3xl p-6 mb-6 shadow-lg">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-2xl">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Containers White List</h2>
               <p className="text-white/60 text-sm">Manage authorized container ISO codes</p>

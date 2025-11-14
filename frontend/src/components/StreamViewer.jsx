@@ -145,7 +145,7 @@ const StreamViewer = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              🎥 Live Video Streaming
+              Live Video Streaming
             </h2>
             <p className="text-white/70">
               {devices.length === 0 
