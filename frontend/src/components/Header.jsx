@@ -80,7 +80,7 @@ const Header = ({
               </button>
 
               {/* History Button */}
-              <button
+              {/*<button
                 onClick={() => setIsDateSearchModalOpen(true)}
                 className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
                   mode === 'history'
@@ -102,7 +102,7 @@ const Header = ({
                   />
                 </svg>
                 History
-              </button>
+              </button>*/}
 
               {/* Area History Button */}
               <button
@@ -301,7 +301,7 @@ const Header = ({
               Live Mode
             </button>
 
-            {/* History Button Mobile */}
+            {/* History Button Mobile
             <button
               onClick={() => {
                 setIsDateSearchModalOpen(true);
@@ -327,7 +327,7 @@ const Header = ({
                 />
               </svg>
               History Search
-            </button>
+            </button> */}
 
             {/* Area History Button Mobile */}
             <button
