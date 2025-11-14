@@ -4,8 +4,6 @@ const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const AWS = require('aws-sdk');
-
 // ✨ NUEVO: Importar módulo de señalización WebRTC
 const { setupWebRTCSignaling } = require('./webrtc-signaling');
 
@@ -20,11 +18,6 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
-
-// Configurar el AWS SDK
-AWS.config.update({ region: 'us-east-2' }); 
-const s3 = new AWS.S3();
-const S3_BUCKET_NAME = 'juls-container-reports';
 
 // Crear tabla location_data si no existe
 async function createTable() {
@@ -870,51 +863,6 @@ app.delete('/api/containers-wl/:id', async (req, res) => {
     });
   }
 });
-
-// ==================== ENDPOINTS DE REPORTES S3 ====================
-
-// ✨ NUEVO: Listar todos los reportes PDF del bucket S3
-app.get('/api/reports', async (req, res) => {
-  try {
-    const params = {
-      Bucket: S3_BUCKET_NAME,
-    };
-
-    const data = await s3.listObjectsV2(params).promise();
-
-    // Filtrar solo por archivos .pdf y generar URLs firmadas
-    const reports = data.Contents
-      .filter(file => file.Key.endsWith('.pdf'))
-      .map(file => {
-        // Generar una URL firmada que expira en 15 minutos
-        const url = s3.getSignedUrl('getObject', {
-          Bucket: S3_BUCKET_NAME,
-          Key: file.Key,
-          Expires: 900, // 15 minutos
-        });
-
-        return {
-          fileName: file.Key,
-          lastModified: file.LastModified,
-          size: file.Size,
-          url: url,
-        };
-      });
-
-    // Ordenar por fecha (más reciente primero)
-    reports.sort((a, b) => b.lastModified - a.lastModified);
-
-    res.json(reports);
-
-  } catch (error) {
-    console.error('Error listando reportes de S3:', error);
-    res.status(500).json({ 
-      error: 'Error interno del servidor al listar reportes',
-      message: error.message 
-    });
-  }
-});
-
 
 // ==================== HEALTH CHECK ====================
 
