@@ -19,15 +19,12 @@ const Header = ({
         <div className="flex items-center justify-between h-20">
           {/* Logo y Título */}
           <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur-lg opacity-50 animate-pulse"></div>
-              <div className="relative bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-2xl shadow-xl">
-                <img
-                  src="/logo_dark.png"
-                  alt="JulsTracker Logo"
-                  className="w-8 h-8"
-                />
-              </div>
+            <div className="">
+              <img
+                src="/logo_dark.png"
+                alt="JulsTracker Logo"
+                className="w-8 h-8"
+              />
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
@@ -43,11 +40,10 @@ const Header = ({
               {/* Live Button */}
               <button
                 onClick={handleReturnToLive}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'live'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'live'
                     ? 'pb-[5px] text-cyan-400 border-cyan-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -93,11 +89,10 @@ const Header = ({
               {/* Area History Button */}
               <button
                 onClick={setIsAreaHistoryMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'areaHistory'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'areaHistory'
                     ? 'pb-[5px] text-emerald-400 border-emerald-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -118,11 +113,10 @@ const Header = ({
               {/* Stream Button */}
               <button
                 onClick={setStreamMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'stream'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'stream'
                     ? 'pb-[5px] text-pink-400 border-pink-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -143,11 +137,10 @@ const Header = ({
               {/* Containers Button */}
               <button
                 onClick={setContainersMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'containers'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'containers'
                     ? 'pb-[5px] text-orange-400 border-orange-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -168,11 +161,10 @@ const Header = ({
               {/* Containers WL Button */}
               <button
                 onClick={setContainersWLMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'containersWL'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'containersWL'
                     ? 'pb-[5px] text-amber-400 border-amber-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -193,11 +185,10 @@ const Header = ({
               {/* ✨ Reports Button */}
               <button
                 onClick={setReportsMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'reports'
+                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'reports'
                     ? 'pb-[5px] text-indigo-400 border-indigo-400'
                     : 'text-white/50 border-transparent hover:text-white'
-                }`}
+                  }`}
               >
                 <svg
                   className="w-5 h-5 mr-1"
@@ -265,11 +256,10 @@ const Header = ({
                 handleReturnToLive();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'live'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'live'
                   ? 'bg-cyan-600/20 text-cyan-400 border-2 border-cyan-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
@@ -321,11 +311,10 @@ const Header = ({
                 setIsAreaHistoryMode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'areaHistory'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
                   ? 'bg-emerald-600/20 text-emerald-400 border-2 border-emerald-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
@@ -349,11 +338,10 @@ const Header = ({
                 setStreamMode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'stream'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'stream'
                   ? 'bg-pink-600/20 text-pink-400 border-2 border-pink-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
@@ -377,11 +365,10 @@ const Header = ({
                 setContainersMode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'containers'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containers'
                   ? 'bg-orange-600/20 text-orange-400 border-2 border-orange-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
@@ -405,11 +392,10 @@ const Header = ({
                 setContainersWLMode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'containersWL'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containersWL'
                   ? 'bg-amber-600/20 text-amber-400 border-2 border-amber-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
@@ -433,11 +419,10 @@ const Header = ({
                 setReportsMode();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'reports'
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'reports'
                   ? 'bg-indigo-600/20 text-indigo-400 border-2 border-indigo-400'
                   : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
+                }`}
             >
               <svg
                 className="w-5 h-5"
