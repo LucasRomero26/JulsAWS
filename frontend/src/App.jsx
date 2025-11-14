@@ -27,6 +27,7 @@ import TimelineSlider from './components/TimelineSlider';
 import StreamViewer from './components/StreamViewer';
 import ContainersView from './components/ContainersView';
 import ContainersWLView from './components/ContainersWLView';
+import ReportsView from './components/ReportsView'; // ✨ 1. Importar ReportsView
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -303,6 +304,15 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
+  // ✨ 2. Añadir el nuevo handler para Reports
+  const handleSetReportsMode = () => {
+    setMode('reports');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+  };
+
   // Handle area history mode
   const handleSetAreaHistoryMode = () => {
     setMode('areaHistory');
@@ -546,10 +556,12 @@ function App() {
         setStreamMode={handleSetStreamMode}
         setContainersMode={handleSetContainersMode}
         setContainersWLMode={handleSetContainersWLMode}
+        setReportsMode={handleSetReportsMode} // ✨ 3. Pasar el handler al Header
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
+      {/* ✨ 5. Actualizar lógica de sidebar para excluir 'reports' */}
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && mode !== 'reports' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -558,7 +570,7 @@ function App() {
       )}
 
       {/* Area Sidebar for area history mode */}
-      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && (
         <AreaSidebar
           users={users}
           selectedDevices={selectedDevicesForArea}
@@ -568,7 +580,8 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' ? 'md:ml-80' : ''
+      {/* ✨ 6. Actualizar clase de 'main' para excluir 'reports' del padding */}
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && mode !== 'reports' ? 'md:ml-80' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -594,6 +607,8 @@ function App() {
           <ContainersView />
         ) : mode === 'containersWL' ? (
           <ContainersWLView />
+        ) : mode === 'reports' ? ( // ✨ 4. Añadir el renderizado condicional para ReportsView
+          <ReportsView />
         ) : users.length > 0 ? (
           <>
             {/* Action Buttons Bar for Area History Mode */}
