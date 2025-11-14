@@ -173,6 +173,16 @@ const s3 = new AWS.S3({
 const REPORTS_BUCKET = 'container-reports-9584';
 // ===================================
 
+// ====== LAMBDA CONFIG FOR MANUAL REPORTS ======
+const lambda = new AWS.Lambda({
+  region: 'us-east-2',
+});
+
+// Puedes sobreescribirlo con una env var si quieres
+const REPORT_LAMBDA_NAME =
+  process.env.REPORT_LAMBDA_NAME || 'generateDailyContainerReport';
+// =================================================
+
 // ==================== ENDPOINTS DE LOCATION ====================
 
 // Endpoint para obtener el último registro (actualizado para incluir device info)
@@ -575,6 +585,99 @@ app.get('/api/reports', async (req, res) => {
     console.error('Error listing reports from S3:', err);
     res.status(500).json({
       error: 'Error listing reports',
+      details: err.message,
+    });
+  }
+});
+
+// ✨ NUEVO: Generar reporte manual invocando la Lambda
+app.post('/api/reports/generate', async (req, res) => {
+  try {
+    const { date, manualDate } = req.body || {};
+
+    // Aceptamos "date" o "manualDate"
+    const targetDate = manualDate || date;
+
+    if (!targetDate) {
+      return res.status(400).json({
+        error: 'El campo "date" es requerido (formato YYYY-MM-DD)',
+      });
+    }
+
+    const isValid = /^\d{4}-\d{2}-\d{2}$/.test(targetDate);
+    if (!isValid) {
+      return res.status(400).json({
+        error: 'Formato de fecha inválido. Usa YYYY-MM-DD, ej: 2025-11-11',
+      });
+    }
+
+    if (!REPORT_LAMBDA_NAME) {
+      return res.status(500).json({
+        error: 'REPORT_LAMBDA_NAME no está configurado en el servidor',
+      });
+    }
+
+    console.log(
+      `Invocando Lambda ${REPORT_LAMBDA_NAME} para generar reporte manual de fecha ${targetDate}`
+    );
+
+    const lambdaParams = {
+      FunctionName: REPORT_LAMBDA_NAME,
+      InvocationType: 'RequestResponse',
+      Payload: JSON.stringify({ manualDate: targetDate }),
+    };
+
+    const lambdaResult = await lambda.invoke(lambdaParams).promise();
+
+    let payload;
+    try {
+      payload =
+        typeof lambdaResult.Payload === 'string'
+          ? JSON.parse(lambdaResult.Payload)
+          : lambdaResult.Payload;
+    } catch (parseErr) {
+      console.error('Error parseando respuesta de Lambda:', parseErr);
+      return res.status(500).json({
+        error: 'Error parseando la respuesta de Lambda',
+        details: parseErr.message,
+      });
+    }
+
+    // Si la Lambda devolvió un statusCode distinto de 200, lo tratamos como error
+    if (payload.statusCode && payload.statusCode !== 200) {
+      let errorBody = payload.body;
+      try {
+        if (typeof errorBody === 'string') {
+          errorBody = JSON.parse(errorBody);
+        }
+      } catch {
+        // ignorar parse error
+      }
+
+      return res.status(502).json({
+        error: 'La Lambda devolvió un error',
+        details: errorBody || payload,
+      });
+    }
+
+    // Éxito: extraemos el body de la Lambda
+    let body = payload.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        // si no se puede parsear, lo dejamos como string
+      }
+    }
+
+    return res.json({
+      message: 'Reporte manual generado correctamente',
+      lambda: body,
+    });
+  } catch (err) {
+    console.error('Error en /api/reports/generate:', err);
+    return res.status(500).json({
+      error: 'Error generando el reporte manual',
       details: err.message,
     });
   }
