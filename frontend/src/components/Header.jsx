@@ -23,11 +23,11 @@ const Header = ({
               <img
                 src="/logo_dark.png"
                 alt="JulsTracker Logo"
-                className="w-8 h-8"
+                className="w-12 h-12"
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
                 JulsTracker
               </h1>
               <p className="text-xs text-white/50 font-medium">Real-time Location Intelligence</p>
