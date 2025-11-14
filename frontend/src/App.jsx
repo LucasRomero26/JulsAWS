@@ -27,6 +27,7 @@ import TimelineSlider from './components/TimelineSlider';
 import StreamViewer from './components/StreamViewer';
 import ContainersView from './components/ContainersView';
 import ContainersWLView from './components/ContainersWLView';
+import ReportsView from './components/ReportsView';
 import { splitIntoRoutes, calculateRouteDistance } from './utils/pathUtils';
 
 // --- Componente Principal ---
@@ -294,9 +295,18 @@ function App() {
     setIsMobileMenuOpen(false);
   };
 
-  // ✨ NUEVO: Handler para Containers WL
+  // ✨ Handler para Containers WL
   const handleSetContainersWLMode = () => {
     setMode('containersWL');
+    setUserPaths({});
+    setError(null);
+    setErrorType(null);
+    setIsMobileMenuOpen(false);
+  };
+
+  // ✨ NUEVO: Handler para Reports
+  const handleSetReportsMode = () => {
+    setMode('reports');
     setUserPaths({});
     setError(null);
     setErrorType(null);
@@ -546,10 +556,11 @@ function App() {
         setStreamMode={handleSetStreamMode}
         setContainersMode={handleSetContainersMode}
         setContainersWLMode={handleSetContainersWLMode}
+        setReportsMode={handleSetReportsMode}
       />
 
       {/* Sidebar solo en desktop */}
-      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
+      {!isMobile && users.length > 0 && mode !== 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && mode !== 'reports' && (
         <DesktopUsersSidebar
           users={users}
           onUserSelect={handleUserSelect}
@@ -558,7 +569,7 @@ function App() {
       )}
 
       {/* Area Sidebar for area history mode */}
-      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && (
+      {!isMobile && users.length > 0 && mode === 'areaHistory' && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && mode !== 'reports' && (
         <AreaSidebar
           users={users}
           selectedDevices={selectedDevicesForArea}
@@ -568,7 +579,7 @@ function App() {
       )}
 
       {/* Main container */}
-      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' ? 'md:ml-80' : ''
+      <main className={`max-w-[98%] mx-auto min-h-[calc(100vh-6rem)] pt-28 px-4 md:px-0 transition-all duration-300 ${!isMobile && users.length > 0 && mode !== 'stream' && mode !== 'containers' && mode !== 'containersWL' && mode !== 'reports' ? 'md:ml-80' : ''
         }`}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
@@ -594,6 +605,8 @@ function App() {
           <ContainersView />
         ) : mode === 'containersWL' ? (
           <ContainersWLView />
+        ) : mode === 'reports' ? (
+          <ReportsView />
         ) : users.length > 0 ? (
           <>
             {/* Action Buttons Bar for Area History Mode */}
@@ -688,7 +701,7 @@ function App() {
 
             {/* ✨ NUEVO LAYOUT: Map y Timeline lado a lado */}
             {mode === 'areaHistory' && Object.keys(deviceRoutes).length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1lg:grid-cols-3 gap-3">
                 {/* Mapa ocupa 2 columnas */}
                 <div className="lg:col-span-2">
                   <LocationMap
