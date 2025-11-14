@@ -1,447 +1,193 @@
-import React from 'react';
+import { config } from '../config/appConfig';
 
 const Header = ({
   isMobile,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
-  mode,
+  mode, // 'live', 'history', 'areaHistory', 'stream', 'containers', 'containersWL'
   handleReturnToLive,
   setIsDateSearchModalOpen,
   setIsAreaHistoryMode,
   setStreamMode,
   setContainersMode,
-  setContainersWLMode,
-  setReportsMode
+  setContainersWLMode
 }) => {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong backdrop-blur-xl border-b border-white/10 shadow-2xl">
-      <div className="max-w-[98%] mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo y Título */}
-          <div className="flex items-center space-x-3">
-            <div className="">
-              <img
-                src="/logo_dark.png"
-                alt="JulsTracker Logo"
-                className="w-12 h-12"
-              />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
-                JulsTracker
-              </h1>
-              <p className="text-xs text-white/50 font-medium">Real-time Location Intelligence</p>
-            </div>
-          </div>
-
-          {/* Navigation - Desktop */}
-          {!isMobile && (
-            <nav className="flex items-center space-x-1">
-              {/* Live Button */}
-              <button
-                onClick={handleReturnToLive}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'live'
-                    ? 'pb-[5px] text-cyan-400 border-cyan-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                Live
-              </button>
-
-              {/* History Button */}
-              {/*<button
-                onClick={() => setIsDateSearchModalOpen(true)}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${
-                  mode === 'history'
-                    ? 'pb-[5px] text-purple-400 border-purple-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                History
-              </button>*/}
-
-              {/* Area History Button */}
-              <button
-                onClick={setIsAreaHistoryMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'areaHistory'
-                    ? 'pb-[5px] text-emerald-400 border-emerald-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                  />
-                </svg>
-                Area
-              </button>
-
-              {/* Stream Button */}
-              <button
-                onClick={setStreamMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'stream'
-                    ? 'pb-[5px] text-pink-400 border-pink-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-                Stream
-              </button>
-
-              {/* Containers Button */}
-              <button
-                onClick={setContainersMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'containers'
-                    ? 'pb-[5px] text-orange-400 border-orange-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-                Containers
-              </button>
-
-              {/* Containers WL Button */}
-              <button
-                onClick={setContainersWLMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'containersWL'
-                    ? 'pb-[5px] text-amber-400 border-amber-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
-                Containers WL
-              </button>
-
-              {/* ✨ Reports Button */}
-              <button
-                onClick={setReportsMode}
-                className={`flex items-center text-center cursor-pointer px-3 md:px-4 pb-2 pt-2 border-b-2 transition-all duration-300 ${mode === 'reports'
-                    ? 'pb-[5px] text-indigo-400 border-indigo-400'
-                    : 'text-white/50 border-transparent hover:text-white'
-                  }`}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Reports
-              </button>
-            </nav>
-          )}
-
-          {/* Mobile Menu Button */}
-          {isMobile && (
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300"
-            >
-              {isMobileMenuOpen ? (
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
-          )}
+    <header className="fixed top-0 left-0 right-0 z-50 glassmorphism-strong py-5 px-6 h-24">
+      <div className="max-w-[100%] mx-auto flex items-center justify-between h-full">
+        <div className="flex items-center">
+          <img className='w-14 h-14' src="./logo_dark.png" alt="Logo" />
+          <h1 className="py-1 px-3 text-center font-bold text-white/90 text-2xl md:text-3xl">
+            {config.APP_NAME}
+          </h1>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobile && isMobileMenuOpen && (
-          <div className="py-4 space-y-2 border-t border-white/10">
-            {/* Live Button Mobile */}
+        {isMobile ? (
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-white hover:text-white/70 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        ) : (
+          <div className="flex items-center gap-4 p-1">
             <button
-              onClick={() => {
-                handleReturnToLive();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'live'
-                  ? 'bg-cyan-600/20 text-cyan-400 border-2 border-cyan-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+              onClick={handleReturnToLive}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'live'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white border-transparent hover:text-white/50'
                 }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              Live Mode
+              Live Tracking
             </button>
-
-            {/* History Button Mobile
             <button
-              onClick={() => {
-                setIsDateSearchModalOpen(true);
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${
-                mode === 'history'
-                  ? 'bg-purple-600/20 text-purple-400 border-2 border-purple-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              History Search
-            </button> */}
-
-            {/* Area History Button Mobile */}
-            <button
-              onClick={() => {
-                setIsAreaHistoryMode();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
-                  ? 'bg-emerald-600/20 text-emerald-400 border-2 border-emerald-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+              onClick={setIsAreaHistoryMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'areaHistory'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                />
-              </svg>
-              Area History
+              History
             </button>
-
-            {/* Stream Button Mobile */}
+            {/* ✨ Live Stream Button */}
             <button
-              onClick={() => {
-                setStreamMode();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'stream'
-                  ? 'bg-pink-600/20 text-pink-400 border-2 border-pink-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+              onClick={setStreamMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'stream'
+                ? 'pb-[5px] text-red-600 border-red-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
               </svg>
-              Stream Viewer
+              Live Stream
             </button>
-
-            {/* Containers Button Mobile */}
+            {/* ✨ Containers Button */}
             <button
-              onClick={() => {
-                setContainersMode();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containers'
-                  ? 'bg-orange-600/20 text-orange-400 border-2 border-orange-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+              onClick={setContainersMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'containers'
+                ? 'pb-[5px] text-cyan-600 border-cyan-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
               Containers
             </button>
-
-            {/* Containers WL Button Mobile */}
+            {/* ✨ NUEVO: Containers WL Button */}
             <button
-              onClick={() => {
-                setContainersWLMode();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containersWL'
-                  ? 'bg-amber-600/20 text-amber-400 border-2 border-amber-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
+              onClick={setContainersWLMode}
+              className={`flex items-center text-center cursor-pointer justify-center gap-2 w-40 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'containersWL'
+                ? 'pb-[5px] text-green-600 border-green-600'
+                : 'pb-2 text-white/50 border-transparent hover:text-white'
                 }`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Containers WL
-            </button>
-
-            {/* ✨ Reports Button Mobile */}
-            <button
-              onClick={() => {
-                setReportsMode();
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'reports'
-                  ? 'bg-indigo-600/20 text-indigo-400 border-2 border-indigo-400'
-                  : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6M5 7h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 00-2-2H7a2 2 0 00-2 2v11a2 2 0 01-2 2z"
-                />
-              </svg>
-              Reports
             </button>
           </div>
         )}
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isMobile && isMobileMenuOpen && (
+        <div className="mt-4 glassmorphism rounded-2xl p-4 animate-fade-in">
+          <button
+            onClick={handleReturnToLive}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'live'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </svg>
+            Live Tracking
+          </button>
+          <button
+            onClick={() => {
+              setIsDateSearchModalOpen(true);
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'history'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            History
+          </button>
+          <button
+            onClick={() => {
+              setIsAreaHistoryMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 11V9" />
+            </svg>
+            History by Area
+          </button>
+          <button
+            onClick={() => {
+              setStreamMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'stream'
+              ? 'bg-red-600/20 text-red-600 border-2 border-red-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+            </svg>
+            Live Stream
+          </button>
+          {/* ✨ Containers Button - Mobile */}
+          <button
+            onClick={() => {
+              setContainersMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'containers'
+              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            Containers
+          </button>
+          {/* ✨ NUEVO: Containers WL Button - Mobile */}
+          <button
+            onClick={() => {
+              setContainersWLMode();
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all ${mode === 'containersWL'
+              ? 'bg-green-600/20 text-green-600 border-2 border-green-600'
+              : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Containers WL
+          </button>
+        </div>
+      )}
     </header>
   );
 };
