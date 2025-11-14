@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
+const AWS = require('aws-sdk');
 
 // NUEVO: Importar módulo de señalización WebRTC
 const { setupWebRTCSignaling } = require('./webrtc-signaling');
@@ -163,6 +164,14 @@ udpServer.on('listening', () => {
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ====== S3 CONFIG FOR REPORTS ======
+const s3 = new AWS.S3({
+  region: 'us-east-2',
+});
+
+const REPORTS_BUCKET = 'container-reports-9584';
+// ===================================
 
 // ==================== ENDPOINTS DE LOCATION ====================
 
@@ -499,6 +508,75 @@ app.get('/api/location/area', async (req, res) => {
     });
   }
 });
+
+// ====== REPORTS API (S3 PDFs) ======
+app.get('/api/reports', async (req, res) => {
+  try {
+    // Leer parámetros opcionales de fecha ?date=YYYY-MM-DD
+    const { date } = req.query; // por ahora solo lo usaremos para filtrar por nombre
+
+    if (!REPORTS_BUCKET) {
+      return res.status(500).json({ error: 'REPORTS_BUCKET is not configured' });
+    }
+
+    const params = {
+      Bucket: REPORTS_BUCKET,
+    };
+
+    const data = await s3.listObjectsV2(params).promise();
+
+    const items =
+      data.Contents?.filter((obj) => obj.Key.toLowerCase().endsWith('.pdf')) ||
+      [];
+
+    // Mapear a un formato amigable
+    const reports = items.map((obj) => {
+      const key = obj.Key; // ejemplo: "11_14_2025.pdf"
+      const lastModified = obj.LastModified;
+
+      // Intentar inferir fecha a partir del nombre MM_DD_YYYY
+      let parsedDate = null;
+      const match = key.match(/(\d{2})_(\d{2})_(\d{4})\.pdf$/);
+      if (match) {
+        const [_, mm, dd, yyyy] = match;
+        parsedDate = `${yyyy}-${mm}-${dd}`; // YYYY-MM-DD
+      }
+
+      return {
+        key,
+        fileName: key,
+        size: obj.Size,
+        lastModified,
+        parsedDate,
+      };
+    });
+
+    // Si llega ?date=YYYY-MM-DD, filtra
+    let filteredReports = reports;
+    if (date) {
+      filteredReports = reports.filter((r) => r.parsedDate === date);
+    }
+
+    // Ordenar por fecha de último cambio (desc)
+    filteredReports.sort(
+      (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
+    );
+
+    res.json({
+      bucket: REPORTS_BUCKET,
+      count: filteredReports.length,
+      reports: filteredReports,
+    });
+  } catch (err) {
+    console.error('Error listing reports from S3:', err);
+    res.status(500).json({
+      error: 'Error listing reports',
+      details: err.message,
+    });
+  }
+});
+// ===================================
+
 
 // ==================== ENDPOINTS DE CONTAINERS ====================
 
