@@ -1,6 +1,6 @@
 // --- Configuración Básica ---
 export const config = {
-  API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  API_BASE_URL: import.meta.env.VITE_API_URL || '',
   APP_NAME: 'Juls Tracker',
   APP_SUBTITLE: 'Just UDP Location Service',
   APP_VERSION: '2.0.0',
