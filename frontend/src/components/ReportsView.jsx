@@ -54,11 +54,15 @@ function ReportsView() {
     fetchReports(value || undefined);
   };
 
-  const getReportUrl = (report) => {
-    // Si luego usamos URLs firmadas desde el backend,
-    // aquí solo usarías report.signedUrl.
-    return `${S3_REPORTS_BASE_URL}/${report.key}`;
-  };
+const getReportUrl = (report) => {
+  // Primero usamos la URL firmada que viene del backend
+  if (report.signedUrl) {
+    return report.signedUrl;
+  }
+  // Fallback por si acaso
+  return `${S3_REPORTS_BASE_URL}/${report.key}`;
+};
+
 
   if (loading) {
     return (

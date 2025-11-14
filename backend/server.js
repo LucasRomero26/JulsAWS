@@ -512,8 +512,7 @@ app.get('/api/location/area', async (req, res) => {
 // ====== REPORTS API (S3 PDFs) ======
 app.get('/api/reports', async (req, res) => {
   try {
-    // Leer parámetros opcionales de fecha ?date=YYYY-MM-DD
-    const { date } = req.query; // por ahora solo lo usaremos para filtrar por nombre
+    const { date } = req.query;
 
     if (!REPORTS_BUCKET) {
       return res.status(500).json({ error: 'REPORTS_BUCKET is not configured' });
@@ -529,12 +528,11 @@ app.get('/api/reports', async (req, res) => {
       data.Contents?.filter((obj) => obj.Key.toLowerCase().endsWith('.pdf')) ||
       [];
 
-    // Mapear a un formato amigable
     const reports = items.map((obj) => {
-      const key = obj.Key; // ejemplo: "11_14_2025.pdf"
+      const key = obj.Key; // "11_14_2025.pdf"
       const lastModified = obj.LastModified;
 
-      // Intentar inferir fecha a partir del nombre MM_DD_YYYY
+      // Intentar inferir fecha desde el nombre MM_DD_YYYY
       let parsedDate = null;
       const match = key.match(/(\d{2})_(\d{2})_(\d{4})\.pdf$/);
       if (match) {
@@ -542,22 +540,28 @@ app.get('/api/reports', async (req, res) => {
         parsedDate = `${yyyy}-${mm}-${dd}`; // YYYY-MM-DD
       }
 
+      // 🔑 URL firmada para ver/descargar (válida 1 hora)
+      const signedUrl = s3.getSignedUrl('getObject', {
+        Bucket: REPORTS_BUCKET,
+        Key: key,
+        Expires: 60 * 60, // 1 hora
+      });
+
       return {
         key,
         fileName: key,
         size: obj.Size,
         lastModified,
         parsedDate,
+        signedUrl,     // 👈 ESTA ES LA CLAVE
       };
     });
 
-    // Si llega ?date=YYYY-MM-DD, filtra
     let filteredReports = reports;
     if (date) {
       filteredReports = reports.filter((r) => r.parsedDate === date);
     }
 
-    // Ordenar por fecha de último cambio (desc)
     filteredReports.sort(
       (a, b) => new Date(b.lastModified) - new Date(a.lastModified)
     );
@@ -576,7 +580,6 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 // ===================================
-
 
 // ==================== ENDPOINTS DE CONTAINERS ====================
 
