@@ -474,8 +474,7 @@ app.get('/api/location/area', async (req, res) => {
           (
             6371000 * acos(
               LEAST(1.0, GREATEST(-1.0,
-                cos(radians($1)) * cos(radians(latitude)) * 
-                cos(radians(longitude) - radians($2)) + 
+                cos(radians($1)) * cos(radians(latitude)) * cos(radians(longitude) - radians($2)) + 
                 sin(radians($1)) * sin(radians(latitude))
               ))
             )
@@ -686,7 +685,7 @@ app.post('/api/reports/generate', async (req, res) => {
 
 // ==================== ENDPOINTS DE CONTAINERS ====================
 
-// ✨ ACTUALIZADO: Endpoint para recibir datos de contenedores con device info
+// ✨ ACTUALIZADO: Endpoint para recibir datos de contenedores con validación de White List
 app.post('/api/containers', async (req, res) => {
   try {
     const { iso_code, timestamp, confidence, track_id, image_filename, device_id, device_name, device_type } = req.body;
@@ -699,6 +698,32 @@ app.post('/api/containers', async (req, res) => {
     }
     
     console.log(`📦 Nuevo contenedor detectado: ${iso_code} | Device: ${device_id || 'unknown'} | Confidence: ${confidence}%`);
+
+    // --- PASO 1: VALIDACIÓN DE WHITE LIST ---
+    if (device_id) {
+      try {
+        // Consultamos si existe el par (iso_code, device_id) en la tabla de lista blanca
+        const wlQuery = `
+          SELECT * FROM containers_white_list 
+          WHERE iso_code = $1 AND device_id = $2
+        `;
+        
+        const wlResult = await pool.query(wlQuery, [iso_code, device_id]);
+        
+        if (wlResult.rows.length > 0) {
+          console.log(`✅ COINCIDENCIA EN WHITE LIST: ${iso_code} autorizado para ${device_id}`);
+          
+          // AQUÍ HAREMOS EL ENVÍO HTTP EN EL PASO 2
+          
+        } else {
+          console.log(`⚠️ Contenedor ${iso_code} no está en la lista blanca del dispositivo ${device_id}`);
+        }
+      } catch (err) {
+        console.error('Error verificando white list:', err);
+        // No detenemos el proceso si falla la verificación, solo lo logueamos
+      }
+    }
+    // ----------------------------------------
     
     // Insertar en la base de datos CON INFO DEL DISPOSITIVO
     const query = `
