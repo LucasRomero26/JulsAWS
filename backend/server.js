@@ -685,7 +685,7 @@ app.post('/api/reports/generate', async (req, res) => {
 
 // ==================== ENDPOINTS DE CONTAINERS ====================
 
-// ✨ ACTUALIZADO: Endpoint para recibir datos de contenedores con validación de White List
+// ✨ ACTUALIZADO: Endpoint para recibir datos de contenedores con validación de White List y Control LED
 app.post('/api/containers', async (req, res) => {
   try {
     const { iso_code, timestamp, confidence, track_id, image_filename, device_id, device_name, device_type } = req.body;
@@ -699,7 +699,7 @@ app.post('/api/containers', async (req, res) => {
     
     console.log(`📦 Nuevo contenedor detectado: ${iso_code} | Device: ${device_id || 'unknown'} | Confidence: ${confidence}%`);
 
-    // --- PASO 1: VALIDACIÓN DE WHITE LIST ---
+    // --- PASO 1 & 2: VALIDACIÓN DE WHITE LIST Y ENVÍO A CONTROL LED ---
     if (device_id) {
       try {
         // Consultamos si existe el par (iso_code, device_id) en la tabla de lista blanca
@@ -713,7 +713,27 @@ app.post('/api/containers', async (req, res) => {
         if (wlResult.rows.length > 0) {
           console.log(`✅ COINCIDENCIA EN WHITE LIST: ${iso_code} autorizado para ${device_id}`);
           
-          // AQUÍ HAREMOS EL ENVÍO HTTP EN EL PASO 2
+          // ✨ PASO 2: Enviar petición HTTP al control LED
+          console.log('🔄 Enviando comando a API de control LED...');
+          
+          // Usamos fetch nativo (disponible en Node 20)
+          try {
+            const ledResponse = await fetch('https://led-control-r5z8.onrender.com/api/control', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: 0 })
+            });
+
+            if (ledResponse.ok) {
+              console.log('🚀 Comando enviado al control LED exitosamente');
+            } else {
+              console.error(`❌ Error enviando comando LED: ${ledResponse.status} ${ledResponse.statusText}`);
+            }
+          } catch (fetchError) {
+            console.error('❌ Error de red al contactar control LED:', fetchError.message);
+          }
           
         } else {
           console.log(`⚠️ Contenedor ${iso_code} no está en la lista blanca del dispositivo ${device_id}`);
