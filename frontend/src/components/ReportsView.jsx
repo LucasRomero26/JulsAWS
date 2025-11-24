@@ -105,6 +105,38 @@ function ReportsView() {
     return `${S3_REPORTS_BASE_URL}/${report.key}`;
   };
 
+  const handleDownload = async (report) => {
+    try {
+      const url = getReportUrl(report);
+
+      // Fetch the file
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+
+      // Convert to blob
+      const blob = await response.blob();
+
+      // Create a temporary URL for the blob
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = report.fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Error al descargar el archivo. Por favor, intenta nuevamente.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4">
@@ -344,17 +376,18 @@ function ReportsView() {
                           </svg>
                           View
                         </button>
-                        <a
-                          href={getReportUrl(report)}
-                          download={report.fileName}
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(report);
+                          }}
                           className="group/btn px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-xs text-white rounded-lg transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transform hover:-translate-y-0.5"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
                           Download
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -418,16 +451,15 @@ function ReportsView() {
                   className="w-full h-full rounded-2xl border border-white/10 bg-black/40 shadow-inner transition-all duration-300"
                 />
                 {/* Floating download button on hover */}
-                <a
-                  href={getReportUrl(selectedReport)}
-                  download={selectedReport.fileName}
+                <button
+                  onClick={() => handleDownload(selectedReport)}
                   className="absolute top-4 right-4 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 opacity-0 group-hover/preview:opacity-100 transition-all duration-300 transform translate-y-2 group-hover/preview:translate-y-0 flex items-center gap-2 text-sm font-medium"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   Download PDF
-                </a>
+                </button>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-4">
