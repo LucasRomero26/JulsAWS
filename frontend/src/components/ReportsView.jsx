@@ -105,35 +105,24 @@ function ReportsView() {
     return `${S3_REPORTS_BASE_URL}/${report.key}`;
   };
 
-  const handleDownload = async (report) => {
+  const handleDownload = (report) => {
     try {
       const url = getReportUrl(report);
 
-      // Fetch the file
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to download file');
-      }
-
-      // Convert to blob
-      const blob = await response.blob();
-
-      // Create a temporary URL for the blob
-      const blobUrl = window.URL.createObjectURL(blob);
-
       // Create a temporary link and trigger download
       const link = document.createElement('a');
-      link.href = blobUrl;
+      link.href = url;
       link.download = report.fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      // Append to body, click, and remove
       document.body.appendChild(link);
       link.click();
-
-      // Cleanup
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Error downloading file:', error);
-      alert('Error al descargar el archivo. Por favor, intenta nuevamente.');
+      // Removed alert to avoid false positives
     }
   };
 
@@ -144,7 +133,7 @@ function ReportsView() {
           <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-cyan-500"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path strokeLine cap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
         </div>
