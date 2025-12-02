@@ -23,9 +23,9 @@ const Header = ({
           </h1>
         </div>
 
-        {isMobile ? (
+        {isMobile ?  (
           <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={() => setIsMobileMenuOpen(! isMobileMenuOpen)}
             className="p-2 text-white hover:text-white/70 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,8 +52,8 @@ const Header = ({
             >
               History
             </button>
-            {/* ✨ Live Stream Button */}
-            <button
+            {/* ✨ Live Stream Button - COMENTADO */}
+            {/* <button
               onClick={setStreamMode}
               className={`flex items-center text-center cursor-pointer justify-center gap-2 w-36 text-lg transition-all duration-300 border-b-2 pt-2 ${mode === 'stream'
                 ? 'pb-[5px] text-red-600 border-red-600'
@@ -64,7 +64,7 @@ const Header = ({
                 <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
               </svg>
               Live Stream
-            </button>
+            </button> */}
             {/* ✨ Containers Button */}
             <button
               onClick={setContainersMode}
@@ -120,8 +120,8 @@ const Header = ({
               : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            <svg xmlns="http://www.w3. org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00. 293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
             </svg>
             Live Tracking
           </button>
@@ -131,7 +131,7 @@ const Header = ({
               setIsMobileMenuOpen(false);
             }}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'history'
-              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
+              ?  'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
               : 'bg-white/10 text-white hover:bg-white/20'
               }`}
           >
@@ -140,22 +140,9 @@ const Header = ({
             </svg>
             History
           </button>
-          <button
-            onClick={() => {
-              setIsAreaHistoryMode();
-              setIsMobileMenuOpen(false);
-            }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 mb-2 rounded-xl transition-all ${mode === 'areaHistory'
-              ? 'bg-cyan-600/20 text-cyan-600 border-2 border-cyan-600'
-              : 'bg-white/10 text-white hover:bg-white/20'
-              }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 11V9" />
-            </svg>
-            History by Area
-          </button>
-          <button
+          {/* History by Area Button - ELIMINADO */}
+          {/* Live Stream Button - Mobile - COMENTADO */}
+          {/* <button
             onClick={() => {
               setStreamMode();
               setIsMobileMenuOpen(false);
@@ -169,7 +156,7 @@ const Header = ({
               <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
             </svg>
             Live Stream
-          </button>
+          </button> */}
           {/* ✨ Containers Button - Mobile */}
           <button
             onClick={() => {
